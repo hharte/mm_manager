@@ -17,8 +17,6 @@
  * Print Cash box status
  * Make custom LCD table generator.
  * Make custom Areacode table generator.
- * Allow user to specify MM numbers to mm_manager
- * Clean up mm_context data structure.
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -772,7 +770,7 @@ int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len)
     long size;
     uint8_t *bufp;
 
-    snprintf(fname, sizeof(fname), "./mm_table_%02x.bin", table_id);
+    snprintf(fname, sizeof(fname), "./tables/mm_table_%02x.bin", table_id);
     if(!(stream = fopen(fname, "rb"))) {
         printf("Error loading %s\n", fname);
         exit(-1);
