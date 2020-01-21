@@ -11,11 +11,11 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 
 # Compatibility
 
-mm_manager runs on Linux and MacOS X.  
+`mm_manager` runs on Linux and MacOS X.  
 
  
 
-The mm_manager has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (1.20 firmware) and V1.3 Control PCP (2.20 firmware.)  It may work with other versions, please let me know.
+The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (1.20 firmware) and V1.3 Control PCP (2.20 firmware.)  It may work with other versions, please let me know.
 
 
 # Items Needed
@@ -24,11 +24,11 @@ The mm_manager has been tested with a Nortel Multi-Pay (coin, credit card) Termi
 
 1. Nortel Millennium Multi-Pay Terminal running firmware v1.20 or v2.20.  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to stock v1.20 or v2.20 firmware.
 2. 24VDC @500mA Power Supply for Millennium Terminal
-3. Two phone lines (one for mm_manager, one for Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 10-digit number.
+3. Two phone lines (one for `mm_manager`, one for Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 7- to 10-digit number.
 4. 1200-baud or faster modem.  I like the [Lenovo 56K USB](https://www.ebay.com/i/264145034802) modems, but any 56K modem with Conexant chipset should work.
 5. T-Key such as the [Jonard JIC-719A](https://jonard.com/jic-719a-t-key-tool?v=248) to open the payphone.  I don’t recommend the flat, stamped T-keys as they are prone to bending.
 6. Keys for your terminal’s upper and lower locks, if locks are present.
-7. mm_manager software and a Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be left on 24x7 so the terminal can call in when needed.
+7. `mm_manager` software and a Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be left on 24x7 so the terminal can call in when needed.
 
 
 # mm_manager Installation and Usage
@@ -47,7 +47,7 @@ usage: mm_manager [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <
 	-l <logfile> 	log bytes transmitted to and received from
             the terminal. Useful for debugging.
 	-m 			use serial modem (specify device with -f)
-	-n <Primary NCC Number> [-t <Secondary NCC Number>] - specify
+	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify
             primary and optionally secondary NCC number.
 ```
 
@@ -59,6 +59,8 @@ usage: mm_manager [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <
 ### Phone Line
 
 The Nortel Millennium payphones require a standard POTS line, with answer supervision in the form of polarity reversal to indicate that the far end has answered the call.  This is required for the Millennium to know when to collect or refund coins.  Most SIP ATAs and Cisco Voice Routers can be configured for polarity reversal.  If your phone line does not support polarity reversal, an answer supervision detection module is available from Nortel.
+
+If you are using VoIP, make sure to use the u-law PCM codec, disable silence suppression, disable comfort noise generation, and disable echo cancellation.  This is required to condition the line for modem operation.  You may also need to increase the jitter buffer size, and use a fixed jitter buffer, rather than adaptive.
 
 
 ### Power Supply
@@ -77,9 +79,23 @@ If these sensors are not happy, the phone will alarm, and will go “Out of Serv
 
 Provisioning the Millennium Terminal is accomplished through the craft access menu on the terminal itself.  For this, you will need the terminal’s access code, and a PIN.  The default Access Code is 2727378 (CRASERV).
 
-With the upper housing of the phone locked, take the handset off the cradle and replace it.  Then key in 2727378.  You will be prompted for a PIN, use anything above 5000, like 55555.  Unlock the upper housing with a T-Key when prompted.  You do not need to open the upper housing.
+With the upper housing of the phone locked, take the handset off the cradle and replace it.  Then key in 2727378 (CRASERV.)  You will be prompted for a PIN, use anything above 50000, like 55555.  Unlock the upper housing with a T-Key when prompted.  You do not need to open the upper housing.
 
-Start `mm_manager`.
+Start `mm_manager`:
+
+
+```
+./mm_manager -m -n 18005551234 -f /dev/ttyACM0 -vv -l install.bytes
+```
+
+
+Where:
+
+	18005551234 should be replaced by the phone number of your Manager.
+
+	/dev/ttyACM0 should be replaced by your modem device.
+
+	install.bytes is a log file that will contain all of the data received and sent by the manager.
 
 Follow on-screen prompts on the Terminal to install.
 
@@ -87,18 +103,22 @@ Key in this Terminal’s telephone number (10-digits) NPA-NXX-XXXX.
 
 Key in this Terminal’s 10-digit serial number (1234567890 is fine.)
 
-Key in the Manager’s phone number (I use 1-855-288-2568, which I intercept in the Asterisk dialplan and send to the modem connected to the computer running mm_manager.)
+Key in the Manager’s phone number (I use 1-800-555-1234, which I intercept in the Asterisk dialplan and send to the modem connected to the computer running `mm_manager`.)
 
  
 
 
 # Configuration Tables
 
-Communication with the Nortel Millennium involves sending and receiving tables.  Tables are numbered 1 through 155, and contain configuration information sent to the terminal or query / status information received from the terminal.  Tables are of fixed size, depending on type of table.  Some of the important tables for configuring a millennium phone include:
+Communication with the Nortel Millennium involves sending and receiving tables.  Tables are numbered 1 through 155, and contain configuration information sent to the terminal or query / status information received from the terminal.  Tables are of fixed size, depending on the type of table.
 
-Each packet response from the Manager includes the Terminal’s phone number, followed by a byte containing the Table ID of the current table being sent by the Manager.
+Each packet response from the Manager includes the Terminal’s phone number, followed by a byte containing the Table ID of the current table being sent by the Manager.  Multiple tables may be packed into a single packet (the maximum packet table payload length is 245 bytes.)
+
+In the case of large table download (> 245 bytes) to the Millennium terminal, the table payload is split into 245-byte chunks, but the Table ID is only included in the first packet.
 
 The following are some of the tables used by the Millennium terminal.  They should be customized (using a hex editor) for your specific phone.  Some parameters (like NCC numbers and Access Code) can be changed via command-line parameters to `mm_manager`.
+
+Some of the important tables for configuring a Millennium terminal include:
 
 
 <table>
@@ -257,7 +277,9 @@ TCOLLCT
    </td>
    <td>1108
    </td>
-   <td>Provider names, 1st=coin, 3rd=credit, 2nd=smart card?
+   <td>CARRIER
+<p>
+9 + (33 x 33) + 10 
    </td>
   </tr>
   <tr>
@@ -269,7 +291,7 @@ TCOLLCT
    </td>
    <td>1152
    </td>
-   <td>HOTRNG
+   <td>HOTRNG 36 x 32
    </td>
   </tr>
   <tr>
@@ -285,17 +307,15 @@ TCOLLCT
    </td>
   </tr>
   <tr>
-   <td>92
+   <td>92B
    </td>
    <td>0x5c
    </td>
-   <td>200 Number Call Screening List P2-277
-<p>
-(RDLIST?)
+   <td>180 Number Call Screening List P2-277
    </td>
    <td>3060
    </td>
-   <td>Flags:
+   <td>(17 x 180) Flags:
 <p>
 0x00=unused
 <p>
@@ -383,7 +403,7 @@ Qty 400: 20-line VFD strings
    </td>
    <td>0x48
    </td>
-   <td>Spare Table (LCD?)
+   <td>Spare Table
    </td>
    <td>1000
    </td>
@@ -675,6 +695,23 @@ FLAG Bits:
 Separate sequence numbers are counted for each of tx_seq and rx_seq.  ACKs should always be sent with the same sequence as the last received Rx packet.  Tx seq is incremented after every successful packet transmission, and reset when the terminal disconnects.
 
 
+# Debugging
+
+`mm_manager` can log all bytes sent to or received from a Millennium terminal.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
+
+One useful trick is to parse the transcript with `mm_manager`, and save it to a file.  Then the code can be modified and improved and tested by re-running the transcript through `mm_manager` and comparing it with the previous run using a tool such as `tkdiff`.
+
+
+# Known Issues
+
+
+
+1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a long time for the modem to detect this condition and go back on-hook.  One way around this is to kill `mm_manager` and restart it, before proceeding with the configuration download.
+2. Even though the baud rate for the Millennium Terminal is 1200bps, the Manager’s modem is configured for 19.2Kbps.  This is fine for newer modems, but will cause issues for older modems that don’t support this baud rate.
+3. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
+4. Lots of tables are not well understood.  Please help figure more out if you can.
+
+
 # References
 
 [Nortel Millennium on Wikipedia](https://en.wikipedia.org/wiki/Nortel_payphones#Millennium)
@@ -682,3 +719,7 @@ Separate sequence numbers are counted for each of tx_seq and rx_seq.  ACKs shoul
 [Chaos Computer Club Muenchen](https://wiki.muc.ccc.de/millennium:start)
 
 [muccc / millennium on GitHub](https://github.com/muccc/millennium/)
+
+[Millennium Database Design Report MSR 2.1](https://github.com/muccc/millennium/blob/master/documentation/manager/A0xxxxxx_00_02.pdf)
+
+[MIllennium Multi-Pay Terminal Installation, Operation, and Maintenance Guide](https://github.com/muccc/millennium/blob/master/documentation/nortel_millennium_text.pdf)

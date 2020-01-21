@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
                        "\t-h this help.\n"
                        "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n" \
                        "\t-m use serial modem (specify device with -f)\n" \
-                       "\t-n <Primary NCC Number> [-t <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n");
+                       "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n");
                        return(0);
                        break;
             case 'a':
