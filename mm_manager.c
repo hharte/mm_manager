@@ -271,11 +271,9 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
         ppayload = pkt->payload;
 
         if(pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
-            for (i=0; i < PKT_TABLE_ID_OFFSET; i++) {
-                context->phone_number[i*2] = ((*ppayload & 0xf0) >> 4) + '0';
-                context->phone_number[i*2+1] = (*ppayload++ & 0x0f) + '0';
-            }
-            context->phone_number[10] = '\0';
+
+            phone_num_to_string(context->phone_number, sizeof(context->phone_number), ppayload, PKT_TABLE_ID_OFFSET);
+            ppayload += PKT_TABLE_ID_OFFSET;
 
             if (context->debuglevel > 1) printf("\tReceived packet from phone# %s\n", context->phone_number);
         } else {
@@ -400,15 +398,24 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 }
                 case TABLE_ID_CDR_POST_MSR15: {
                     cdr_record_t *cdr = (cdr_record_t *)ppayload;
+                    char phone_number_string[21];
                     ppayload += sizeof(cdr_record_t);
 
-                    printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d: CDR Seq: %04d (0x%04x)\n", 
-                        cdr->timestamp[0] + 1900,
-                        cdr->timestamp[1],
-                        cdr->timestamp[2],
-                        cdr->timestamp[3],
-                        cdr->timestamp[4],
-                        cdr->timestamp[5],
+                    printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d DN: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, CDR Seq: %04d (0x%04x) \n", 
+                        cdr->start_timestamp[0] + 1900,
+                        cdr->start_timestamp[1],
+                        cdr->start_timestamp[2],
+                        cdr->start_timestamp[3],
+                        cdr->start_timestamp[4],
+                        cdr->start_timestamp[5],
+                        cdr->call_duration[0],
+                        cdr->call_duration[1],
+                        cdr->call_duration[2],
+                        phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num, sizeof(cdr->called_num)),
+                        (float)cdr->call_cost[0] / 100,
+                        (float)cdr->call_cost[1] / 100,
+                        cdr->carrier_code,
+                        cdr->rate_type,
                         cdr->seq, cdr->seq);
                     *pack_payload++ = TABLE_ID_CDR_ACK;
                     *pack_payload++ = cdr->seq & 0xFF;
@@ -578,13 +585,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     rate_request_t *rate_request = (rate_request_t *)ppayload;
                     ppayload += sizeof(rate_request_t);
 
-
-                    for (i=0; i < 10; i++) {
-                        phone_number[i*2] = ((rate_request->phone_number[i] & 0xf0) >> 4) + '0';
-                        if (phone_number[i*2] == '>') break;
-                        phone_number[i*2+1] = (rate_request->phone_number[i] & 0x0f) + '0';
-                        if (phone_number[i*2+1] == '>') break;
-                    }
+                    phone_num_to_string(phone_number, sizeof(phone_number), rate_request->phone_number, sizeof(rate_request->phone_number));
                     printf("\t\tRate request: %04d-%02d-%02d %02d:%02d:%02d: Phone number: %s, seq=%d, %d,%d,%d,%d,%d,%d.\n",
                             rate_request->timestamp[0] + 1900,
                             rate_request->timestamp[1],

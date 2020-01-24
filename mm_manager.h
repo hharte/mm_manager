@@ -140,14 +140,15 @@ typedef struct mm_maint_table {
 } mm_maint_t;
 
 typedef struct cdr_record {
-    uint8_t pad[2];
-    uint8_t called_num[9];
-    uint8_t zero[1];
+    uint8_t rate_type;
+    uint8_t called_num[10];
+    uint8_t carrier_code;
     uint8_t other_num[10];
-    uint8_t pad2[8];
+    uint32_t call_cost[2];
     uint16_t seq;
-    uint8_t timestamp[6];
-    uint8_t pad3[15];
+    uint8_t start_timestamp[6];
+    uint8_t call_duration[3];
+    uint8_t pad3[12];
 } cdr_record_t;
 
 /* TABLE_ID_CASHBOX_COLL_UNIV */
@@ -289,5 +290,6 @@ extern int hangup_modem(int fd);
 /* mm_util */
 extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
 extern void dump_hex(uint8_t *data, int len);
+extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_buf, int num_buf_len);
 
 #pragma pack(pop)

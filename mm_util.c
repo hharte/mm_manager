@@ -71,3 +71,29 @@ void dump_hex(uint8_t *data, int len)
     }           
     printf("\n");
 }
+
+/* Convert encoded phone number into string. */
+extern char *phone_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len)
+{
+    char *pstr = string_buf;
+    int i, j, pn_digit;
+
+    j = 0;
+
+    for (i = 0; i < num_buf_len; i++) {
+        pn_digit = num_buf[i] >> 4;
+        if (pn_digit == 0xe) break;
+        *pstr++ = (pn_digit) + '0';
+        j++;
+        if (j >= (string_buf_len - 1)) break;
+
+        pn_digit = num_buf[i] & 0x0f;
+         if (pn_digit == 0xe) break;
+        *pstr++ = (pn_digit) + '0';
+        j++;
+        if (j >= (string_buf_len - 1)) break;
+    }
+
+    *pstr = '\0';
+    return string_buf;
+}
