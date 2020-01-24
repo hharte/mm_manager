@@ -315,7 +315,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         *pack_payload++ = (ptm->tm_hour & 0xff);     /* Fill current hour (0-23) */
                         *pack_payload++ = (ptm->tm_min & 0xff);      /* Fill current minute (0-59) */
                         *pack_payload++ = (ptm->tm_sec & 0xff);      /* Fill current second (0-59) */
-                        *pack_payload++ = 0;                         /* Hundredths of a second? */
+                        *pack_payload++ = (ptm->tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
                     } else {
                         *pack_payload++ = 119;  // Year
                         *pack_payload++ = 11;   // Month
@@ -323,7 +323,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         *pack_payload++ = 12;   // Hours
                         *pack_payload++ = 34;   // Minutes
                         *pack_payload++ = 56;   // Seconds
-                        *pack_payload++ = 00;   // Hundredths
+                        *pack_payload++ = 1;    // Day of week
                     }
                     printf("Current day/time: %04d-%02d-%02d / %2d:%02d:%02d\n", timestamp[0]+1900,
                                                                                 timestamp[1],
