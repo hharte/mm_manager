@@ -159,8 +159,8 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "-n may only be specified twice.\n");
                     return(-1);
                 }
-                if ((strlen(optarg) < 7) || (strlen(optarg) > 15)) {
-                    fprintf(stderr, "Option -n takes a 7- to 15-digit NCC number.\n");
+                if ((strlen(optarg) < 1) || (strlen(optarg) > 15)) {
+                    fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
                     return(-1);
                 } else {
                     strncpy(mm_context.ncc_number[index], optarg, sizeof(mm_context.ncc_number[0]));
@@ -187,14 +187,14 @@ int main(int argc, char *argv[])
 
     printf("Using access code: %s\n", mm_context.access_code);
 
-    if(strlen(mm_context.ncc_number[0]) >= 7) {
+    if(strlen(mm_context.ncc_number[0]) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context.ncc_number[0]);
-    } else {
+    } else if (mm_context.use_modem == 1) {
         fprintf(stderr, "Error: -n <NCC Number> must be specified.\n");
         return(-1);
     }
 
-    if(strlen(mm_context.ncc_number[1]) >= 7) {
+    if(strlen(mm_context.ncc_number[1]) >= 1) {
         printf("Using Secondary NCC number: %s\n", mm_context.ncc_number[1]);
     }
 
@@ -865,9 +865,17 @@ int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer,
     printf("\t  Primary NCC: %s\n", context->ncc_number[0]);
     for (i = 0; i < (strlen(context->ncc_number[0])); i++) {
         if (i % 2 == 0) {
-            table_buffer[PRI_NCC_OFFSET + (i >> 1)]  = (context->ncc_number[0][i] - '0') << 4;
+            if (context->ncc_number[0][i] == '0') {
+                table_buffer[PRI_NCC_OFFSET + (i >> 1)]  = 0xa0;
+            } else {
+                table_buffer[PRI_NCC_OFFSET + (i >> 1)]  = (context->ncc_number[0][i] - '0') << 4;
+            }
         } else {
-            table_buffer[PRI_NCC_OFFSET + (i >> 1)] |= (context->ncc_number[0][i] - '0');
+            if (context->ncc_number[0][i] == '0') {
+                table_buffer[PRI_NCC_OFFSET + (i >> 1)] |= 0x0a;
+            } else {
+                table_buffer[PRI_NCC_OFFSET + (i >> 1)] |= (context->ncc_number[0][i] - '0');
+            }
         }
     }
 
@@ -876,9 +884,17 @@ int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer,
         printf("\tSecondary NCC: %s\n\n", context->ncc_number[1]);
         for (i = 0; i < strlen(context->ncc_number[1]); i++) {
             if (i % 2 == 0) {
-                table_buffer[SEC_NCC_OFFSET + (i / 2)]  = (context->ncc_number[1][i] - '0') << 4;
+                if (context->ncc_number[1][i] == '0') {
+                    table_buffer[SEC_NCC_OFFSET + (i >> 1)]  = 0xa0;
+                } else {
+                    table_buffer[SEC_NCC_OFFSET + (i >> 1)]  = (context->ncc_number[1][i] - '0') << 4;
+                }
             } else {
-                table_buffer[SEC_NCC_OFFSET + (i / 2)] |= (context->ncc_number[1][i] - '0');
+                if (context->ncc_number[1][i] == '0') {
+                    table_buffer[SEC_NCC_OFFSET + (i >> 1)] |= 0x0a;
+                } else {
+                    table_buffer[SEC_NCC_OFFSET + (i >> 1)] |= (context->ncc_number[1][i] - '0');
+                }
             }
         }
     }
