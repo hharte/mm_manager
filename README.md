@@ -11,9 +11,9 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 
 # Compatibility
 
-`mm_manager` runs on Linux and MacOS X.  
+`mm_manager` runs on Linux and MacOS X.
 
- 
+
 
 The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (1.20 firmware) and V1.3 Control PCP (2.20 firmware.)  It may work with other versions, please let me know.
 
@@ -65,14 +65,14 @@ If you are using VoIP, make sure to use the u-law PCM codec, disable silence sup
 
 ### Power Supply
 
-The Nortel Millennium terminal requires 24VDC to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.  
+The Nortel Millennium terminal requires 24VDC to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.
 
 
 ### Other Terminal Installation Notes
 
 The Millennium Terminal is an advanced payphone that contains a multitude of sensors to determine if the phone is installed and operating properly.  This includes sensors to make sure that a coin box is installed, and also a sensor to ensure the coin vault door is in place.  If your Millennium does not have a coin box, please obtain one.  The coin boxes are standard Western Electric / Northern Electric Single Slot, readily available.  In a pinch, the coin box sensor switch can be taped in the closed position.  The same goes for the coin vault door.  The coin vault door must be in place and locked.  If your phone is missing the coin vault lock, as is quite common for these phones purchased on the second-hand market, please obtain the correct lock, or tape the switch closed.
 
-If these sensors are not happy, the phone will alarm, and will go “Out of Service.” 
+If these sensors are not happy, the phone will alarm, and will go “Out of Service.”
 
 
 # Millennium Terminal Provisioning
@@ -105,7 +105,7 @@ Key in this Terminal’s 10-digit serial number (1234567890 is fine.)
 
 Key in the Manager’s phone number (I use 1-800-555-1234, which I intercept in the Asterisk dialplan and send to the modem connected to the computer running `mm_manager`.)
 
- 
+
 
 
 # Configuration Tables
@@ -279,7 +279,7 @@ TCOLLCT
    </td>
    <td>CARRIER
 <p>
-9 + (33 x 33) + 10 
+9 + (33 x 33) + 10
    </td>
   </tr>
   <tr>
@@ -381,7 +381,7 @@ Qty 400: 20-line VFD strings
    </td>
    <td>English: V1.3 Only
 <p>
-Qty 400: 20-line VFD strings 
+Qty 400: 20-line VFD strings
 <p>
 0x71B5A offset in U2 ROM.
    </td>
@@ -395,7 +395,7 @@ Qty 400: 20-line VFD strings
    </td>
    <td>1191
    </td>
-   <td>RATE 
+   <td>RATE
    </td>
   </tr>
   <tr>
@@ -549,11 +549,11 @@ Qty 400: 20-line VFD strings
    </td>
    <td>Advertising Prompts
 <p>
-seq, text, duration(2), effects 
+seq, text, duration(2), effects
    </td>
    <td>480
    </td>
-   <td>ADMESS 
+   <td>ADMESS
 <p>
 Text info about rates for local and anywhere in the US Calls. 20 entries.
    </td>
@@ -579,7 +579,7 @@ Text info about rates for local and anywhere in the US Calls. 20 entries.
    </td>
    <td>47
    </td>
-   <td>TERM Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.  
+   <td>TERM Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.
    </td>
   </tr>
   <tr>
@@ -609,7 +609,7 @@ Text info about rates for local and anywhere in the US Calls. 20 entries.
 </table>
 
 
- 
+
 
 
 # Low-Level Protocol
@@ -627,7 +627,7 @@ The low-level protocol sent over the modem is a stream of bytes framed within ST
    </td>
    <td>DATA
    </td>
-   <td>CRC-16 
+   <td>CRC-16
    </td>
    <td>END
    </td>
@@ -707,9 +707,20 @@ One useful trick is to parse the transcript with `mm_manager`, and save it to a 
 
 
 1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a long time for the modem to detect this condition and go back on-hook.  One way around this is to kill `mm_manager` and restart it, before proceeding with the configuration download.
-2. Even though the baud rate for the Millennium Terminal is 1200bps, the Manager’s modem is configured for 19.2Kbps.  This is fine for newer modems, but will cause issues for older modems that don’t support this baud rate.
+2. `mm_manager` can run under the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) available on Windows 10.  Note, however, that there may be some issue with modem initialization.  To work around this, connect to your modem using a program like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) first, to make sure it is working, then quit Putty and run `mm_manager`.
 3. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
 4. Lots of tables are not well understood.  Please help figure more out if you can.
+5. Found by Troy Krahn: Force download from Millennium Maintenance Mode does not download tables, even though phone shows that it completed successfully.
+
+
+# Further Work Needed (Feel free to help!)
+
+
+
+1. Automatically generate NPA and LCD tables based on rate center and latest [information available from NANPA](https://nationalnanpa.com/reports/reports_cocodes.html).
+2. Improve modem robustness.
+3. Port modem code to Win32 to support Windows XP/Windows 7.
+4. Lots of other things, please file bugs as you find them.
 
 
 # References
@@ -720,6 +731,11 @@ One useful trick is to parse the transcript with `mm_manager`, and save it to a 
 
 [muccc / millennium on GitHub](https://github.com/muccc/millennium/)
 
+[Description of Millennium Tables](https://wiki.muc.ccc.de/millennium:dlog:start)
+
+[millenniium-panel on GitHub](https://github.com/pc-coholic/millennium-panel)
+
 [Millennium Database Design Report MSR 2.1](https://github.com/muccc/millennium/blob/master/documentation/manager/A0xxxxxx_00_02.pdf)
 
-[MIllennium Multi-Pay Terminal Installation, Operation, and Maintenance Guide](https://github.com/muccc/millennium/blob/master/documentation/nortel_millennium_text.pdf)
+[Millennium Multi-Pay Terminal Installation, Operation, and Maintenance Guide](https://github.com/muccc/millennium/blob/master/documentation/nortel_millennium_text.pdf)
+
