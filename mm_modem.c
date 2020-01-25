@@ -65,10 +65,10 @@ int init_port(int fd)
     tcgetattr(fd, &options);
 
     /*
-    * Set the baud rates to 19200...
+    * Set the baud rates to 1200...
     */
-    cfsetispeed(&options, B19200);
-    cfsetospeed(&options, B19200);
+    cfsetispeed(&options, B1200);
+    cfsetospeed(&options, B1200);
 
     /*
     * Enable the receiver and set local mode...
