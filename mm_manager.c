@@ -346,10 +346,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                             terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
                             terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
 
-                    if (terminal_upd_reason & TTBLREQ_CASHBOX_STATUS) {
-                        cashbox_pending = 1;
-                    }
-
+                    cashbox_pending = 1;
                     table_download_pending = 1;
                     break;
                 }
@@ -904,6 +901,3 @@ int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer,
 
     return 0;
 }
-
-
-
