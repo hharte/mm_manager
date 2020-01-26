@@ -1,12 +1,12 @@
 /*
  * This is a "Manager" for the Nortel Millennium payhone.
- * 
+ *
  * It can provision a Nortel Millennium payphone with Rev 1.0 or 1.3
  * Control PCP.  CDRs, Alarms, and Maintenance Reports can also be
  * retieved.
- *  
+ *
  * www.github.com/hharte/mm_manager
- * 
+ *
  * (c) 2020, Howard M. Harte
  */
 
@@ -24,42 +24,44 @@
 #define PKT_TABLE_ID_OFFSET         (0x05)
 #define PKT_TABLE_DATA_OFFSET       (PKT_TABLE_ID_OFFSET + 1)
 
-/* TERMSCH (Terminal Schedule) pp. 2-533 */
-#define TABLE_ID_CARD_AUTH_REQ      0x01    // 1: Card Authorization Request
-#define TABLE_ID_AUTH_REQ_MSR15     0x02    // 2: Formatted/Unformatted Authorization Request – Post MSR 1.5 message.
-#define TABLE_ID_AUTH_RESPONSE      0x03    // 3: Authorization Response
-#define TABLE_ID_CARD_CDR           0x04    // 4: Card Call Detail Record
-#define TABLE_ID_CDR_ACK            0x05    // 5: Call Detail Acknowledge
-#define TABLE_ID_MAINT_ACTION_REPORT 0x06   // 6: Maintenance Action Report/Request Message
-#define TABLE_ID_ALARM_MSG          0x07    // 7: Alarm Message
-#define TABLE_ID_TERM_CALL_IN_MSG   0x08    // 8: Terminal Call-in Message
-#define TABLE_ID_TERM_CALL_BACK_MSG 0x09    // 9: Terminal Call-back Message
-#define TABLE_ID_TERM_STATUS_MSG    0x0a    // 10: Terminal Status Message
-#define TABLE_ID_CARD_CALL_STATS    0x0b    // 11: Summary Card Call Statistics Record
-#define TABLE_ID_PERF_STATS         0x0c    // 12: Performance Statistics Record
-#define TABLE_ID_END_OF_DATA_MSG    0x0d    // 13: End of Data Message
-#define TABLE_ID_TABLE_UPDATE_ACK   0x0e    // 14: Table Update Acknowledge Message
-#define TABLE_ID_MAINT_ACK          0x0f    // 15: Maintenance Acknowledge
-#define TABLE_ID_ALARM_ACK          0x10    // 16: Alarm Acknowledge
-#define TABLE_ID_XMIT_TERMINAL_DATA 0x11    // 17: Transmit Terminal Data
-#define TABLE_ID_TERM_TABLE_DATA_UPD 0x12   // 18: Terminal Table Data Update
-#define TABLE_ID_CALL_BACK_REQUEST  0x13    // 19: Call Back Request
-#define TABLE_ID_SET_DATE_TIME      0x14    // 20: Date/Time Synchronization
-#define TABLE_ID_TERM_ACCESS_PARAM  0x15    // 21: Terminal Access Parameters
-#define TABLE_ID_INST_SERV_PARAM    0x1f    // 31: Installation/Servicing Parameters
-#define TABLE_ID_TIME_SYNC_REQ      0x24    // 36: Time Synchronization Request
-#define TABLE_ID_PERF_STATS_RECORD  0x25    // 37: Performance Statistics Record Message
-#define TABLE_ID_CASH_BOX_STATUS    0x26    // 38: Cash Box Status Message – Universal
-#define TABLE_ID_ATTN_REQ_CDR_UPLD  0x2a    // 42: Attention Request Call Records Upload
-#define TABLE_ID_ATTN_REQ_TABLE_UPD 0x2c    // 44: Attention Request Table Update
-#define TABLE_ID_CASHBOX_COLL_UNIV  0x33    // 51: Cash Box Collection Message – Universal
-#define TABLE_ID_CDR_POST_MSR15     0x35    // 53: Call Detail Record Message – Post MSR 1.5
-#define TABLE_ID_SUMMARY_CALL_STATS 0x38    // 56: Summary Call Statistics Record – Post MSR 1.6
-#define TABLE_ID_CARR_CALL_STATS    0x39    // 57: Carrier Call Statistics Message 
-#define TABLE_ID_SW_VERSION_MSG     0x3c    // 60: Terminal Software Version Message
-#define TABLE_ID_RATE_REQ_UNIV      0x3f    // 63: Rate Request Message – Universal
-#define TABLE_ID_RATE_RESP_UNIV     0x40    // 64: Rate Response Message – Universal
-#define TABLE_ID_EXP_CAR_CALL_STATS 0x47    // 71: Expanded Carrier Call Statistics Message
+/* TERMSCH (Terminal Schedule) pp. 2-533
+ * Renamed per https://wiki.millennium.management/dlog:start
+ */
+#define DLOG_MT_CARD_AUTH_REQ       0x01    // 1: Card Authorization Request
+#define DLOG_MT_FUNF_CARD_AUTH      0x02    // 2: Formatted/Unformatted Authorization Request – Post MSR 1.5 message.
+#define DLOG_MT_AUTH_RESPONSE       0x03    // 3: Authorization Response
+#define DLOG_MT_CD_CALL_DETAILS     0x04    // 4: Card Call Detail Record
+#define DLOG_MT_CDR_DETAILS_ACK     0x05    // 5: Call Detail Acknowledge
+#define DLOG_MT_MAINT_REQ           0x06    // 6: Maintenance Action Report/Request Message
+#define DLOG_MT_ALARM               0x07    // 7: Alarm Message
+#define DLOG_MT_CALL_IN             0x08    // 8: Terminal Call-in Message
+#define DLOG_MT_CALL_BACK           0x09    // 9: Terminal Call-back Message
+#define DLOG_MT_TERM_STATUS         0x0a    // 10: Terminal Status Message
+#define DLOG_MT_CD_CALL_STATS       0x0b    // 11: Summary Card Call Statistics Record
+#define DLOG_MT_PERF_STATS          0x0c    // 12: Performance Statistics Record
+#define DLOG_MT_END_DATA            0x0d    // 13: End of Data Message
+#define DLOG_MT_TAB_UPD_ACK         0x0e    // 14: Table Update Acknowledge Message
+#define DLOG_MT_MAINT_ACK           0x0f    // 15: Maintenance Acknowledge
+#define DLOG_MT_ALARM_ACK           0x10    // 16: Alarm Acknowledge
+#define DLOG_MT_TRANS_DATA          0x11    // 17: Transmit Terminal Data
+#define DLOG_MT_TABLE_UPD           0x12    // 18: Terminal Table Data Update
+#define DLOG_MT_CALL_BACK_REQ       0x13    // 19: Call Back Request
+#define DLOG_MT_TIME_SYNC           0x14    // 20: Date/Time Synchronization
+#define DLOG_MT_NCC_TERM_PARAMS     0x15    // 21: Terminal Access Parameters
+#define DLOG_MT_INSTALL_PARAMS      0x1f    // 31: Installation/Servicing Parameters
+#define DLOG_MT_TIME_SYNC_REQ       0x24    // 36: Time Synchronization Request
+#define DLOG_MT_PERF_STATS_MSG      0x25    // 37: Performance Statistics Record Message
+#define DLOG_MT_CASH_BOX_STATUS     0x26    // 38: Cash Box Status Message – Universal
+#define DLOG_MT_ATN_REQ_CDR_UPL     0x2a    // 42: Attention Request Call Records Upload
+#define DLOG_MT_ATN_REQ_TAB_UPD     0x2c    // 44: Attention Request Table Update
+#define DLOG_MT_CASH_BOX_COLLECTION 0x33    // 51: Cash Box Collection Message – Universal
+#define DLOG_MT_CALL_DETAILS        0x35    // 53: Call Detail Record Message – Post MSR 1.5
+#define DLOG_MT_SUMMARY_CALL_STATS  0x38    // 56: Summary Call Statistics Record – Post MSR 1.6
+#define DLOG_MT_CARRIER_CALL_STATS  0x39    // 57: Carrier Call Statistics Message
+#define DLOG_MT_SW_VERSION          0x3c    // 60: Terminal Software Version Message
+#define DLOG_MT_RATE_REQUEST        0x3f    // 63: Rate Request Message – Universal
+#define DLOG_MT_RATE_RESPONSE       0x40    // 64: Rate Response Message – Universal
+#define DLOG_MT_CARRIER_STATS_EXP   0x47    // 71: Expanded Carrier Call Statistics Message
 
 /* TTBLREQ (Terminal Table Request) pp. 2-651 */
 #define TTBLREQ_CRAFT_FORCE_DL      0x01    // Menu Item - Craft I/F Table Download
@@ -127,19 +129,19 @@ typedef struct mm_table {
 
 /*
  * These data structures match the ones generated and
- * consumed by the terminal. 
+ * consumed by the terminal.
  */
-typedef struct mm_alarm_table {
+typedef struct dlog_mt_alarm {
     uint8_t timestamp[6];
     uint8_t alarm_id;
-} mm_alarm_t;
+} dlog_mt_alarm_t;
 
-typedef struct mm_maint_table {
+typedef struct dlog_mt_maint_req {
     uint16_t type;
     uint8_t access_pin[3];
-} mm_maint_t;
+} dlog_mt_maint_req_t;
 
-typedef struct cdr_record {
+typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
     uint8_t carrier_code;
@@ -149,14 +151,14 @@ typedef struct cdr_record {
     uint8_t start_timestamp[6];
     uint8_t call_duration[3];
     uint8_t pad3[12];
-} cdr_record_t;
+} dlog_mt_call_details_t;
 
-/* TABLE_ID_CASHBOX_COLL_UNIV */
-typedef struct cashbox_coll_univ {
+/* DLOG_MT_CASH_BOX_COLLECTION */
+typedef struct dlog_mt_cash_box_collection {
     uint8_t pad[14];
     uint8_t timestamp[6];
     uint8_t cash[50];
-} cashbox_coll_univ_t;
+} dlog_mt_cash_box_collection_t;
 
 /* TABLE_ID_CASHBOX_STATUS_UNIV */
 typedef struct cashbox_status_univ {
@@ -164,33 +166,33 @@ typedef struct cashbox_status_univ {
     uint8_t status[50];
 } cashbox_status_univ_t;
 
-/* TABLE_ID_PERF_STATS_RECORD 97 bytes */
-typedef struct perf_stats_record {
+/* DLOG_MT_PERF_STATS_RECORD 97 bytes */
+typedef struct dlog_mt_perf_stats_record {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
     uint8_t pad[85];
-} perf_stats_record_t;
+} dlog_mt_perf_stats_record_t;
 
-/* TABLE_ID_SUMMARY_CALL_STATS */
-typedef struct summary_call_stats {
+/* DLOG_MT_SUMMARY_CALL_STATS */
+typedef struct dlog_mt_summary_call_stats {
     uint8_t stats[80];
-} summary_call_stats_t;
+} dlog_mt_summary_call_stats_t;
 
-/* TABLE_ID_CARR_CALL_STATS 106 bytes */
-typedef struct exp_car_call_stats {
+/* DLOG_MT_CARRIER_CALL_STATS 106 bytes */
+typedef struct dlog_mt_carrier_call_stats {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
     uint8_t pad[94];
-} carr_call_stats_t;
+} dlog_mt_carrier_call_stats_t;
 
-/* TABLE_ID_EXP_CAR_CALL_STATS */
-typedef struct exp_carr_call_stats {
+/* DLOG_MT_CARRIER_STATS_EXP */
+typedef struct dlog_mt_carrier_stats_exp {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
-} exp_carr_call_stats_t;
+} dlog_mt_carrier_stats_exp_t;
 
-/* TSWVERS pp. 2-647 */
-typedef struct term_version {
+/* DLOG_MT_SW_VERSION (TSWVERS pp. 2-647) */
+typedef struct dlog_mt_sw_version {
     uint8_t control_rom_edition[7];
     uint8_t control_version[4];
     uint8_t telephony_rom_edition[7];
@@ -198,15 +200,15 @@ typedef struct term_version {
     uint8_t term_type;
     uint8_t validator_sw_ver[2];
     uint8_t validator_hw_ver[2];
-} term_version_t;
+} dlog_mt_sw_version_t;
 
-/* TABLE_ID_RATE_REQ_UNIV */
-typedef struct rate_request {
+/* DLOG_MT_RATE_REQUEST */
+typedef struct dlog_mt_rate_request {
     uint16_t seq;
     uint8_t phone_number[10];
     uint8_t timestamp[6];
     uint8_t pad[6];
-} rate_request_t;
+} dlog_mt_rate_request_t;
 
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
@@ -216,7 +218,7 @@ typedef struct rate_request {
 #define DATAJACK_ALLOW_DA_CALLS                 (1 << 3)    /* Indicates wether directory assistance calls are allowed during a datajack call. */
 #define DATAJACK_FLAGS_4_7                      (0xF0)      /* Datajack flags (unused) */
 
-/* See TSTATUS, 2-637 */ 
+/* See TSTATUS, 2-637 */
 #define TSTATUS_HANDSET_DISCONT_IND             (1 << 0)
 #define TSTATUS_TELEPHONY_STATUS_IND            (1 << 1)
 #define TSTATUS_EPM_SAM_NOT_RESPONDING          (1 << 2)
@@ -258,11 +260,11 @@ typedef struct rate_request {
 #define TSTATUS_CODE_SERVE_CONNECTION_FAILURE   (1 << 38)
 #define TSTATUS_CODE_SERVER_ABORTED             (1 << 39)
 
-/* TABLE_ID_TERM_STATUS_MSG */
-typedef struct term_status {
+/* DLOG_MT_TERM_STATUS */
+typedef struct dlog_mt_term_status {
     uint8_t serialnum[5];
     uint8_t status[5];
-} term_status_t;
+} dlog_mt_term_status_t;
 
 /* MM Table Operations */
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
