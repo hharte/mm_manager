@@ -1,12 +1,12 @@
 /*
  * This is a "Manager" for the Nortel Millennium payhone.
- * 
+ *
  * It can provision a Nortel Millennium payphone with Rev 1.0 or 1.3
  * Control PCP.  CDRs, Alarms, and Maintenance Reports can also be
  * retieved.
- * 
+ *
  * www.github.com/hharte/mm_manager
- *  
+ *
  * (c) 2020, Howard M. Harte
  */
 
@@ -42,7 +42,7 @@ int open_port(char *modem_dev)
 }
 
 /* Initialize Serial Port options */
-int init_port(int fd)
+int init_port(int fd, int baudrate)
 {
     struct termios options;
 
@@ -65,10 +65,10 @@ int init_port(int fd)
     tcgetattr(fd, &options);
 
     /*
-    * Set the baud rates to 1200...
+    * Set the baud rates to specified baudrate...
     */
-    cfsetispeed(&options, B1200);
-    cfsetospeed(&options, B1200);
+    cfsetispeed(&options, baudrate);
+    cfsetospeed(&options, baudrate);
 
     /*
     * Enable the receiver and set local mode...
@@ -150,7 +150,7 @@ int hangup_modem(int fd)
     send_at_command(fd, "+++");
     sleep(1);
     send_at_command(fd, "ATH0");
-    
+
     return (0);
 }
 /* Send AT Command to Modem */

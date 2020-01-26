@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     char *modem_dev = NULL;
     int index;
     int c;
+    int baudrate = 19200;
 
     time_t rawtime;
     struct tm *ptm;
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
     mm_context.ncc_number[0][0] = '\0';
     mm_context.ncc_number[1][0] = '\0';
 
-    while ((c = getopt (argc, argv, "rvml:f:ha:n:")) != -1) {
+    while ((c = getopt (argc, argv, "rvmb:l:f:ha:n:")) != -1) {
         switch (c)
         {
             case 'h':
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
                        "\t-h this help.\n"
                        "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n" \
                        "\t-m use serial modem (specify device with -f)\n" \
+                       "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200."
                        "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n");
                        return(0);
                        break;
@@ -145,6 +147,9 @@ int main(int argc, char *argv[])
             case 'm':
                 mm_context.use_modem = 1;
                 break;
+            case 'b':
+                baudrate = atoi(optarg);
+                break;
             case 'n':
                 if(index > 1) {
                     fprintf(stderr, "-n may only be specified twice.\n");
@@ -159,7 +164,7 @@ int main(int argc, char *argv[])
                 }
                 break;
             case '?':
-                if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n')
+                if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n' || optopt == 'b')
                     fprintf (stderr, "Option -%c requires an argument.\n", optopt);
                 else
                     fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -196,8 +201,14 @@ int main(int argc, char *argv[])
         }
         mm_context.connected = 1;
     } else {
+        if (baudrate < 1200) {
+            printf("Error: baud rate must be 1200 bps or faster.\n");
+            return(-1);
+        }
+        printf("Baud Rate: %d\n", baudrate);
+
         mm_context.fd = open_port(modem_dev);
-        init_port(mm_context.fd);
+        init_port(mm_context.fd, baudrate);
         status = init_modem(mm_context.fd);
         if (status == 0) {
             printf("Modem initialized.\n");

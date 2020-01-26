@@ -284,7 +284,7 @@ extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
 /* modem functions: */
 extern int open_port(char *modem_dev);
-extern int init_port(int fd);
+extern int init_port(int fd, int baudrate);
 extern int init_modem(int fd);
 extern int wait_for_connect(int fd);
 extern int hangup_modem(int fd);
