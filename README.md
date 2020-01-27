@@ -40,13 +40,15 @@ Simply download the source files and example tables from GitHub.  Then type “m
 
 
 ```
-usage: mm_manager [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>]
+usage: mm_manager [-vhm] [-b <baudrate] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>]
 	-v verbose 	multiple v's increase verbosity.
 	-f <filename> 	modem device or file
 	-h 			this help.
 	-l <logfile> 	log bytes transmitted to and received from
             the terminal. Useful for debugging.
 	-m 			use serial modem (specify device with -f)
+   -b			   <baudrate> - Modem baud rate, in bps.  Defaults
+ 			   to 19200.
 	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify
             primary and optionally secondary NCC number.
 ```
@@ -723,7 +725,6 @@ If you find a bug, please provide the following information when you report the 
 2. `mm_manager` can run under the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) available on Windows 10.  Note, however, that there may be some issue with modem initialization.  To work around this, connect to your modem using a program like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) first, to make sure it is working, then quit Putty and run `mm_manager`.
 3. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
 4. Lots of tables are not well understood.  Please help figure more out if you can.
-5. Found by Troy Krahn: Force download from Millennium Maintenance Mode does not download tables, even though phone shows that it completed successfully.
 
 
 # Further Work Needed (Feel free to help!)
