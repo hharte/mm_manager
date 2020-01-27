@@ -210,6 +210,28 @@ typedef struct dlog_mt_rate_request {
     uint8_t pad[6];
 } dlog_mt_rate_request_t;
 
+/* DLOG_MT_RATE_RESPONSE  (25 bytes) */
+typedef struct dlog_mt_rate_response {
+    uint8_t rate_type;
+    uint16_t initial_period;
+    uint16_t initial_charge;
+    uint16_t additional_period;
+    uint16_t additional_charge;
+    uint8_t pad2[16];
+} dlog_mt_rate_response_t;
+
+typedef enum rate_type {
+    mm_intra_lata = 0,      // 0 Millennium Manager rated Intra-lata
+    lms_rate_local,         // 1 LMS rate (local call)
+    fixed_charge_local,     // 2 Fixed Charge (local call)
+    not_available,          // 3 Rate not available (Not used in RATE table)
+    invalid_npa_nxx,        // 4 Invalid NPA/NXX
+    toll_intra_lata,        // 5 Toll Intra-lata
+    toll_inter_lata,        // 6 Toll Inter-lata
+    mm_inter_lata,          // 7 Millennium Manager rated Inter-lata
+    mm_local                // 8 Millennium Manager rated local
+} rate_type_t;
+
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
 #define DATAJACK_ENABLED                        (1 << 0)    /* Indicates wether terminal allows (1) or blocks (0) datajack calls. */

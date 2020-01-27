@@ -580,7 +580,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 }
                 case DLOG_MT_RATE_REQUEST: {
                     char phone_number[21] = { 0 };
-                    uint8_t rate_response[] = {DLOG_MT_RATE_RESPONSE, 0x28, 0x00, 0xff, 0xff, 0x32, 0x00, 0xff, 0xff, 0x00, 0x00};
+                    dlog_mt_rate_response_t rate_response = { 0 };
                     dlog_mt_rate_request_t *dlog_mt_rate_request = (dlog_mt_rate_request_t *)ppayload;
                     ppayload += sizeof(dlog_mt_rate_request_t);
 
@@ -601,7 +601,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                             dlog_mt_rate_request->pad[4],
                             dlog_mt_rate_request->pad[5]);
 
-                    memcpy(pack_payload, rate_response, sizeof(rate_response));
+                    rate_response.rate_type = (uint8_t)mm_local;
+                    rate_response.initial_period = 60;
+                    rate_response.initial_charge = 125;
+                    rate_response.additional_period = 120;
+                    rate_response.additional_charge = 35;
+                    *pack_payload++ = DLOG_MT_RATE_RESPONSE;
+                    memcpy(pack_payload, &rate_response, sizeof(rate_response));
                     pack_payload += sizeof(rate_response);
                     break;
                 }
