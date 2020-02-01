@@ -21,6 +21,16 @@
 #define FLAG_RETRY      (1 << 2)
 #define FLAG_SEQUENCE   (0x3)
 
+#define PKT_SUCCESS                 (0)
+#define PKT_ERROR_RETRY             (1 << 0)
+#define PKT_ERROR_DISCONNECT        (1 << 1)
+#define PKT_ERROR_CRC               (1 << 2)
+#define PKT_ERROR_FRAMING           (1 << 3)
+#define PKT_ERROR_TIMEOUT           (1 << 4)
+#define PKT_ERROR_EOF               (1 << 5)
+
+#define PKT_TIMEOUT_MAX             (10)    // Maximum time  to wait for modem character
+
 #define PKT_TABLE_ID_OFFSET         (0x05)
 #define PKT_TABLE_DATA_OFFSET       (PKT_TABLE_ID_OFFSET + 1)
 
@@ -306,8 +316,8 @@ int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer,
 
 /* MM Protocol */
 extern int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
-extern int send_mm_packet(mm_context_t *context, uint8_t *payload, int len);
-extern int send_mm_ack(mm_context_t *context);
+extern int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t flags);
+extern int send_mm_ack(mm_context_t *context, uint8_t flags);
 extern int wait_for_mm_ack(mm_context_t *context);
 extern int print_mm_packet(int direction, mm_packet_t *pkt);
 

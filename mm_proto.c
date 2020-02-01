@@ -1,12 +1,12 @@
 /*
  * This is a "Manager" for the Nortel Millennium payhone.
- * 
+ *
  * It can provision a Nortel Millennium payphone with Rev 1.0 or 1.3
  * Control PCP.  CDRs, Alarms, and Maintenance Reports can also be
  * retieved.
- * 
+ *
  * www.github.com/hharte/mm_manager
- *  
+ *
  * (c) 2020, Howard M. Harte
  */
 
@@ -29,7 +29,7 @@
 
 /*
  * Receive a packet from Millennium Terminal.
- * 
+ *
  * Packets are formatted as follows:
  * +------+-------+--------+-----------+--------+-----+
  * |START | FLAGS | LENGTH | DATA .... | CRC-16 | END |
@@ -45,8 +45,10 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     unsigned int databyte;
     unsigned int bytecnt = 0;
     int bytes_processed;
-    uint8_t l2_state = L2_STATE_SEARCH_FOR_START;;
-    
+    uint8_t l2_state = L2_STATE_SEARCH_FOR_START;
+    uint8_t status = PKT_SUCCESS;
+    uint8_t timeout = 0;
+
     pktbufp = pktbuf;
 
     while(pkt_received == 0) {
@@ -54,7 +56,14 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             while(read(context->fd, &databyte, 1) == 0) {
                 putchar('.');
                 fflush(stdout);
+                timeout++;
+                if (timeout > PKT_TIMEOUT_MAX) {
+                    printf("%s: Timeout waiting for packet error.\n", __FUNCTION__);
+                    status |= PKT_ERROR_TIMEOUT;
+                    return status;
+                }
             }
+            timeout = 0;
         } else {
             if (feof(context->bytestream)) {
                 break;
@@ -73,7 +82,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             fprintf(context->logstream, "UART: RX: %02X\n", databyte);
             fflush(context->logstream);
         }
-        
+
         switch (l2_state) {
             case L2_STATE_SEARCH_FOR_START:
                 if (databyte == START_BYTE) {
@@ -109,42 +118,50 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
                 l2_state = L2_STATE_SEARCH_FOR_STOP;
                 pkt->trailer.crc |= databyte << 8;
                 pkt->calculated_crc = crc16(0, &pkt->hdr.start, pkt->payload_len + 3);
+                if (pkt->trailer.crc != pkt->calculated_crc) {
+                    printf("%s: CRC Error!\n", __FUNCTION__);
+                    status |= PKT_ERROR_CRC;
+                }
                 break;
             case L2_STATE_SEARCH_FOR_STOP:
                 if (databyte == STOP_BYTE) {
                     l2_state = L2_STATE_SEARCH_FOR_START;
-                    pkt->trailer.end = databyte;
-                    pkt_received = 1;
+                } else {
+                    printf("%s: Framing Error!\n", __FUNCTION__);
+                    status |= PKT_ERROR_FRAMING;
                 }
+                pkt->trailer.end = databyte;
+                pkt_received = 1;
+
                 break;
         }
     }
-    
+
     if (context->debuglevel > 0) {
         print_mm_packet(RX, pkt);
     }
 
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
-        printf("Receved disconnect flag!\n");
+        printf("%s: Receved disconnect flag!\n", __FUNCTION__);
         context->tx_seq = 0;
         if (context->use_modem == 1) {
-            printf("Hanging up modem.\n");                
+            printf("%s: Hanging up modem.\n", __FUNCTION__);
             hangup_modem(context->fd);
             context->connected = 0;
-            return 0;
         }
+        status |= PKT_ERROR_DISCONNECT;
     }
 
     if (context->use_modem == 0) {
         if(feof(context->bytestream)) {
-            printf("Error: Terminating due to EOF!\n");
+            printf("%s: Error: Terminating due to EOF!\n", __FUNCTION__);
             fflush(stdout);
+            status |= PKT_ERROR_EOF;
             exit(0);
-            return -1;
         }
     }
-    return 0;
-}   
+    return status;
+}
 
 /* Send manager packet to the terminal.
  *
@@ -153,10 +170,10 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
  * If payload is not NULL, and length is > 0, then the terminal's phone number
  * will be prepended to the payload and sent.
  */
-int send_mm_packet(mm_context_t *context, uint8_t *payload, int len)
+int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t flags)
 {
     mm_packet_t pkt;
-    
+
     if (context->debuglevel > 3) {
         if (payload != NULL) {
             printf("T<--M Sending packet: Terminal: %s, tx_seq=%d\n", context->phone_number, context->tx_seq);
@@ -183,6 +200,10 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len)
         pkt.payload_len = 0;
         /* If payload is NULL, send an ACK packet instead, using rx_seq. */
         pkt.hdr.flags = FLAG_ACK | (context->rx_seq & FLAG_SEQUENCE);
+    }
+
+    if (flags & FLAG_RETRY) {
+        pkt.hdr.flags |= FLAG_RETRY;
     }
 
     pkt.hdr.pktlen = pkt.payload_len + 5;
@@ -219,9 +240,9 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len)
     return 0;
 }
 
-int send_mm_ack(mm_context_t *context)
+int send_mm_ack(mm_context_t *context, uint8_t flags)
 {
-    return (send_mm_packet(context, NULL, 0));
+    return (send_mm_packet(context, NULL, 0, flags));
 }
 
 int wait_for_mm_ack(mm_context_t *context)
@@ -272,7 +293,7 @@ int print_mm_packet(int direction, mm_packet_t *pkt)
 
     if (pkt->payload_len > 0) {
         dump_hex(pkt->payload, pkt->payload_len);
-    }           
+    }
 
     return status;
 }

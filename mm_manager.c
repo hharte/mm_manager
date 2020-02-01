@@ -266,393 +266,396 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     uint8_t table_download_pending = 0;
     uint8_t dont_send_reply = 0;
     uint8_t end_of_data = 0;
+    uint8_t status;
 
-    if(receive_mm_packet(context, pkt) == 0) {
-        context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
-
-        ppayload = pkt->payload;
-
-        if(pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
-
-            phone_num_to_string(context->phone_number, sizeof(context->phone_number), ppayload, PKT_TABLE_ID_OFFSET);
-            ppayload += PKT_TABLE_ID_OFFSET;
-
-            if (context->debuglevel > 1) printf("\tReceived packet from phone# %s\n", context->phone_number);
-        } else {
-            table->table_id = 0;
-            printf("Error: Received an ACK without expecting it!\n");
-            return 0;
-        }
-
-        /* Acknowledge the received packet */
-        send_mm_ack(context);
-
-        while (ppayload < pkt->payload + pkt->payload_len) {
-
-            table->table_id = *ppayload++;
-
-            switch(table->table_id) {
-                case DLOG_MT_TIME_SYNC_REQ: {
-                    time_t rawtime;
-                    struct tm *ptm;
-                    uint8_t *timestamp;
-
-                    printf("\tSeq: %d: Received time/date request\n", context->rx_seq);
-
-                    *pack_payload++ = DLOG_MT_TIME_SYNC;
-                    timestamp = pack_payload;
-
-                    if (context->use_modem == 1) {
-                        /* When using the modem, fill the current time.  If not using the modem, use
-                        * a static time, so that results can be automatically checked.
-                        */
-                        time ( &rawtime );
-                        ptm = localtime ( &rawtime );
-
-                        *pack_payload++ = (ptm->tm_year & 0xff);     /* Fill current years since 1900 */
-                        *pack_payload++ = (ptm->tm_mon+1 & 0xff);    /* Fill current month (1-12) */
-                        *pack_payload++ = (ptm->tm_mday & 0xff);     /* Fill current day (0-31) */
-                        *pack_payload++ = (ptm->tm_hour & 0xff);     /* Fill current hour (0-23) */
-                        *pack_payload++ = (ptm->tm_min & 0xff);      /* Fill current minute (0-59) */
-                        *pack_payload++ = (ptm->tm_sec & 0xff);      /* Fill current second (0-59) */
-                        *pack_payload++ = (ptm->tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
-                    } else {
-                        *pack_payload++ = 119;  // Year
-                        *pack_payload++ = 11;   // Month
-                        *pack_payload++ = 9;    // Day
-                        *pack_payload++ = 12;   // Hours
-                        *pack_payload++ = 34;   // Minutes
-                        *pack_payload++ = 56;   // Seconds
-                        *pack_payload++ = 1;    // Day of week
-                    }
-                    printf("Current day/time: %04d-%02d-%02d / %2d:%02d:%02d\n", timestamp[0]+1900,
-                                                                                timestamp[1],
-                                                                                timestamp[2],
-                                                                                timestamp[3],
-                                                                                timestamp[4],
-                                                                                timestamp[5]);
-
-                    end_of_data = 1;
-                    break;
-                }
-                case DLOG_MT_ATN_REQ_TAB_UPD: {
-                    uint8_t terminal_upd_reason;
-
-                    terminal_upd_reason = *ppayload++;
-                    printf("\tTerminal requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n", terminal_upd_reason,
-                            terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
-                            terminal_upd_reason & TTBLREQ_CRAFT_INSTALL  ? "Install, " : "",
-                            terminal_upd_reason & TTBLREQ_LOST_MEMORY    ? "Lost Memory, " : "",
-                            terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
-                            terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
-
-                    cashbox_pending = 1;
-                    table_download_pending = 1;
-                    break;
-                }
-                case DLOG_MT_ALARM: {
-                    dlog_mt_alarm_t *alarm = (dlog_mt_alarm_t *)ppayload;
-                    uint8_t alarm_index;
-
-                    ppayload += sizeof(dlog_mt_alarm_t);
-
-                    *pack_payload++ = DLOG_MT_ALARM_ACK;
-                    *pack_payload++ = alarm->alarm_id;
-
-                    /* Our Alarm Table only has 41 entries, if alarm is 99 (Un-Alarm) set it to 40,
-                        * if our alarm is > 39 (last valid alarm, except 99) then use alarm 41 to display
-                        * "Unknown Alarm."
-                        */
-                    if (alarm->alarm_id == 99) {
-                        alarm_index = 40;
-                    } else if (alarm->alarm_id > 39) {
-                        alarm_index = 41;
-                    } else {
-                        alarm_index = alarm->alarm_id;
-                    }
-
-                    printf("\t\tAlarm: %04d-%02d-%02d %02d:%02d:%02d: Type: %d (0x%02x) - %s\n",
-                        alarm->timestamp[0] + 1900,
-                        alarm->timestamp[1],
-                        alarm->timestamp[2],
-                        alarm->timestamp[3],
-                        alarm->timestamp[4],
-                        alarm->timestamp[5],
-                        alarm->alarm_id, alarm->alarm_id,
-                        alarm_type_str[alarm_index]);
-                    break;
-                }
-                case DLOG_MT_MAINT_REQ: {
-                    dlog_mt_maint_req_t *maint = (dlog_mt_maint_req_t *)ppayload;;
-                    ppayload += sizeof(dlog_mt_maint_req_t);
-
-                    printf("\t\tMaintenance Type: %d (0x%03x) Access PIN: %02x%02x%01x\n",
-                        maint->type, maint->type,
-                        maint->access_pin[0], maint->access_pin[1], (maint->access_pin[2] & 0xF0) >> 4);
-
-                    *pack_payload++ = DLOG_MT_MAINT_ACK;
-                    *pack_payload++ = maint->type & 0xFF;
-                    *pack_payload++ = (maint->type >> 8) & 0xFF;
-                    break;
-                }
-                case DLOG_MT_CALL_DETAILS: {
-                    dlog_mt_call_details_t *cdr = (dlog_mt_call_details_t *)ppayload;
-                    char phone_number_string[21];
-                    ppayload += sizeof(dlog_mt_call_details_t);
-
-                    printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d DN: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, CDR Seq: %04d (0x%04x) \n",
-                        cdr->start_timestamp[0] + 1900,
-                        cdr->start_timestamp[1],
-                        cdr->start_timestamp[2],
-                        cdr->start_timestamp[3],
-                        cdr->start_timestamp[4],
-                        cdr->start_timestamp[5],
-                        cdr->call_duration[0],
-                        cdr->call_duration[1],
-                        cdr->call_duration[2],
-                        phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num, sizeof(cdr->called_num)),
-                        (float)cdr->call_cost[0] / 100,
-                        (float)cdr->call_cost[1] / 100,
-                        cdr->carrier_code,
-                        cdr->rate_type,
-                        cdr->seq, cdr->seq);
-                    *pack_payload++ = DLOG_MT_CDR_DETAILS_ACK;
-                    *pack_payload++ = cdr->seq & 0xFF;
-                    *pack_payload++ = (cdr->seq >> 8) & 0xFF;
-                    break;
-                }
-                case DLOG_MT_ATN_REQ_CDR_UPL: {
-                    /* Not sure what the cdr_req_type is, just swallow it. */
-                    uint8_t cdr_req_type = *ppayload++;
-                    printf("Seq: %d: DLOG_MT_ATN_REQ_CDR_UPL, cdr_req_type=%02x (0x%02x)\n", context->tx_seq, cdr_req_type, cdr_req_type);
-
-                    *pack_payload++ = DLOG_MT_TRANS_DATA;
-                    break;
-                }
-                case DLOG_MT_CASH_BOX_COLLECTION: {
-                    dlog_mt_cash_box_collection_t *dlog_mt_cash_box_collection = (dlog_mt_cash_box_collection_t *)ppayload;
-                    printf("\tSeq: %d: DLOG_MT_CASH_BOX_COLLECTION.\n", context->tx_seq);
-
-                    ppayload += sizeof(dlog_mt_cash_box_collection_t);
-
-                    printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: ",
-                            dlog_mt_cash_box_collection->timestamp[0] + 1900,
-                            dlog_mt_cash_box_collection->timestamp[1],
-                            dlog_mt_cash_box_collection->timestamp[2],
-                            dlog_mt_cash_box_collection->timestamp[3],
-                            dlog_mt_cash_box_collection->timestamp[4],
-                            dlog_mt_cash_box_collection->timestamp[5]);
-
-                    dump_hex(dlog_mt_cash_box_collection->cash, sizeof(dlog_mt_cash_box_collection->cash));
-                    break;
-                }
-                case DLOG_MT_TERM_STATUS: {
-                    dlog_mt_term_status_t *dlog_mt_term_status = (dlog_mt_term_status_t *)ppayload;
-                    uint8_t serial_number[11];
-                    uint64_t dlog_mt_term_status_word;
-                    int i;
-
-                    ppayload += sizeof(dlog_mt_term_status_t);
-
-                    for (i=0; i < 5; i++) {
-                        serial_number[i*2] = ((dlog_mt_term_status->serialnum[i] & 0xf0) >> 4) + '0';
-                        serial_number[i*2+1] = (dlog_mt_term_status->serialnum[i] & 0x0f) + '0';
-                    }
-
-                    serial_number[10] = '\0';
-
-                    dlog_mt_term_status_word  = dlog_mt_term_status->status[0];
-                    dlog_mt_term_status_word |= dlog_mt_term_status->status[1] << 8;
-                    dlog_mt_term_status_word |= dlog_mt_term_status->status[2] << 16;
-                    dlog_mt_term_status_word |= dlog_mt_term_status->status[3] << 24;
-                    dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[4]) << 32;
-
-                    printf("\tTerminal serial number %s, Terminal Status Word: 0x%010llx\n",
-                        serial_number, dlog_mt_term_status_word);
-
-                    /* Iterate over all the terminal status bits and display a message for any flags set. */
-                    for (i = 0; dlog_mt_term_status_word != 0; i++) {
-                        if (dlog_mt_term_status_word & 1) {
-                            printf("Terminal Status: %s\n", alarm_type_str[i]);
-                        }
-                        dlog_mt_term_status_word >>= 1;
-                    }
-                    break;
-                }
-                case DLOG_MT_SW_VERSION: {
-                    dlog_mt_sw_version_t *dlog_mt_sw_version = (dlog_mt_sw_version_t *)ppayload;
-
-                    char control_rom_edition[sizeof(dlog_mt_sw_version->control_rom_edition) + 1] = { 0 };
-                    char control_version[sizeof(dlog_mt_sw_version->control_version) + 1] = { 0 };
-                    char telephony_rom_edition[sizeof(dlog_mt_sw_version->telephony_rom_edition) + 1] = { 0 };
-                    char telephony_version[sizeof(dlog_mt_sw_version->telephony_version) + 1] = { 0 };
-                    memcpy(control_rom_edition, dlog_mt_sw_version->control_rom_edition, sizeof(dlog_mt_sw_version->control_rom_edition));
-                    memcpy(control_version, dlog_mt_sw_version->control_version, sizeof(dlog_mt_sw_version->control_version));
-                    memcpy(telephony_rom_edition, dlog_mt_sw_version->telephony_rom_edition, sizeof(dlog_mt_sw_version->telephony_rom_edition));
-                    memcpy(telephony_version, dlog_mt_sw_version->telephony_version, sizeof(dlog_mt_sw_version->telephony_version));
-
-                    ppayload += sizeof(dlog_mt_sw_version_t);
-
-                    if (strcmp(control_version, "V1.0") == 0) {
-                        context->phone_rev = 10;
-                    } else if (strcmp(control_version, "V1.3") == 0) {
-                        context->phone_rev = 13;
-                    } else {
-                        printf("Error: Unknown control version %s, defaulting to tables for V1.0.\n", control_version);
-                        context->phone_rev = 10;
-                    }
-
-                    printf("\t\t             Terminal Type: %02d (0x%02x)\n", dlog_mt_sw_version->term_type, dlog_mt_sw_version->term_type);
-                    printf("\t\t       Control ROM Edition: %s\n", control_rom_edition);
-                    printf("\t\t           Control Version: %s\n", control_version);
-                    printf("\t\t     Telephony ROM Edition: %s\n", telephony_rom_edition);
-                    printf("\t\t         Telephony Version: %s\n", telephony_version);
-                    printf("\t\tValidator Hardware Version: %c%c\n", dlog_mt_sw_version->validator_hw_ver[0], dlog_mt_sw_version->validator_hw_ver[1]);
-                    printf("\t\tValidator Software Version: %c%c\n", dlog_mt_sw_version->validator_sw_ver[0], dlog_mt_sw_version->validator_sw_ver[1]);
-
-                    break;
-                }
-                case DLOG_MT_CASH_BOX_STATUS: {
-                    cashbox_status_univ_t *cashbox_status = (cashbox_status_univ_t *)ppayload;
-                    ppayload += sizeof(cashbox_status_univ_t);
-
-                    printf("Cashbox status:\n");
-                    printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: ",
-                            cashbox_status->timestamp[0] + 1900,
-                            cashbox_status->timestamp[1],
-                            cashbox_status->timestamp[2],
-                            cashbox_status->timestamp[3],
-                            cashbox_status->timestamp[4],
-                            cashbox_status->timestamp[5]);
-                    break;
-                }
-                case DLOG_MT_PERF_STATS_MSG: {
-                    dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
-                    ppayload += sizeof(dlog_mt_perf_stats_record_t);
-
-                    printf("\t\tPerformance Statistics Record: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
-                            perf_stats->timestamp[0] + 1900,
-                            perf_stats->timestamp[1],
-                            perf_stats->timestamp[2],
-                            perf_stats->timestamp[3],
-                            perf_stats->timestamp[4],
-                            perf_stats->timestamp[5],
-                            perf_stats->timestamp2[0] + 1900,
-                            perf_stats->timestamp2[1],
-                            perf_stats->timestamp2[2],
-                            perf_stats->timestamp2[3],
-                            perf_stats->timestamp2[4],
-                            perf_stats->timestamp2[5]);
-                    break;
-                }
-                case DLOG_MT_CALL_IN: {
-                    printf("Seq: %d: DLOG_MT_CALL_IN.\n", context->tx_seq);
-                    *pack_payload++ = DLOG_MT_TRANS_DATA;
-                    break;
-                }
-                case DLOG_MT_CALL_BACK: {
-                    printf("Seq: %d: DLOG_MT_CALL_BACK.\n", context->tx_seq);
-                    *pack_payload++ = DLOG_MT_TRANS_DATA;
-                    break;
-                }
-                case DLOG_MT_CARRIER_CALL_STATS:
-                {
-                    dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
-                    ppayload += sizeof(dlog_mt_carrier_call_stats_t);
-                    printf("Seq: %d: DLOG_MT_CARRIER_CALL_STATS.\n", context->tx_seq);
-                    break;
-                }
-                case DLOG_MT_CARRIER_STATS_EXP: {
-                    dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
-                    ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
-                    printf("Seq: %d: TABLE_ID_EXP_CARR_CALL_STATS.\n", context->tx_seq);
-                    *pack_payload++ = DLOG_MT_END_DATA;
-                    break;
-                }
-                case DLOG_MT_SUMMARY_CALL_STATS: {
-                    dlog_mt_summary_call_stats_t *dlog_mt_summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
-                    ppayload += sizeof(dlog_mt_summary_call_stats_t);
-
-                    printf("Summary call stats:\n");
-                    dump_hex((uint8_t *)dlog_mt_summary_call_stats, sizeof(dlog_mt_summary_call_stats));
-
-                    break;
-                }
-                case DLOG_MT_RATE_REQUEST: {
-                    char phone_number[21] = { 0 };
-                    dlog_mt_rate_response_t rate_response = { 0 };
-                    dlog_mt_rate_request_t *dlog_mt_rate_request = (dlog_mt_rate_request_t *)ppayload;
-                    ppayload += sizeof(dlog_mt_rate_request_t);
-
-                    phone_num_to_string(phone_number, sizeof(phone_number), dlog_mt_rate_request->phone_number, sizeof(dlog_mt_rate_request->phone_number));
-                    printf("\t\tRate request: %04d-%02d-%02d %02d:%02d:%02d: Phone number: %s, seq=%d, %d,%d,%d,%d,%d,%d.\n",
-                            dlog_mt_rate_request->timestamp[0] + 1900,
-                            dlog_mt_rate_request->timestamp[1],
-                            dlog_mt_rate_request->timestamp[2],
-                            dlog_mt_rate_request->timestamp[3],
-                            dlog_mt_rate_request->timestamp[4],
-                            dlog_mt_rate_request->timestamp[5],
-                            phone_number,
-                            dlog_mt_rate_request->seq,
-                            dlog_mt_rate_request->pad[0],
-                            dlog_mt_rate_request->pad[1],
-                            dlog_mt_rate_request->pad[2],
-                            dlog_mt_rate_request->pad[3],
-                            dlog_mt_rate_request->pad[4],
-                            dlog_mt_rate_request->pad[5]);
-
-                    rate_response.rate.type = (uint8_t)mm_local;
-                    rate_response.rate.initial_period = 60;
-                    rate_response.rate.initial_charge = 125;
-                    rate_response.rate.additional_period = 120;
-                    rate_response.rate.additional_charge = 35;
-                    *pack_payload++ = DLOG_MT_RATE_RESPONSE;
-                    memcpy(pack_payload, &rate_response, sizeof(rate_response));
-                    pack_payload += sizeof(rate_response);
-                    break;
-                }
-                case DLOG_MT_END_DATA:
-                    printf("Seq: %d: DLOG_MT_END_DATA.\n", context->tx_seq);
-                    *pack_payload++ = DLOG_MT_END_DATA;
-                    break;
-                case DLOG_MT_TAB_UPD_ACK:
-                    printf("Seq: %d: DLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", context->tx_seq, *ppayload);
-                    ppayload++;
-                    *pack_payload++ = DLOG_MT_TRANS_DATA;
-                    break;
-                default:
-                    printf("Unhandled table %d (0x%02x)", table->table_id, table->table_id);
-                    send_mm_ack(context);
-                    break;
-            }
-        }
-
-        if (cashbox_pending == 1) {
-            uint8_t cashbox_status[] = {
-                DLOG_MT_CASH_BOX_STATUS, 0x5a, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00,
-                00, 00, 0x32, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-                00, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-                00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 };
-
-            printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n", context->tx_seq);
-            memcpy(pack_payload, cashbox_status, sizeof(cashbox_status));
-            pack_payload += sizeof(cashbox_status);
-        }
-
-        if (dont_send_reply == 0) {
-            if (pack_payload - ack_payload == 0) {
-                *pack_payload++ = DLOG_MT_END_DATA;
-            }
-            send_mm_table(context, ack_payload, (pack_payload - ack_payload), end_of_data);
-        }
-        if (table_download_pending == 1) {
-            mm_download_tables(context);
-        }
-
+    if ((status = receive_mm_packet(context, pkt)) != 0) {
+        // Send retry.
+        send_mm_ack(context, FLAG_RETRY);
         return 0;
-    } else {
-        return -1;
     }
+
+    context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
+
+    ppayload = pkt->payload;
+
+    if(pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
+
+        phone_num_to_string(context->phone_number, sizeof(context->phone_number), ppayload, PKT_TABLE_ID_OFFSET);
+        ppayload += PKT_TABLE_ID_OFFSET;
+
+        if (context->debuglevel > 1) printf("\tReceived packet from phone# %s\n", context->phone_number);
+    } else {
+        table->table_id = 0;
+        printf("Error: Received an ACK without expecting it!\n");
+        return 0;
+    }
+
+    /* Acknowledge the received packet */
+    send_mm_ack(context, 0);
+
+    while (ppayload < pkt->payload + pkt->payload_len) {
+
+        table->table_id = *ppayload++;
+
+        switch(table->table_id) {
+            case DLOG_MT_TIME_SYNC_REQ: {
+                time_t rawtime;
+                struct tm *ptm;
+                uint8_t *timestamp;
+
+                printf("\tSeq: %d: Received time/date request\n", context->rx_seq);
+
+                *pack_payload++ = DLOG_MT_TIME_SYNC;
+                timestamp = pack_payload;
+
+                if (context->use_modem == 1) {
+                    /* When using the modem, fill the current time.  If not using the modem, use
+                    * a static time, so that results can be automatically checked.
+                    */
+                    time ( &rawtime );
+                    ptm = localtime ( &rawtime );
+
+                    *pack_payload++ = (ptm->tm_year & 0xff);     /* Fill current years since 1900 */
+                    *pack_payload++ = (ptm->tm_mon+1 & 0xff);    /* Fill current month (1-12) */
+                    *pack_payload++ = (ptm->tm_mday & 0xff);     /* Fill current day (0-31) */
+                    *pack_payload++ = (ptm->tm_hour & 0xff);     /* Fill current hour (0-23) */
+                    *pack_payload++ = (ptm->tm_min & 0xff);      /* Fill current minute (0-59) */
+                    *pack_payload++ = (ptm->tm_sec & 0xff);      /* Fill current second (0-59) */
+                    *pack_payload++ = (ptm->tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
+                } else {
+                    *pack_payload++ = 119;  // Year
+                    *pack_payload++ = 11;   // Month
+                    *pack_payload++ = 9;    // Day
+                    *pack_payload++ = 12;   // Hours
+                    *pack_payload++ = 34;   // Minutes
+                    *pack_payload++ = 56;   // Seconds
+                    *pack_payload++ = 1;    // Day of week
+                }
+                printf("Current day/time: %04d-%02d-%02d / %2d:%02d:%02d\n", timestamp[0]+1900,
+                                                                            timestamp[1],
+                                                                            timestamp[2],
+                                                                            timestamp[3],
+                                                                            timestamp[4],
+                                                                            timestamp[5]);
+
+                end_of_data = 1;
+                break;
+            }
+            case DLOG_MT_ATN_REQ_TAB_UPD: {
+                uint8_t terminal_upd_reason;
+
+                terminal_upd_reason = *ppayload++;
+                printf("\tTerminal requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n", terminal_upd_reason,
+                        terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
+                        terminal_upd_reason & TTBLREQ_CRAFT_INSTALL  ? "Install, " : "",
+                        terminal_upd_reason & TTBLREQ_LOST_MEMORY    ? "Lost Memory, " : "",
+                        terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
+                        terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
+
+                cashbox_pending = 1;
+                table_download_pending = 1;
+                break;
+            }
+            case DLOG_MT_ALARM: {
+                dlog_mt_alarm_t *alarm = (dlog_mt_alarm_t *)ppayload;
+                uint8_t alarm_index;
+
+                ppayload += sizeof(dlog_mt_alarm_t);
+
+                *pack_payload++ = DLOG_MT_ALARM_ACK;
+                *pack_payload++ = alarm->alarm_id;
+
+                /* Our Alarm Table only has 41 entries, if alarm is 99 (Un-Alarm) set it to 40,
+                    * if our alarm is > 39 (last valid alarm, except 99) then use alarm 41 to display
+                    * "Unknown Alarm."
+                    */
+                if (alarm->alarm_id == 99) {
+                    alarm_index = 40;
+                } else if (alarm->alarm_id > 39) {
+                    alarm_index = 41;
+                } else {
+                    alarm_index = alarm->alarm_id;
+                }
+
+                printf("\t\tAlarm: %04d-%02d-%02d %02d:%02d:%02d: Type: %d (0x%02x) - %s\n",
+                    alarm->timestamp[0] + 1900,
+                    alarm->timestamp[1],
+                    alarm->timestamp[2],
+                    alarm->timestamp[3],
+                    alarm->timestamp[4],
+                    alarm->timestamp[5],
+                    alarm->alarm_id, alarm->alarm_id,
+                    alarm_type_str[alarm_index]);
+                break;
+            }
+            case DLOG_MT_MAINT_REQ: {
+                dlog_mt_maint_req_t *maint = (dlog_mt_maint_req_t *)ppayload;;
+                ppayload += sizeof(dlog_mt_maint_req_t);
+
+                printf("\t\tMaintenance Type: %d (0x%03x) Access PIN: %02x%02x%01x\n",
+                    maint->type, maint->type,
+                    maint->access_pin[0], maint->access_pin[1], (maint->access_pin[2] & 0xF0) >> 4);
+
+                *pack_payload++ = DLOG_MT_MAINT_ACK;
+                *pack_payload++ = maint->type & 0xFF;
+                *pack_payload++ = (maint->type >> 8) & 0xFF;
+                break;
+            }
+            case DLOG_MT_CALL_DETAILS: {
+                dlog_mt_call_details_t *cdr = (dlog_mt_call_details_t *)ppayload;
+                char phone_number_string[21];
+                ppayload += sizeof(dlog_mt_call_details_t);
+
+                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d DN: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, CDR Seq: %04d (0x%04x) \n",
+                    cdr->start_timestamp[0] + 1900,
+                    cdr->start_timestamp[1],
+                    cdr->start_timestamp[2],
+                    cdr->start_timestamp[3],
+                    cdr->start_timestamp[4],
+                    cdr->start_timestamp[5],
+                    cdr->call_duration[0],
+                    cdr->call_duration[1],
+                    cdr->call_duration[2],
+                    phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num, sizeof(cdr->called_num)),
+                    (float)cdr->call_cost[0] / 100,
+                    (float)cdr->call_cost[1] / 100,
+                    cdr->carrier_code,
+                    cdr->rate_type,
+                    cdr->seq, cdr->seq);
+                *pack_payload++ = DLOG_MT_CDR_DETAILS_ACK;
+                *pack_payload++ = cdr->seq & 0xFF;
+                *pack_payload++ = (cdr->seq >> 8) & 0xFF;
+                break;
+            }
+            case DLOG_MT_ATN_REQ_CDR_UPL: {
+                /* Not sure what the cdr_req_type is, just swallow it. */
+                uint8_t cdr_req_type = *ppayload++;
+                printf("Seq: %d: DLOG_MT_ATN_REQ_CDR_UPL, cdr_req_type=%02x (0x%02x)\n", context->tx_seq, cdr_req_type, cdr_req_type);
+
+                *pack_payload++ = DLOG_MT_TRANS_DATA;
+                break;
+            }
+            case DLOG_MT_CASH_BOX_COLLECTION: {
+                dlog_mt_cash_box_collection_t *dlog_mt_cash_box_collection = (dlog_mt_cash_box_collection_t *)ppayload;
+                printf("\tSeq: %d: DLOG_MT_CASH_BOX_COLLECTION.\n", context->tx_seq);
+
+                ppayload += sizeof(dlog_mt_cash_box_collection_t);
+
+                printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: ",
+                        dlog_mt_cash_box_collection->timestamp[0] + 1900,
+                        dlog_mt_cash_box_collection->timestamp[1],
+                        dlog_mt_cash_box_collection->timestamp[2],
+                        dlog_mt_cash_box_collection->timestamp[3],
+                        dlog_mt_cash_box_collection->timestamp[4],
+                        dlog_mt_cash_box_collection->timestamp[5]);
+
+                dump_hex(dlog_mt_cash_box_collection->cash, sizeof(dlog_mt_cash_box_collection->cash));
+                break;
+            }
+            case DLOG_MT_TERM_STATUS: {
+                dlog_mt_term_status_t *dlog_mt_term_status = (dlog_mt_term_status_t *)ppayload;
+                uint8_t serial_number[11];
+                uint64_t dlog_mt_term_status_word;
+                int i;
+
+                ppayload += sizeof(dlog_mt_term_status_t);
+
+                for (i=0; i < 5; i++) {
+                    serial_number[i*2] = ((dlog_mt_term_status->serialnum[i] & 0xf0) >> 4) + '0';
+                    serial_number[i*2+1] = (dlog_mt_term_status->serialnum[i] & 0x0f) + '0';
+                }
+
+                serial_number[10] = '\0';
+
+                dlog_mt_term_status_word  = dlog_mt_term_status->status[0];
+                dlog_mt_term_status_word |= dlog_mt_term_status->status[1] << 8;
+                dlog_mt_term_status_word |= dlog_mt_term_status->status[2] << 16;
+                dlog_mt_term_status_word |= dlog_mt_term_status->status[3] << 24;
+                dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[4]) << 32;
+
+                printf("\tTerminal serial number %s, Terminal Status Word: 0x%010llx\n",
+                    serial_number, dlog_mt_term_status_word);
+
+                /* Iterate over all the terminal status bits and display a message for any flags set. */
+                for (i = 0; dlog_mt_term_status_word != 0; i++) {
+                    if (dlog_mt_term_status_word & 1) {
+                        printf("Terminal Status: %s\n", alarm_type_str[i]);
+                    }
+                    dlog_mt_term_status_word >>= 1;
+                }
+                break;
+            }
+            case DLOG_MT_SW_VERSION: {
+                dlog_mt_sw_version_t *dlog_mt_sw_version = (dlog_mt_sw_version_t *)ppayload;
+
+                char control_rom_edition[sizeof(dlog_mt_sw_version->control_rom_edition) + 1] = { 0 };
+                char control_version[sizeof(dlog_mt_sw_version->control_version) + 1] = { 0 };
+                char telephony_rom_edition[sizeof(dlog_mt_sw_version->telephony_rom_edition) + 1] = { 0 };
+                char telephony_version[sizeof(dlog_mt_sw_version->telephony_version) + 1] = { 0 };
+                memcpy(control_rom_edition, dlog_mt_sw_version->control_rom_edition, sizeof(dlog_mt_sw_version->control_rom_edition));
+                memcpy(control_version, dlog_mt_sw_version->control_version, sizeof(dlog_mt_sw_version->control_version));
+                memcpy(telephony_rom_edition, dlog_mt_sw_version->telephony_rom_edition, sizeof(dlog_mt_sw_version->telephony_rom_edition));
+                memcpy(telephony_version, dlog_mt_sw_version->telephony_version, sizeof(dlog_mt_sw_version->telephony_version));
+
+                ppayload += sizeof(dlog_mt_sw_version_t);
+
+                if (strcmp(control_version, "V1.0") == 0) {
+                    context->phone_rev = 10;
+                } else if (strcmp(control_version, "V1.3") == 0) {
+                    context->phone_rev = 13;
+                } else {
+                    printf("Error: Unknown control version %s, defaulting to tables for V1.0.\n", control_version);
+                    context->phone_rev = 10;
+                }
+
+                printf("\t\t             Terminal Type: %02d (0x%02x)\n", dlog_mt_sw_version->term_type, dlog_mt_sw_version->term_type);
+                printf("\t\t       Control ROM Edition: %s\n", control_rom_edition);
+                printf("\t\t           Control Version: %s\n", control_version);
+                printf("\t\t     Telephony ROM Edition: %s\n", telephony_rom_edition);
+                printf("\t\t         Telephony Version: %s\n", telephony_version);
+                printf("\t\tValidator Hardware Version: %c%c\n", dlog_mt_sw_version->validator_hw_ver[0], dlog_mt_sw_version->validator_hw_ver[1]);
+                printf("\t\tValidator Software Version: %c%c\n", dlog_mt_sw_version->validator_sw_ver[0], dlog_mt_sw_version->validator_sw_ver[1]);
+
+                break;
+            }
+            case DLOG_MT_CASH_BOX_STATUS: {
+                cashbox_status_univ_t *cashbox_status = (cashbox_status_univ_t *)ppayload;
+                ppayload += sizeof(cashbox_status_univ_t);
+
+                printf("Cashbox status:\n");
+                printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: ",
+                        cashbox_status->timestamp[0] + 1900,
+                        cashbox_status->timestamp[1],
+                        cashbox_status->timestamp[2],
+                        cashbox_status->timestamp[3],
+                        cashbox_status->timestamp[4],
+                        cashbox_status->timestamp[5]);
+                break;
+            }
+            case DLOG_MT_PERF_STATS_MSG: {
+                dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
+                ppayload += sizeof(dlog_mt_perf_stats_record_t);
+
+                printf("\t\tPerformance Statistics Record: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
+                        perf_stats->timestamp[0] + 1900,
+                        perf_stats->timestamp[1],
+                        perf_stats->timestamp[2],
+                        perf_stats->timestamp[3],
+                        perf_stats->timestamp[4],
+                        perf_stats->timestamp[5],
+                        perf_stats->timestamp2[0] + 1900,
+                        perf_stats->timestamp2[1],
+                        perf_stats->timestamp2[2],
+                        perf_stats->timestamp2[3],
+                        perf_stats->timestamp2[4],
+                        perf_stats->timestamp2[5]);
+                break;
+            }
+            case DLOG_MT_CALL_IN: {
+                printf("Seq: %d: DLOG_MT_CALL_IN.\n", context->tx_seq);
+                *pack_payload++ = DLOG_MT_TRANS_DATA;
+                break;
+            }
+            case DLOG_MT_CALL_BACK: {
+                printf("Seq: %d: DLOG_MT_CALL_BACK.\n", context->tx_seq);
+                *pack_payload++ = DLOG_MT_TRANS_DATA;
+                break;
+            }
+            case DLOG_MT_CARRIER_CALL_STATS:
+            {
+                dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
+                ppayload += sizeof(dlog_mt_carrier_call_stats_t);
+                printf("Seq: %d: DLOG_MT_CARRIER_CALL_STATS.\n", context->tx_seq);
+                break;
+            }
+            case DLOG_MT_CARRIER_STATS_EXP: {
+                dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
+                ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
+                printf("Seq: %d: TABLE_ID_EXP_CARR_CALL_STATS.\n", context->tx_seq);
+                *pack_payload++ = DLOG_MT_END_DATA;
+                break;
+            }
+            case DLOG_MT_SUMMARY_CALL_STATS: {
+                dlog_mt_summary_call_stats_t *dlog_mt_summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
+                ppayload += sizeof(dlog_mt_summary_call_stats_t);
+
+                printf("Summary call stats:\n");
+                dump_hex((uint8_t *)dlog_mt_summary_call_stats, sizeof(dlog_mt_summary_call_stats));
+
+                break;
+            }
+            case DLOG_MT_RATE_REQUEST: {
+                char phone_number[21] = { 0 };
+                dlog_mt_rate_response_t rate_response = { 0 };
+                dlog_mt_rate_request_t *dlog_mt_rate_request = (dlog_mt_rate_request_t *)ppayload;
+                ppayload += sizeof(dlog_mt_rate_request_t);
+
+                phone_num_to_string(phone_number, sizeof(phone_number), dlog_mt_rate_request->phone_number, sizeof(dlog_mt_rate_request->phone_number));
+                printf("\t\tRate request: %04d-%02d-%02d %02d:%02d:%02d: Phone number: %s, seq=%d, %d,%d,%d,%d,%d,%d.\n",
+                        dlog_mt_rate_request->timestamp[0] + 1900,
+                        dlog_mt_rate_request->timestamp[1],
+                        dlog_mt_rate_request->timestamp[2],
+                        dlog_mt_rate_request->timestamp[3],
+                        dlog_mt_rate_request->timestamp[4],
+                        dlog_mt_rate_request->timestamp[5],
+                        phone_number,
+                        dlog_mt_rate_request->seq,
+                        dlog_mt_rate_request->pad[0],
+                        dlog_mt_rate_request->pad[1],
+                        dlog_mt_rate_request->pad[2],
+                        dlog_mt_rate_request->pad[3],
+                        dlog_mt_rate_request->pad[4],
+                        dlog_mt_rate_request->pad[5]);
+
+                rate_response.rate.type = (uint8_t)mm_local;
+                rate_response.rate.initial_period = 60;
+                rate_response.rate.initial_charge = 125;
+                rate_response.rate.additional_period = 120;
+                rate_response.rate.additional_charge = 35;
+                *pack_payload++ = DLOG_MT_RATE_RESPONSE;
+                memcpy(pack_payload, &rate_response, sizeof(rate_response));
+                pack_payload += sizeof(rate_response);
+                break;
+            }
+            case DLOG_MT_END_DATA:
+                printf("Seq: %d: DLOG_MT_END_DATA.\n", context->tx_seq);
+                *pack_payload++ = DLOG_MT_END_DATA;
+                break;
+            case DLOG_MT_TAB_UPD_ACK:
+                printf("Seq: %d: DLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", context->tx_seq, *ppayload);
+                ppayload++;
+                *pack_payload++ = DLOG_MT_TRANS_DATA;
+                break;
+            default:
+                printf("Unhandled table %d (0x%02x)", table->table_id, table->table_id);
+                send_mm_ack(context, 0);
+                break;
+        }
+    }
+
+    if (cashbox_pending == 1) {
+        uint8_t cashbox_status[] = {
+            DLOG_MT_CASH_BOX_STATUS, 0x5a, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00,
+            00, 00, 0x32, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+            00, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+            00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 };
+
+        printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n", context->tx_seq);
+        memcpy(pack_payload, cashbox_status, sizeof(cashbox_status));
+        pack_payload += sizeof(cashbox_status);
+    }
+
+    if (dont_send_reply == 0) {
+        if (pack_payload - ack_payload == 0) {
+            *pack_payload++ = DLOG_MT_END_DATA;
+        }
+        send_mm_table(context, ack_payload, (pack_payload - ack_payload), end_of_data);
+    }
+    if (table_download_pending == 1) {
+        mm_download_tables(context);
+    }
+
+    return 0;
 }
 
 
@@ -715,7 +718,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_d
             chunk_len = bytes_remaining;
         }
 
-        send_mm_packet(context, p, chunk_len);
+        send_mm_packet(context, p, chunk_len, 0);
 
         if (wait_for_mm_ack(context) != 0) return -1;
         p += chunk_len;
@@ -726,7 +729,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_d
     if (context->debuglevel > 1) printf("Sending end of data message.\n");
 
     if(end_of_data != 0) {
-        send_mm_packet(context, &end_of_data_msg, sizeof(end_of_data_msg));
+        send_mm_packet(context, &end_of_data_msg, sizeof(end_of_data_msg), 0);
         if (wait_for_mm_ack(context) != 0) return -1;
     }
 
@@ -738,15 +741,15 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
 {
     mm_packet_t packet;
     mm_packet_t *pkt = &packet;
-    int i;
+    int i, status;
 
     if (context->debuglevel > 1) printf("Waiting for ACK for table %d (0x%02x)\n", table_id, table_id);
 
-    if(receive_mm_packet(context, pkt) == 0) {
+    if ((status = receive_mm_packet(context, pkt)) == PKT_SUCCESS) {
         context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
 
-        if(pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
-            for (i=0; i < PKT_TABLE_ID_OFFSET; i++) {
+        if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
+            for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
                 context->phone_number[i*2] = ((pkt->payload[i] & 0xf0) >> 4) + '0';
                 context->phone_number[i*2+1] = (pkt->payload[i] & 0x0f) + '0';
             }
@@ -755,16 +758,20 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
 
             if((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
                (pkt->payload[6] == table_id)) {
-                   if (context->debuglevel > 0) printf("Seq: %d: Received ACK for table %d (0x%02x)\n", context->rx_seq, table_id, table_id);
-                   send_mm_ack(context);
-               } else {
-                   printf("Error: Did not receive ACK for table id %d\n", table_id);
-                   return (-1);
-               }
+                if (context->debuglevel > 0) printf("Seq: %d: Received ACK for table %d (0x%02x)\n", context->rx_seq, table_id, table_id);
+                send_mm_ack(context, 0);
+            } else {
+                printf("%s: ERROR: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
+                    __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
+                return (-1);
+            }
 
         }
+    } else {
+        printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",
+            __FUNCTION__, table_id, table_id, status);
     }
-    return 0;
+    return status;
 }
 
 
