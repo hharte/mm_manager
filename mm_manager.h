@@ -202,23 +202,7 @@ typedef struct dlog_mt_sw_version {
     uint8_t validator_hw_ver[2];
 } dlog_mt_sw_version_t;
 
-/* DLOG_MT_RATE_REQUEST */
-typedef struct dlog_mt_rate_request {
-    uint16_t seq;
-    uint8_t phone_number[10];
-    uint8_t timestamp[6];
-    uint8_t pad[6];
-} dlog_mt_rate_request_t;
-
-/* DLOG_MT_RATE_RESPONSE  (25 bytes) */
-typedef struct dlog_mt_rate_response {
-    uint8_t rate_type;
-    uint16_t initial_period;
-    uint16_t initial_charge;
-    uint16_t additional_period;
-    uint16_t additional_charge;
-    uint8_t pad2[16];
-} dlog_mt_rate_response_t;
+#define FLAG_PERIOD_UNLIMITED   (1 << 15)
 
 typedef enum rate_type {
     mm_intra_lata = 0,      // 0 Millennium Manager rated Intra-lata
@@ -231,6 +215,29 @@ typedef enum rate_type {
     mm_inter_lata,          // 7 Millennium Manager rated Inter-lata
     mm_local                // 8 Millennium Manager rated local
 } rate_type_t;
+
+typedef struct rate_table_entry {
+    uint8_t type;
+    uint16_t initial_period;
+    uint16_t initial_charge;
+    uint16_t additional_period;
+    uint16_t additional_charge;
+} rate_table_entry_t;
+
+/* DLOG_MT_RATE_REQUEST */
+typedef struct dlog_mt_rate_request {
+    uint16_t seq;
+    uint8_t phone_number[10];
+    uint8_t timestamp[6];
+    uint8_t pad[6];
+} dlog_mt_rate_request_t;
+
+/* DLOG_MT_RATE_RESPONSE  (24 bytes) */
+/* DLOG_MT_RATE_RESPONSE  (25 bytes) */
+typedef struct dlog_mt_rate_response {
+    rate_table_entry_t rate;
+    uint8_t pad2[16];
+} dlog_mt_rate_response_t;
 
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
