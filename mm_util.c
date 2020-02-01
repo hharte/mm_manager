@@ -1,12 +1,12 @@
 /*
  * This is a "Manager" for the Nortel Millennium payhone.
- * 
+ *
  * It can provision a Nortel Millennium payphone with Rev 1.0 or 1.3
  * Control PCP.  CDRs, Alarms, and Maintenance Reports can also be
  * retieved.
- * 
+ *
  * www.github.com/hharte/mm_manager
- *  
+ *
  * (c) 2020, Howard M. Harte
  */
 
@@ -57,9 +57,9 @@ void dump_hex(uint8_t *data, int len)
             if ((data[i] >= 0x20) && (data[i] < 0x7F)) {
                 *pascii++ = data[i];
             } else {
-                *pascii++ = '.';    
+                *pascii++ = '.';
             }
-        
+
         }
         *pascii++ = '\0';
         if (strlen((char *)ascii) > 0) {
@@ -68,7 +68,7 @@ void dump_hex(uint8_t *data, int len)
             }
             printf("%s", ascii);
         }
-    }           
+    }
     printf("\n");
 }
 
@@ -90,6 +90,35 @@ extern char *phone_num_to_string(char *string_buf, int string_buf_len, uint8_t* 
         pn_digit = num_buf[i] & 0x0f;
          if (pn_digit == 0xe) break;
         *pstr++ = (pn_digit) + '0';
+        j++;
+        if (j >= (string_buf_len - 1)) break;
+    }
+
+    *pstr = '\0';
+    return string_buf;
+}
+
+/* Lookup table to translate number string into text.  Not sure what B, C, D, E, F are used for. */
+const char pn_lut[16] = { '\0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'B', 'C', 'D', 'E', 'F' };
+
+/* Convert encoded phone number terminated with zero into a string. */
+char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len)
+{
+    char *pstr = string_buf;
+    int i, j, pn_digit;
+
+    j = 0;
+
+    for (i = 0; i < num_buf_len; i++) {
+        pn_digit = num_buf[i] >> 4;
+
+        *pstr++ = pn_lut[pn_digit];
+        j++;
+
+        if (j >= (string_buf_len - 1)) break;
+
+        pn_digit = num_buf[i] & 0x0f;
+        *pstr++ = pn_lut[pn_digit];
         j++;
         if (j >= (string_buf_len - 1)) break;
     }

@@ -303,6 +303,19 @@ typedef struct dlog_mt_carrier_table {
 #define CB_OUTDIAL_STRING_ORDER                 (1 << 6)    /* 0=FGB#, Called #, Card #; 1=FGB#, Card #, Called # */
 #define CB_FEATURE_GROUP_B                      (1 << 7)    /* Feature Group B is a category of free access to the carrier network. It usually uses 1-800 or 950xxx. */
 
+/* CALLSCR (Call Screening List) pp. 2-33 */
+typedef struct call_screen_list_entry {
+    uint8_t  pad[4];                        /* Need to figure out what these are for. */
+    uint8_t  phone_number[9];               /* 0-terminated phone number, one digit per nibble. */
+    uint8_t  class;                         /* This seems to indicate class of number */
+    uint8_t  spare[3];                      /* These might be spares, they are all 0's. */
+} call_screen_list_entry_t;
+
+#define CALLSCRN_TABLE_MAX                      180
+typedef struct dlog_mt_call_screen_list {
+    call_screen_list_entry_t entry[CALLSCRN_TABLE_MAX];
+} dlog_mt_call_screen_list_t;
+
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
 #define DATAJACK_ENABLED                        (1 << 0)    /* Indicates wether terminal allows (1) or blocks (0) datajack calls. */
@@ -386,5 +399,6 @@ extern int hangup_modem(int fd);
 extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
 extern void dump_hex(uint8_t *data, int len);
 extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_buf, int num_buf_len);
+extern char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len);
 
 #pragma pack(pop)

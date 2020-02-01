@@ -25,6 +25,9 @@ MGR_OBJ = $(patsubst %,$(ODIR)/%,$(_MGR_OBJ))
 _NPA_OBJ = mm_areacode.o
 NPA_OBJ = $(patsubst %,$(ODIR)/%,$(_NPA_OBJ))
 
+_CALLSCRN_OBJ = mm_callscrn.o mm_util.o
+CALLSCRN_OBJ = $(patsubst %,$(ODIR)/%,$(_CALLSCRN_OBJ))
+
 _CARRIER_OBJ = mm_carrier.o
 CARRIER_OBJ = $(patsubst %,$(ODIR)/%,$(_CARRIER_OBJ))
 
@@ -37,12 +40,15 @@ RATE_OBJ = $(patsubst %,$(ODIR)/%,$(_RATE_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: mm_manager mm_areacode mm_carrier mm_lcd mm_rate
+all: mm_manager mm_areacode mm_callscrn mm_carrier mm_lcd mm_rate
 
 mm_manager: $(MGR_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_areacode: $(NPA_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_callscrn: $(CALLSCRN_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_carrier: $(CARRIER_OBJ)
