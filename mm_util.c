@@ -126,3 +126,61 @@ char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_
     *pstr = '\0';
     return string_buf;
 }
+
+/* Call Type (lower 4-bits) of CALLTYP */
+char *call_type_str[16] = {
+    "Incoming",
+    "Abandoned",
+    "Local",
+    "Intra-LATA",
+    "Inter-LATA",
+    "Internatonal",
+    "Operator",
+    "Zero+",
+    "1-800",
+    "Directory Assistance",
+    "Denied",
+    "Unassigned",
+    "Unassigned2",
+    "e-Purse",
+    "Unknown"
+};
+
+/* Payment Type (upper 4-bits) of CALLTYP */
+char *pmt_type_str[16] = {
+    "Unused0",
+    "Unused1",
+    "No Charge",
+    "Coin",
+    "Credit Card",
+    "Calling Card",
+    "Cash Card",
+    "Inmate",
+    "Mondex",
+    "Visa Stored Value",
+    "Smart City",
+    "Proton",
+    "UndefinedC",
+    "UndefinedD",
+    "UndefinedE",
+    "UndefinedF",
+};
+
+char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len)
+{
+    int len_call_type, len_pmt_type;
+
+    len_call_type = strlen(call_type_str[call_type & 0x0f]);
+    len_pmt_type = strlen(pmt_type_str[call_type >> 4]);
+
+    if ((len_call_type + len_pmt_type + 1) > string_buf_len) {
+        return NULL;
+    }
+
+    sprintf(string_buf, "%s %s",
+        call_type_str[call_type & 0x0f],
+        pmt_type_str[call_type >> 4]);
+
+    return string_buf;
+
+}

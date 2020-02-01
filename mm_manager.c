@@ -404,9 +404,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_CALL_DETAILS: {
                 dlog_mt_call_details_t *cdr = (dlog_mt_call_details_t *)ppayload;
                 char phone_number_string[21];
+                char call_type_str[38];
+
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d DN: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, CDR Seq: %04d (0x%04x) \n",
+                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d %s, DN: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
                     cdr->start_timestamp[0] + 1900,
                     cdr->start_timestamp[1],
                     cdr->start_timestamp[2],
@@ -416,12 +418,16 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     cdr->call_duration[0],
                     cdr->call_duration[1],
                     cdr->call_duration[2],
+                    call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
                     phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num, sizeof(cdr->called_num)),
                     (float)cdr->call_cost[0] / 100,
                     (float)cdr->call_cost[1] / 100,
                     cdr->carrier_code,
                     cdr->rate_type,
-                    cdr->seq, cdr->seq);
+                    cdr->seq);
+
+                if (context->debuglevel > 2) dump_hex(cdr->pad, sizeof(cdr->pad));
+
                 *pack_payload++ = DLOG_MT_CDR_DETAILS_ACK;
                 *pack_payload++ = cdr->seq & 0xFF;
                 *pack_payload++ = (cdr->seq >> 8) & 0xFF;

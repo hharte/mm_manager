@@ -160,8 +160,45 @@ typedef struct dlog_mt_call_details {
     uint16_t seq;
     uint8_t start_timestamp[6];
     uint8_t call_duration[3];
-    uint8_t pad[12];
+    uint8_t call_type;              /* CALLTYP (Call Type) pp. 2-41 */
+    uint8_t pad[11];
 } dlog_mt_call_details_t;
+
+/* Call Type (lower 4-bits) of CALLTYP */
+#define CALL_TYPE_INCOMING      0x00    // Incoming
+#define CALL_TYPE_UNANSWERED    0x01    // Unanswered
+#define CALL_TYPE_ABANDONED     0x02    // Abandoned
+#define CALL_TYPE_LOCAL         0x03    // Local
+#define CALL_TYPE_INTRA_LATA    0x04    // Intra-LATA
+#define CALL_TYPE_INTER_LATA    0x05    // Inter-LATA
+#define CALL_TYPE_INTERNATIONAL 0x06    // International
+#define CALL_TYPE_OPERATOR      0x07    // Operator
+#define CALL_TYPE_ZERO_PLUS     0x08    // Zero+
+#define CALL_TYPE_1800          0x09    // 1-800
+#define CALL_TYPE_DIR_ASSIST    0x0a    // Directory Assistance
+#define CALL_TYPE_DENIED        0x0b    // Denied
+#define CALL_TYPE_UNASSIGNED    0x0c    // Unassigned
+#define CALL_TYPE_UNASSIGNED2   0x0d    // Unassigned
+#define CALL_TYPE_E_PURSE       0x0e    // e-Purse transaction
+#define CALL_TYPE_UNKNOWN       0x0f    // Unknown
+
+/* Payment Type (upper 4-bits) of CALLTYP */
+#define PMT_TYPE_UNUSED         0x00    // Unused for compatibility reasons
+#define PMT_TYPE_UNUSED2        0x01    // Unused for compatibility reasons
+#define PMT_TYPE_NONE           0x02    // operator, bill to third, free, etc.
+#define PMT_TYPE_COIN           0x03    // Coin
+#define PMT_TYPE_CREDIT_CARD    0x04    // Commercial credit card (magnetic)
+#define PMT_TYPE_CALLING_CARD   0x05    // Calling card (magnetic)
+#define PMT_TYPE_CASH_CARD      0x06    // Cash card
+#define PMT_TYPE_INMATE         0x07    // Inmate no payment
+#define PMT_TYPE_MONDEX         0x08    // Mondex card
+#define PMT_TYPE_VISA_ST_VALUE  0x09    // Visa stored value card
+#define PMT_TYPE_SMART_CITY     0x0a    // Smart City (FSU)
+#define PMT_TYPE_PROTON         0x0b    // Proton
+#define PMT_TYPE_UNDEFINED      0x0c    // Undefined
+#define PMT_TYPE_UNDEFINED2     0x0d    // Undefined
+#define PMT_TYPE_UNDEFINED3     0x0e    // Undefined
+#define PMT_TYPE_UNDEFINED4     0x0f    // Undefined
 
 /* DLOG_MT_CASH_BOX_COLLECTION */
 typedef struct dlog_mt_cash_box_collection {
@@ -400,5 +437,6 @@ extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
 extern void dump_hex(uint8_t *data, int len);
 extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_buf, int num_buf_len);
 extern char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len);
+extern char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len);
 
 #pragma pack(pop)
