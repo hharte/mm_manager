@@ -151,6 +151,11 @@ typedef struct dlog_mt_maint_req {
     uint8_t access_pin[3];
 } dlog_mt_maint_req_t;
 
+typedef struct dlog_mt_call_back_req {
+    uint16_t type;
+    uint8_t callback_time[6];
+} dlog_mt_call_back_req_t;
+
 typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
