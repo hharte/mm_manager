@@ -522,14 +522,23 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 cashbox_status_univ_t *cashbox_status = (cashbox_status_univ_t *)ppayload;
                 ppayload += sizeof(cashbox_status_univ_t);
 
-                printf("Cashbox status:\n");
-                printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: ",
+                printf("\t\tCashbox status: %04d-%02d-%02d %02d:%02d:%02d: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
                         cashbox_status->timestamp[0] + 1900,
                         cashbox_status->timestamp[1],
                         cashbox_status->timestamp[2],
                         cashbox_status->timestamp[3],
                         cashbox_status->timestamp[4],
-                        cashbox_status->timestamp[5]);
+                        cashbox_status->timestamp[5],
+                        (float)cashbox_status->currency_value / 100,
+                        cashbox_status->percent_full,
+                        cashbox_status->coin_count[COIN_COUNT_CA_NICKELS],
+                        cashbox_status->coin_count[COIN_COUNT_CA_DIMES],
+                        cashbox_status->coin_count[COIN_COUNT_CA_QUARTERS],
+                        cashbox_status->coin_count[COIN_COUNT_CA_DOLLARS],
+                        cashbox_status->coin_count[COIN_COUNT_US_NICKELS],
+                        cashbox_status->coin_count[COIN_COUNT_US_DIMES],
+                        cashbox_status->coin_count[COIN_COUNT_US_QUARTERS],
+                        cashbox_status->coin_count[COIN_COUNT_US_DOLLARS]);
                 break;
             }
             case DLOG_MT_PERF_STATS_MSG: {
@@ -633,15 +642,17 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
         }
     }
 
+    /* Send cash box status if requested by terminal */
     if (cashbox_pending == 1) {
-        uint8_t cashbox_status[] = {
-            DLOG_MT_CASH_BOX_STATUS, 0x5a, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00,
-            00, 00, 0x32, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-            00, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-            00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 };
+        cashbox_status_univ_t cashbox_status = {
+            .timestamp = { 90, 1, 1, 0, 0, 0 }, /* January 1, 1990 00:00:00 */
+            {0}
+        };
+
+        *pack_payload++ = DLOG_MT_CASH_BOX_STATUS;
 
         printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n", context->tx_seq);
-        memcpy(pack_payload, cashbox_status, sizeof(cashbox_status));
+        memcpy(pack_payload, &cashbox_status, sizeof(cashbox_status_univ_t));
         pack_payload += sizeof(cashbox_status);
     }
 

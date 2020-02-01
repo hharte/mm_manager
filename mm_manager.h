@@ -170,10 +170,25 @@ typedef struct dlog_mt_cash_box_collection {
     uint8_t cash[50];
 } dlog_mt_cash_box_collection_t;
 
+#define COIN_COUNT_CA_NICKELS   0
+#define COIN_COUNT_CA_DIMES     1
+#define COIN_COUNT_CA_QUARTERS  2
+#define COIN_COUNT_CA_DOLLARS   3
+#define COIN_COUNT_US_NICKELS   4
+#define COIN_COUNT_US_DIMES     5
+#define COIN_COUNT_US_QUARTERS  6
+#define COIN_COUNT_US_DOLLARS   7
+
 /* TABLE_ID_CASHBOX_STATUS_UNIV */
 typedef struct cashbox_status_univ {
     uint8_t timestamp[6];
-    uint8_t status[50];
+    uint8_t pad[4];
+    uint8_t status;                     // Cash box status bits (0=normal, 1=$value exceeded, 2=%threshold exceeded, 3=both exceeded, >3 totally full)
+    uint8_t percent_full;               // Percent full (0-100%)
+    uint16_t currency_value;            // Contains the total value of the currency which was collected, not including any previous collections.
+    uint16_t pad2[2];
+    uint16_t coin_count[8];             // Array of counts of Nickles, Dime, Quarters, Dollars for US and CA.
+    uint8_t spare[22];
 } cashbox_status_univ_t;
 
 /* DLOG_MT_PERF_STATS_RECORD 97 bytes */
