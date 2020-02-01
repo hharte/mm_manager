@@ -160,7 +160,7 @@ typedef struct dlog_mt_call_details {
     uint16_t seq;
     uint8_t start_timestamp[6];
     uint8_t call_duration[3];
-    uint8_t pad3[12];
+    uint8_t pad[12];
 } dlog_mt_call_details_t;
 
 /* DLOG_MT_CASH_BOX_COLLECTION */
@@ -263,6 +263,45 @@ typedef struct dlog_mt_rate_response {
     rate_table_entry_t rate;
     uint8_t pad2[16];
 } dlog_mt_rate_response_t;
+
+typedef struct carrier_table_entry {
+    uint8_t  carrier_ref;                   /* Unique number for each carrier used to cross reference the carrier in other tables. */
+    uint16_t carrier_num;
+    uint32_t valid_cards;
+    char     display_prompt[20];            /* Actual prompt for display on one line. */
+    uint8_t  control_byte2;
+    uint8_t  control_byte;
+    uint16_t fgb_timer;                     /* Time in 10 msec increments */
+    uint8_t  international_accept_flags;
+    uint8_t  call_entry;                    /* This field is used for Call Entry. This indicates the pointer to the Call Screening list for Feature Group B access. */
+} carrier_table_entry_t;
+
+#define DEFAULT_CARRIERS_MAX        9
+#define CARRIER_TABLE_MAX_CARRIERS  33
+typedef struct dlog_mt_carrier_table {
+    uint8_t defaults[DEFAULT_CARRIERS_MAX];
+    carrier_table_entry_t carrier[CARRIER_TABLE_MAX_CARRIERS];
+    uint8_t spare[10];
+} dlog_mt_carrier_table_t;
+
+/* CONTROL_BYTE2 - CARRIER (Carrier) pp. 2-71 */
+#define CB2_FEATURE_GRP_B_PROMPT_FOR_NUM        (1 << 0)    /* FEATURE GRP B PROMPT FOR NUM */
+#define CB2_REM_CARRIER_PREFIX_ZM_LOCAL         (1 << 1)    /* REM CARRIER PREFIX ZM LOCAL */
+#define CB2_REM_CARRIER_PREFIX_INTRALATA        (1 << 2)    /* REM CARRIER PREFIX INTRALATA */
+#define CB2_REM_CARRIER_PREFIX_INTERLATA        (1 << 3)    /* Remove Carrier Prefix Interlata */
+#define CB2_REM_CARRIER_PREFIX_INTERNATIONAL    (1 << 4)    /* Remove Carrier Prefix International */
+#define CB2_REM_CARRIER_PREFIX_DA               (1 << 5)    /* Remove Carrier Prefix DA */
+#define CB2_REM_CARRIER_PREFIX_1800             (1 << 6)    /* Remove Carrier Prefix 1-800 */
+
+/* CONTROL_BYTE - CARRIER (Carrier) pp. 2-72 */
+#define CB_CARRIER_CARD_FLAG                    (1 << 0)    /* Indicates if to dial 101XXXX */
+#define CB_USE_SPEC_DISPLAY_PROMPT              (1 << 1)    /* Indicates use of the specific display prompt. */
+#define CB_ACCEPTS_COIN_CASH_CARDS              (1 << 2)    /* Indicates if coin calls are accepted. */
+#define CB_USE_ALTERN_BONG_TONE_TIMEOUT         (1 << 3)    /* If this bit is 0, then the normal value from the User Interface Table will be used. If this bit is 1, then the alternate timer value from the User Interface Table will be used. */
+#define CB_USE_ALTERN_DELAY_AFTER_BONG          (1 << 4)    /* If this bit is 0, then the normal value from the User Interface Table will be used. If this bit is 1, then the alternate timer value from the User Interface Table will be used. */
+#define CB_INTRA_LATA_CALLS_TO_LEC              (1 << 5)    /* This field is used for intra-lata calls to LEC. This field determines how an intra-lata call is routed (to LEC or Carrier) when a carrier card is inserted and no carrier prefix is dialed. */
+#define CB_OUTDIAL_STRING_ORDER                 (1 << 6)    /* 0=FGB#, Called #, Card #; 1=FGB#, Card #, Called # */
+#define CB_FEATURE_GROUP_B                      (1 << 7)    /* Feature Group B is a category of free access to the carrier network. It usually uses 1-800 or 950xxx. */
 
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
