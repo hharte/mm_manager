@@ -58,6 +58,7 @@
 #define DLOG_MT_CALL_BACK_REQ       0x13    // 19: Call Back Request
 #define DLOG_MT_TIME_SYNC           0x14    // 20: Date/Time Synchronization
 #define DLOG_MT_NCC_TERM_PARAMS     0x15    // 21: Terminal Access Parameters
+#define DLOG_MT_ADVERT_PROMPTS      0x1d    // 29: Advertising prompts
 #define DLOG_MT_INSTALL_PARAMS      0x1f    // 31: Installation/Servicing Parameters
 #define DLOG_MT_TIME_SYNC_REQ       0x24    // 36: Time Synchronization Request
 #define DLOG_MT_PERF_STATS_MSG      0x25    // 37: Performance Statistics Record Message
@@ -357,6 +358,32 @@ typedef struct call_screen_list_entry {
 typedef struct dlog_mt_call_screen_list {
     call_screen_list_entry_t entry[CALLSCRN_TABLE_MAX];
 } dlog_mt_call_screen_list_t;
+
+/* ADMESS (Advertising) pp. 2-5 */
+#define ADMESS_ATTR_PERMANENT                   0       // Permanent
+#define ADMESS_ATTR_FLASHING_SAME               1       // Flashing Same
+#define ADMESS_ATTR_FLASHING_NEXT               2       // Flashing Next
+#define ADMESS_ATTR_SCROLL_IN                   3       // Scroll In
+#define ADMESS_ATTR_SCROLL_OUT                  4       // Scroll Out
+#define ADMESS_ATTR_SCROLL_IN_AND_OUT           5       // Scroll In and Out
+#define ADMESS_ATTR_NEW_PROMPT                  17      // New Prompt
+#define ADMESS_ATTR_FLASHING_SAME_OFF           18      // Flashing Same Off
+#define ADMESS_ATTR_FLASHING_NEXT_2ND           19      // Flashing Next 2nd
+#define ADMESS_ATTR_FLASHING_NEXT_1ST_OFF       20      // Flashing Next 1st Off
+#define ADMESS_ATTR_FLASHING_NEXT_2ND_OFF       21      // Flashing Next 2nd Off
+#define ADMESS_ATTR_BLANK_BEFORE                0x40    //
+
+typedef struct admess_table_entry {
+    uint16_t display_time;                  /* Length of time in 10ms increments that the message displays or scrolls. */
+    uint8_t  display_attr;                  /* Display attributes */
+    uint8_t  spare;                         /* This seems to indicate class of number */
+    uint8_t  message_text[20];              /* The Advertising message. */
+} admess_table_entry_t;
+
+#define ADVERT_PROMPTS_MAX                      20
+typedef struct dlog_mt_advert_prompts {
+    admess_table_entry_t entry[ADVERT_PROMPTS_MAX];
+} dlog_mt_cadvert_prompts_t;
 
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
