@@ -442,20 +442,28 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_CASH_BOX_COLLECTION: {
-                dlog_mt_cash_box_collection_t *dlog_mt_cash_box_collection = (dlog_mt_cash_box_collection_t *)ppayload;
+                dlog_mt_cash_box_collection_t *cash_box_collection = (dlog_mt_cash_box_collection_t *)ppayload;
                 printf("\tSeq: %d: DLOG_MT_CASH_BOX_COLLECTION.\n", context->tx_seq);
 
                 ppayload += sizeof(dlog_mt_cash_box_collection_t);
 
-                printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: ",
-                        dlog_mt_cash_box_collection->timestamp[0] + 1900,
-                        dlog_mt_cash_box_collection->timestamp[1],
-                        dlog_mt_cash_box_collection->timestamp[2],
-                        dlog_mt_cash_box_collection->timestamp[3],
-                        dlog_mt_cash_box_collection->timestamp[4],
-                        dlog_mt_cash_box_collection->timestamp[5]);
-
-                dump_hex(dlog_mt_cash_box_collection->cash, sizeof(dlog_mt_cash_box_collection->cash));
+                printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+                        cash_box_collection->timestamp[0] + 1900,
+                        cash_box_collection->timestamp[1],
+                        cash_box_collection->timestamp[2],
+                        cash_box_collection->timestamp[3],
+                        cash_box_collection->timestamp[4],
+                        cash_box_collection->timestamp[5],
+                        (float)cash_box_collection->currency_value / 100,
+                        cash_box_collection->percent_full,
+                        cash_box_collection->coin_count[COIN_COUNT_CA_NICKELS],
+                        cash_box_collection->coin_count[COIN_COUNT_CA_DIMES],
+                        cash_box_collection->coin_count[COIN_COUNT_CA_QUARTERS],
+                        cash_box_collection->coin_count[COIN_COUNT_CA_DOLLARS],
+                        cash_box_collection->coin_count[COIN_COUNT_US_NICKELS],
+                        cash_box_collection->coin_count[COIN_COUNT_US_DIMES],
+                        cash_box_collection->coin_count[COIN_COUNT_US_QUARTERS],
+                        cash_box_collection->coin_count[COIN_COUNT_US_DOLLARS]);
                 break;
             }
             case DLOG_MT_TERM_STATUS: {

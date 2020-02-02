@@ -210,7 +210,13 @@ typedef struct dlog_mt_call_details {
 typedef struct dlog_mt_cash_box_collection {
     uint8_t pad[14];
     uint8_t timestamp[6];
-    uint8_t cash[50];
+    uint8_t pad2[4];
+    uint8_t status;                     // Cash box status bits (0=normal, 1=$value exceeded, 2=%threshold exceeded, 3=both exceeded, >3 totally full)
+    uint8_t percent_full;               // Percent full (0-100%)
+    uint16_t currency_value;            // Contains the total value of the currency which was collected, not including any previous collections.
+    uint16_t pad3[2];
+    uint16_t coin_count[8];             // Array of counts of Nickles, Dime, Quarters, Dollars for US and CA.
+    uint8_t spare[22];
 } dlog_mt_cash_box_collection_t;
 
 #define COIN_COUNT_CA_NICKELS   0
