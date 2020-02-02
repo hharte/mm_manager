@@ -51,6 +51,7 @@ int init_port(int fd, int baudrate)
 
     /* set raw input, 1 second timeout */
     options.c_cflag     |= (CLOCAL | CREAD);
+    options.c_cflag     |= CRTSCTS;   /* Enable RTS/CTS Flow Control */
     options.c_lflag     &= ~(ICANON | ECHO | ECHOE | ISIG);
     options.c_oflag     &= ~OPOST;
     options.c_cc[VMIN]  = 0;
@@ -100,7 +101,7 @@ int init_modem(int fd)
         return -1;
     }
 
-    printf("Set carrier to Bell 212.\n");
+    printf("Set modulation to Bell 212.\n");
     status = send_at_command(fd, "AT+MS=B212");
     if (status != 0) {
         return -1;
@@ -148,7 +149,6 @@ int wait_for_connect(int fd)
 int hangup_modem(int fd)
 {
     send_at_command(fd, "+++");
-    sleep(1);
     send_at_command(fd, "ATH0");
 
     return (0);
@@ -169,6 +169,8 @@ static int send_at_command(int fd, char *command)
         if (write(fd, buffer, strlen(buffer)) < strlen(buffer)) {
             continue;
         }
+
+        sleep(1);   /* Some modems need time to process the AT command. */
 
         /* read characters into our string buffer until we get a CR or NL */
         bufptr = buffer;
