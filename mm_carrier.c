@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 #include "mm_manager.h"
 
 /* Default Carrier Mapping strings: */
