@@ -185,13 +185,15 @@ int main(int argc, char *argv[])
 
     if(strlen(mm_context.ncc_number[0]) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context.ncc_number[0]);
+
+        if(strlen(mm_context.ncc_number[1]) == 0) {
+            strncpy(mm_context.ncc_number[1], mm_context.ncc_number[0], strlen(mm_context.ncc_number[0]));
+        }
+
+        printf("Using Secondary NCC number: %s\n", mm_context.ncc_number[1]);
     } else if (mm_context.use_modem == 1) {
         fprintf(stderr, "Error: -n <NCC Number> must be specified.\n");
         return(-1);
-    }
-
-    if(strlen(mm_context.ncc_number[1]) >= 1) {
-        printf("Using Secondary NCC number: %s\n", mm_context.ncc_number[1]);
     }
 
     if (mm_context.use_modem == 0) {
@@ -917,7 +919,7 @@ int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer,
         }
     }
 
-    if (strlen(context->ncc_number[1]) == 11) {
+    if (strlen(context->ncc_number[1]) > 0) {
         // Rewrite table with Secondary NCC phone number
         printf("\tSecondary NCC: %s\n\n", context->ncc_number[1]);
         for (i = 0; i < strlen(context->ncc_number[1]); i++) {
