@@ -31,7 +31,7 @@ int open_port(char *modem_dev)
 {
     int fd;
 
-    fd = open(modem_dev, O_RDWR | O_NOCTTY | O_NDELAY);
+    fd = open(modem_dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
     if (fd == -1) {
         /* Could not open the port. */
         printf("open_port: Unable to open %s.", modem_dev);
@@ -45,40 +45,61 @@ int open_port(char *modem_dev)
 int init_port(int fd, int baudrate)
 {
     struct termios options;
+    speed_t speed;
 
-    /* get the current options */
-    tcgetattr(fd, &options);
+    switch (baudrate) {
+        case 1200:
+            speed = B1200;
+            break;
+        case 2400:
+            speed = B2400;
+            break;
+        case 4800:
+            speed = B4800;
+            break;
+        case 9600:
+            speed = B9600;
+            break;
+        case 19200:
+            speed = B19200;
+            break;
+        case 38400:
+            speed = B38400;
+            break;
+        case 57600:
+            speed = B57600;
+            break;
+        case 115200:
+            speed = B115200;
+            break;
+        case 230400:
+            speed = B230400;
+            break;
+        default:
+            printf("%s: Invalid baud rate: %d, defaulting to 1200.\n",
+                __FUNCTION__, baudrate);
+            speed = B1200;
+            break;
+    }
 
-    /* set raw input, 1 second timeout */
-    options.c_cflag     |= (CLOCAL | CREAD);
-    options.c_cflag     |= CRTSCTS;   /* Enable RTS/CTS Flow Control */
-    options.c_lflag     &= ~(ICANON | ECHO | ECHOE | ISIG);
-    options.c_oflag     &= ~OPOST;
+    /* Set serial port options. */
+    cfmakeraw(&options);
+    options.c_cflag |=  (CS8 | CLOCAL | CREAD | CRTSCTS | HUPCL);
+    options.c_cflag &= ~(PARODD | CSTOPB);
+    options.c_lflag &= ~(ECHOCTL | ECHOPRT | FLUSHO);
+    options.c_iflag |=  (IGNPAR | IGNBRK);
+
+#ifdef __APPLE__
+    options.c_cflag &= ~(CDTR_IFLOW | CDSR_OFLOW);
+    options.c_lflag &= ~(NOKERNINFO);
+#endif /* __APPLE__ */
+
     options.c_cc[VMIN]  = 0;
     options.c_cc[VTIME] = 10;
 
-    /* set the options */
-    tcsetattr(fd, TCSANOW, &options);
+    cfsetispeed(&options, speed);
+    cfsetospeed(&options, speed);
 
-    /*
-    * Get the current options for the port...
-    */
-    tcgetattr(fd, &options);
-
-    /*
-    * Set the baud rates to specified baudrate...
-    */
-    cfsetispeed(&options, baudrate);
-    cfsetospeed(&options, baudrate);
-
-    /*
-    * Enable the receiver and set local mode...
-    */
-    options.c_cflag |= (CLOCAL | CREAD);
-
-    /*
-    * Set the new options for the port...
-    */
     tcsetattr(fd, TCSANOW, &options);
 
     return (0);
@@ -102,7 +123,8 @@ int init_modem(int fd)
     }
 
     printf("Set modulation to Bell 212.\n");
-    status = send_at_command(fd, "AT+MS=B212");
+//    status = send_at_command(fd, "AT&N2");	// 3-Com Business Modem 56K USB (use 1200 baud)
+    status = send_at_command(fd, "AT+MS=B212");	// Lenovo 56K USB Modem
     if (status != 0) {
         return -1;
     }
