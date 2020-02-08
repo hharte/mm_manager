@@ -37,10 +37,13 @@ LCD_OBJ = $(patsubst %,$(ODIR)/%,$(_LCD_OBJ))
 _RATE_OBJ = mm_rate.o
 RATE_OBJ = $(patsubst %,$(ODIR)/%,$(_RATE_OBJ))
 
+_SMCARD_OBJ = mm_smcard.o
+SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
+
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: mm_manager mm_areacode mm_callscrn mm_carrier mm_lcd mm_rate
+all: mm_manager mm_areacode mm_callscrn mm_carrier mm_lcd mm_rate mm_smcard
 
 mm_manager: $(MGR_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
@@ -58,6 +61,9 @@ mm_lcd: $(LCD_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_rate: $(RATE_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_smcard: $(SMCARD_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY: clean

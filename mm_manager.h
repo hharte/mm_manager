@@ -489,6 +489,44 @@ typedef struct dlog_mt_term_status {
     uint8_t status[5];
 } dlog_mt_term_status_t;
 
+/* Smart Card Definitions */
+#define SC_REBATE_INTRALATA         0   /* Amount deducted from rate for smart card intralatacalls. */
+#define SC_REBATE_IXL               1   /* Amount deducted from rate for smart card international calls. */
+#define SC_REBATE_LOCAL             2   /* Amount deducted from rate for smart card local calls. */
+#define SC_REBATE_INTERLATA         3   /* Amount deducted from rate for smart card interlata calls. */
+#define SC_REBATE_DA                4   /* Amount deducted from rate for smart card Directory assistance calls. */
+#define SC_REBATE_1800              5   /* Amount deducted from rate for smart card 1-800 calls. */
+#define SC_REBATE_LOCAL_LMS_ADL     6   /* Amounted deducted from the rate for local (LMS) additional rate rebate. */
+#define SC_REBATE_INTRALATA_ADL     7   /* Amount deducted from the rate for the intra-lata additional rate rebate. */
+#define SC_REBATE_INTERLATA_ADL     8   /* Amount deducted from the rate for the inter-lata additional rate rebate. */
+#define SC_REBATE_IXL_ADL           9   /* Amount deducted from the rate for international additional rate rebate. */
+#define SC_REBATE_DA_ADL            10  /* Amount deducted from the rate for the directory assistance additional rate rebate. */
+#define SC_REBATE_1800_ADL          11  /* Amount deducted from the rate for the 1-800 additional rate rebate. */
+#define SC_SURCHARGE_DATAJACK       12  /* Initial surcharge for a datajack call. */
+#define SC_SURCHARGE_DATAJACK_ADL   13  /* Additional surcharge for a datajack call. */
+
+#define SC_MULT_MAX_UNIT_MAX        15
+#define SC_REBATE_MAX               14
+
+#define SC_MAX_UNIT_MASK            (0x3FFF)
+#define SC_MULT_MASK                (~SC_MAX_UNIT_MASK)
+#define SC_MULT_SHIFT               (14)
+#define SC_DES_KEY_MAX              20
+#define SC_DES_KEY_LEN              8
+
+typedef struct des_key {
+    uint8_t x[SC_DES_KEY_LEN];
+} des_key_t;
+
+/* SMCARD (Smart Card Parameters Table) pp 2-351 */
+typedef struct dlog_mt_scard_parm_table {
+    des_key_t   des_key[SC_DES_KEY_MAX];                /* 20 8-byte DES keys */
+    uint16_t    mult_max_unit[SC_MULT_MAX_UNIT_MAX];    /* 15 Mult / Max Unit entries */
+    uint16_t    rebates[SC_REBATE_MAX];                 /* Rebate table (14 entries) */
+    uint8_t     spare[6];                               /* Spare */
+} dlog_mt_scard_parm_table_t;
+
+
 /* MM Table Operations */
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
