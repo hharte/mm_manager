@@ -22,15 +22,77 @@
 #include "mm_manager.h"
 
 /* Terminal Table Lists for Rev 1.3 and Rev 1.0 Control PCP */
-uint8_t table_list_rev1_3[] = { 0x97, 0x96, 0x8a, 0x89, 0x88, 0x87, 0x86, 0x5d,
-                              0x5c, 0x56, 0x55, 0x49, 0x48, 0x3e, 0x3a, 0x37,
-                              0x32, 0x23, 0x22, 0x21, 0x20, 0x1f, 0x1e, 0x1d,
-                              0x1a, 0x15, 0x0d, 0 };
+uint8_t table_list_rev1_3[] = {
+    DLOG_MT_INTL_SBR_TABLE,
+    DLOG_MT_NPA_SBR_TABLE,
+    DLOG_MT_NPA_NXX_TABLE_3,
+    DLOG_MT_NPA_NXX_TABLE_2,
+    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARRIER_TABLE,
+    DLOG_MT_CARD_TABLE,         /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,
+    DLOG_MT_CALL_SCREEN_LIST,
+    DLOG_MT_VIS_PROPTS_L2,
+    DLOG_MT_VIS_PROPTS_L1,
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_SPARE_TABLE,
+    DLOG_MT_NUM_PLAN_TABLE,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_END_DATA,
+    0                           /* End of table list */
+};
 
-uint8_t table_list_rev1_0[] = { 0x97, 0x96, 0x8a, 0x89, 0x88, 0x87, 0x86, 0x5d,
-                              0x5c, 0x49, 0x3e, 0x3a, 0x37, 0x32, 0x23, 0x22,
-                              0x21, 0x20, 0x1f, 0x1e, 0x1d, 0x1a, 0x15, 0x0d,
-                              0 };
+uint8_t table_list_rev1_0[] = {
+    DLOG_MT_INTL_SBR_TABLE,
+    DLOG_MT_NPA_SBR_TABLE,
+    DLOG_MT_NPA_NXX_TABLE_3,
+    DLOG_MT_NPA_NXX_TABLE_2,
+    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARRIER_TABLE,
+    DLOG_MT_CARD_TABLE,         /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,
+    DLOG_MT_CALL_SCREEN_LIST,
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_NUM_PLAN_TABLE,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_END_DATA,
+    0                           /* End of table list */
+};
+
+uint8_t table_list_minimal[] = {
+    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARD_TABLE,         /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_END_DATA,
+    0                           /* End of table list */
+};
+
 
 /* Millennium Alarm Strings */
 const char *alarm_type_str[] = {
@@ -107,8 +169,9 @@ int main(int argc, char *argv[])
     index = 0;
     mm_context.ncc_number[0][0] = '\0';
     mm_context.ncc_number[1][0] = '\0';
+    mm_context.minimal_table_set = 0;
 
-    while ((c = getopt (argc, argv, "rvmb:l:f:ha:n:")) != -1) {
+    while ((c = getopt (argc, argv, "rvmb:l:f:ha:n:s")) != -1) {
         switch (c)
         {
             case 'h':
@@ -118,8 +181,9 @@ int main(int argc, char *argv[])
                        "\t-h this help.\n"
                        "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n" \
                        "\t-m use serial modem (specify device with -f)\n" \
-                       "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200."
-                       "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n");
+                       "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n" \
+                       "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
+                       "\t-s small - Download only minimum required tables to terminal.\n");
                        return(0);
                        break;
             case 'a':
@@ -162,6 +226,10 @@ int main(int argc, char *argv[])
                     strncpy(mm_context.ncc_number[index], optarg, sizeof(mm_context.ncc_number[0]));
                     index++;
                 }
+                break;
+            case 's':
+                printf("NOTE: Using minimum required table list for download.\n");
+                mm_context.minimal_table_set = 1;
                 break;
             case '?':
                 if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n' || optopt == 'b')
@@ -736,6 +804,9 @@ int mm_download_tables(mm_context_t *context)
 
     /* Rev 1 PCP does not accept table 0x048, 0x55, 0x56 */
     if (context->phone_rev == 10) table_list = table_list_rev1_0;
+
+    /* If -s was specified, download only the minimal config */
+    if (context->minimal_table_set == 1) table_list = table_list_minimal;
 
     send_mm_table(context, &table_data, 1, 0);
 
