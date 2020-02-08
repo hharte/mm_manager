@@ -406,11 +406,12 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_CALL_DETAILS: {
                 dlog_mt_call_details_t *cdr = (dlog_mt_call_details_t *)ppayload;
                 char phone_number_string[21];
+                char card_number_string[21];
                 char call_type_str[38];
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d %s, DN: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
+                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
                     cdr->start_timestamp[0] + 1900,
                     cdr->start_timestamp[1],
                     cdr->start_timestamp[2],
@@ -422,6 +423,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     cdr->call_duration[2],
                     call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
                     phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num, sizeof(cdr->called_num)),
+                    phone_num_to_string(card_number_string, sizeof(card_number_string), cdr->card_num, sizeof(cdr->card_num)),
                     (float)cdr->call_cost[0] / 100,
                     (float)cdr->call_cost[1] / 100,
                     cdr->carrier_code,
@@ -631,6 +633,44 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         dlog_mt_rate_request->pad[3],
                         dlog_mt_rate_request->pad[4],
                         dlog_mt_rate_request->pad[5]);
+
+                rate_response.rate.type = (uint8_t)mm_local;
+                rate_response.rate.initial_period = 60;
+                rate_response.rate.initial_charge = 125;
+                rate_response.rate.additional_period = 120;
+                rate_response.rate.additional_charge = 35;
+                *pack_payload++ = DLOG_MT_RATE_RESPONSE;
+                memcpy(pack_payload, &rate_response, sizeof(rate_response));
+                pack_payload += sizeof(rate_response);
+                break;
+            }
+            case DLOG_MT_FUNF_CARD_AUTH: {
+                char phone_number_string[21] = { 0 };
+                char card_number_string[25] = { 0 };
+                char call_type_str[38] = { 0 };
+
+                dlog_mt_rate_response_t rate_response = { 0 };
+                dlog_mt_funf_card_auth_t *auth_request = (dlog_mt_funf_card_auth_t *)ppayload;
+                ppayload += sizeof(dlog_mt_funf_card_auth_t);
+
+                phone_num_to_string(phone_number_string, sizeof(phone_number_string), auth_request->phone_number, sizeof(auth_request->phone_number));
+                phone_num_to_string(card_number_string, sizeof(card_number_string), auth_request->card_number, sizeof(auth_request->card_number));
+                call_type_to_string(auth_request->call_type, call_type_str, sizeof(call_type_str));
+
+                printf("\t\tCard Auth request: Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, un2k:0x%04x\n",
+                        phone_number_string,
+                        auth_request->seq,
+                        card_number_string,
+                        auth_request->exp_mm,
+                        auth_request->exp_yy,
+                        auth_request->init_mm,
+                        auth_request->init_yy,
+                        auth_request->control_flag,
+                        auth_request->carrier_ref,
+                        call_type_str,
+                        auth_request->card_ref_num,
+                        auth_request->unknown,
+                        auth_request->unknown2);
 
                 rate_response.rate.type = (uint8_t)mm_local;
                 rate_response.rate.initial_period = 60;

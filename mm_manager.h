@@ -161,7 +161,7 @@ typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
     uint8_t carrier_code;
-    uint8_t other_num[10];
+    uint8_t card_num[10];
     uint32_t call_cost[2];
     uint16_t seq;
     uint8_t start_timestamp[6];
@@ -291,7 +291,7 @@ typedef enum rate_type {
 } rate_type_t;
 
 typedef struct rate_table_entry {
-    uint8_t type;
+    uint8_t  type;                          /* See CALLTYP (Call Type) pp. 2-41 */
     uint16_t initial_period;
     uint16_t initial_charge;
     uint16_t additional_period;
@@ -312,6 +312,24 @@ typedef struct dlog_mt_rate_response {
     rate_table_entry_t rate;
     uint8_t pad2[16];
 } dlog_mt_rate_response_t;
+
+/* DLOG_MT_FUNF_CARD_AUTH - see: TAUTH (Terminal Card Authorization) pp. 2-370 */
+typedef struct dlog_mt_funf_card_auth {
+    uint8_t control_flag;
+    uint8_t phone_number[10];               /* Dialed number for which authorization is requested */
+    uint8_t carrier_ref;                    /* Unique number for each carrier used to cross reference the carrier in other tables. */
+    uint8_t card_number[12];                /* Card number, terminated with 0xe */
+    uint16_t service_code;
+    uint16_t unknown;
+    uint8_t exp_yy;                         /* Card expiration year. */
+    uint8_t exp_mm;                         /* Card expiration month. */
+    uint16_t unknown2;
+    uint8_t init_yy;                        /* Card initial year. */
+    uint8_t init_mm;                        /* Card initial month. */
+    uint8_t call_type;                      /* See CALLTYP (Call Type) pp. 2-41 */
+    uint8_t card_ref_num;
+    uint16_t seq;                           /* Authorization sequence number */
+} dlog_mt_funf_card_auth_t;
 
 typedef struct carrier_table_entry {
     uint8_t  carrier_ref;                   /* Unique number for each carrier used to cross reference the carrier in other tables. */
