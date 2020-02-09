@@ -94,6 +94,19 @@
 #define DLOG_MT_NPA_NXX_TABLE_1     0x88    // 136: Double Compressed LCD Table 1
 #define DLOG_MT_NPA_NXX_TABLE_2     0x89    // 137: Double Compressed LCD Table 2
 #define DLOG_MT_NPA_NXX_TABLE_3     0x8a    // 138: Double Compressed LCD Table 3
+#define DLOG_MT_NPA_NXX_TABLE_4     0x8b    // 139: Double Compressed LCD Table 4
+#define DLOG_MT_NPA_NXX_TABLE_5     0x8c    // 140: Double Compressed LCD Table 5
+#define DLOG_MT_NPA_NXX_TABLE_6     0x8d    // 141: Double Compressed LCD Table 6
+#define DLOG_MT_NPA_NXX_TABLE_7     0x8e    // 142: Double Compressed LCD Table 7
+#define DLOG_MT_NPA_NXX_TABLE_8     0x8f    // 143: Double Compressed LCD Table 8
+#define DLOG_MT_NPA_NXX_TABLE_9     0x90    // 144: Double Compressed LCD Table 9
+#define DLOG_MT_NPA_NXX_TABLE_10    0x91    // 145: Double Compressed LCD Table 10
+#define DLOG_MT_NPA_NXX_TABLE_11    0x92    // 146: Double Compressed LCD Table 11
+#define DLOG_MT_NPA_NXX_TABLE_12    0x93    // 147: Double Compressed LCD Table 12
+#define DLOG_MT_NPA_NXX_TABLE_13    0x94    // 148: Double Compressed LCD Table 13
+#define DLOG_MT_NPA_NXX_TABLE_14    0x95    // 149: Double Compressed LCD Table 14
+#define DLOG_MT_NPA_NXX_TABLE_15    0xa0    // 154: Double Compressed LCD Table 15
+#define DLOG_MT_NPA_NXX_TABLE_16    0xa1    // 155: Double Compressed LCD Table 16
 #define DLOG_MT_NPA_SBR_TABLE       0x96    // 150: Set Based Rating NPA Table
 #define DLOG_MT_INTL_SBR_TABLE      0x97    // 151: Set Based Rating International Table
 

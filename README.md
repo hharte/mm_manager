@@ -47,8 +47,7 @@ usage: mm_manager [-vhm] [-b <baudrate] [-f <filename>] [-l <logfile>] [-a <acce
 	-l <logfile> 	log bytes transmitted to and received from
             the terminal. Useful for debugging.
 	-m 			use serial modem (specify device with -f)
-   -b			   <baudrate> - Modem baud rate, in bps.  Defaults
- 			   to 19200.
+-b <baudrate>	Modem baud rate, in bps.  Defaults to 19200.
 	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify
             primary and optionally secondary NCC number.
 ```
@@ -614,6 +613,35 @@ Text info about rates for local and anywhere in the US Calls. 20 entries.
 
 
 
+## Generating NPA and LCD tables
+
+Python3 scripts are included to generate NPA and LCD tables automatically, using spreadsheets available from the [North American Numbering Plan Administrator](https://nationalnanpa.com/).  For Canada, spreadsheets are available from the [Canadian Numbering Administrator](http://www.cnac.ca/).  These scripts require the Python3 Pandas library to be installed.
+
+To generate an NPA table that classifies US and Canadian numbers as domestic:
+
+
+```
+./generate_npa.py --countries US CANADA
+```
+
+
+To generate LCD tables for rate centers in San Jose, California, USA:
+
+
+```
+./generate_lcd.py --state CA --npa 408 --ratecenters "SNJS NORTH" "SNJS WEST" "SNJS SOUTH" CAMPBELL SARATOGA SUNNYVALE "LOS GATOS"
+```
+
+
+To generate LCD tables for Ottawa, Canada:
+
+
+```
+./generate_lcd.py --country CA --npa 613 --ratecenters Ottawa-Hull
+```
+
+
+
 # Low-Level Protocol
 
 The low-level protocol sent over the modem is a stream of bytes framed within START and END bytes.
@@ -731,10 +759,9 @@ If you find a bug, please provide the following information when you report the 
 
 
 
-1. Automatically generate NPA and LCD tables based on rate center and latest [information available from NANPA](https://nationalnanpa.com/reports/reports_cocodes.html).
-2. Improve modem robustness.
-3. Port modem code to Win32 to support Windows XP/Windows 7.
-4. Lots of other things, please file bugs as you find them.
+1. Improve modem robustness.
+2. Port modem code to Win32 to support Windows XP/Windows 7.
+3. Lots of other things, please file bugs as you find them.
 
 
 # References
