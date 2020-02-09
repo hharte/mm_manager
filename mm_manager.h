@@ -441,6 +441,72 @@ typedef struct dlog_mt_advert_prompts {
 #define DATAJACK_ALLOW_DA_CALLS                 (1 << 3)    /* Indicates wether directory assistance calls are allowed during a datajack call. */
 #define DATAJACK_FLAGS_4_7                      (0xF0)      /* Datajack flags (unused) */
 
+/* FEATRU (Universal Feature Configuration Table) pp 2-151 */
+typedef struct dlog_mt_fconfig_opts {
+    uint8_t     term_type;
+    uint8_t     display_present;
+    uint8_t     num_call_follows;
+    uint8_t     card_val_info;
+    uint8_t     accs_mode_info;
+    uint8_t     incoming_call_mode;
+    uint8_t     anti_fraud_for_incoming_call;
+    uint8_t     OOS_POTS_flags;
+    uint8_t     datajack_visual_display;
+    uint8_t     lang_scroll_order;
+    uint8_t     lang_scroll_order2;
+    uint8_t     num_of_languages;
+    uint8_t     rating_flags;
+    uint8_t     dialaround_timer;
+    uint8_t     ptr_international_access_operator;
+    uint8_t     inter_lata_aos_number;
+    uint8_t     international_access_aos_number;
+    uint8_t     datajack_grace_period;
+    uint8_t     operator_collection_timer;
+    uint8_t     ptr_intra_lata_operator_access_num;
+    uint8_t     ptr_inter_lata_operator_access_num;
+    uint8_t     enable_adverts;
+    uint8_t     default_language;
+    uint8_t     display_called_number;
+    uint8_t     dtmf_duration;
+    uint8_t     interdigit_pause;
+    uint8_t     ppu_preauth_credit_limit;
+    uint8_t     coin_calling_features;
+    uint16_t    coin_call_overtime_period;
+    uint16_t    coin_call_pots_time;
+    uint8_t     international_min_digits;
+    uint8_t     default_rate_req_payment_type;
+    uint8_t     next_call_revalidation_frequency;
+    uint8_t     cutoff_on_disc_duration;
+    uint16_t    cdr_upload_timer_international;
+    uint16_t    cdr_upload_timer_domestic;
+    uint8_t     num_perf_stat_dialog_fails;
+    uint8_t     num_co_line_check_fails;
+    uint8_t     num_alt_ncc_dialog_check_fails;
+    uint8_t     num_failed_dialogs_until_oos;
+    uint8_t     num_failed_dialogs_until_alarm;
+    uint8_t     smartcard_flags;
+    uint8_t     max_num_digits_manual_card_entry;
+    uint8_t     ptr_intra_aos_access_num;
+    uint8_t     carrier_reroute_flags;
+    uint8_t     min_num_digits_manual_card_entry;
+    uint8_t     max_num_smartcard_inserts;
+    uint8_t     max_num_diff_smartcard_inserts;
+    uint8_t     ptr_operator_aos_number;
+    uint8_t     datajack_flags;
+    uint16_t    delay_on_hook_card_alarm;
+    uint16_t    delay_on_hook_card_alarm_after_call;
+    uint16_t    duration_of_card_alarm;
+    uint16_t    card_alarm_on_cadence;
+    uint16_t    card_alarm_off_cadence;
+    uint16_t    delay_until_card_reader_blocked_alarm;
+    uint8_t     settlement_time;
+    uint8_t     grace_period_domestic;
+    uint8_t     ias_timeout;
+    uint8_t     grace_period_international;
+    uint8_t     settlement_time_datajack_calls;
+} dlog_mt_fconfig_opts_t;
+
+
 /* See TSTATUS, 2-637 */
 #define TSTATUS_HANDSET_DISCONT_IND             (1 << 0)
 #define TSTATUS_TELEPHONY_STATUS_IND            (1 << 1)

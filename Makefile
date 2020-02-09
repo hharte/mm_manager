@@ -34,6 +34,9 @@ CALLSCRN_OBJ = $(patsubst %,$(ODIR)/%,$(_CALLSCRN_OBJ))
 _CARRIER_OBJ = mm_carrier.o
 CARRIER_OBJ = $(patsubst %,$(ODIR)/%,$(_CARRIER_OBJ))
 
+_FEATRU_OBJ = mm_featru.o
+FEATRU_OBJ = $(patsubst %,$(ODIR)/%,$(_FEATRU_OBJ))
+
 _LCD_OBJ = mm_lcd.o
 LCD_OBJ = $(patsubst %,$(ODIR)/%,$(_LCD_OBJ))
 
@@ -46,7 +49,7 @@ SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_lcd mm_rate mm_smcard
+all: mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_featru mm_lcd mm_rate mm_smcard
 
 mm_manager: $(MGR_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
@@ -61,6 +64,9 @@ mm_callscrn: $(CALLSCRN_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_carrier: $(CARRIER_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_featru: $(FEATRU_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_lcd: $(LCD_OBJ)
