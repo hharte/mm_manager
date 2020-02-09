@@ -1,12 +1,12 @@
 /*
  * Code to dump area codes list from Nortel Millennium
- * payphone table 0x97
- * 
+ * payphone table 0x96
+ *
  * www.github.com/hharte/mm_manager
- * 
+ *
  * (c) 2020, Howard M. Harte
  *
- * Table 0x97 is an array of 400 bytes, where each nibble corresponds
+ * Table 0x96 is an array of 400 bytes, where each nibble corresponds
  * to one of the area codes from 200-999.
  *
  * Each nibble contains a value representing the type of area code
@@ -36,13 +36,13 @@ int main(int argc, char *argv[])
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_areacode mm_table_97.bin\n");
+               "\tmm_areacode mm_table_96.bin\n");
         return (-1);
     }
 
     instream = fopen(argv[1], "rb");
 
-    printf("Nortel Millennium NPA (Table 0x97) Dump");
+    printf("Nortel Millennium NPA (Table 0x96) Dump");
     while(1) {
         c = fgetc(instream);
         if (feof(instream)) break;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
             printf("  %x  |  %x  |", flags0, flags1);
         }
         areacode += 2;
-    }       
+    }
 
     printf("\n+-----------------------------------------------------------------+\n");
     return 0;
