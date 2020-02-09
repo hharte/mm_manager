@@ -22,6 +22,9 @@ DEPS = mm_manager.h
 _MGR_OBJ = mm_manager.o mm_proto.o mm_util.o mm_modem.o
 MGR_OBJ = $(patsubst %,$(ODIR)/%,$(_MGR_OBJ))
 
+_ADMESS_OBJ = mm_admess.o
+ADMESS_OBJ = $(patsubst %,$(ODIR)/%,$(_ADMESS_OBJ))
+
 _NPA_OBJ = mm_areacode.o
 NPA_OBJ = $(patsubst %,$(ODIR)/%,$(_NPA_OBJ))
 
@@ -43,9 +46,12 @@ SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: mm_manager mm_areacode mm_callscrn mm_carrier mm_lcd mm_rate mm_smcard
+all: mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_lcd mm_rate mm_smcard
 
 mm_manager: $(MGR_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_admess: $(ADMESS_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_areacode: $(NPA_OBJ)

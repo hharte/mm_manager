@@ -431,7 +431,7 @@ typedef struct admess_table_entry {
 #define ADVERT_PROMPTS_MAX                      20
 typedef struct dlog_mt_advert_prompts {
     admess_table_entry_t entry[ADVERT_PROMPTS_MAX];
-} dlog_mt_cadvert_prompts_t;
+} dlog_mt_advert_prompts_t;
 
 /* FEATRU Bit Definitions, see pp. 2-182 */
 /* Data jack at offset 0x35 in FEATRU table */
