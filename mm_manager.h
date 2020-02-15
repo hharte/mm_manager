@@ -456,56 +456,56 @@ typedef struct dlog_mt_advert_prompts {
 
 /* FEATRU (Universal Feature Configuration Table) pp 2-151 */
 typedef struct dlog_mt_fconfig_opts {
-    uint8_t     term_type;
-    uint8_t     display_present;
-    uint8_t     num_call_follows;
-    uint8_t     card_val_info;
-    uint8_t     accs_mode_info;
-    uint8_t     incoming_call_mode;
+    uint8_t     term_type;                      /* Corresponds to the same Terminal Type which is used in the Terminal Control table. */
+    uint8_t     display_present;                /* Indicates whether a Visual display is present on the terminal.  If value is “0”, Advertising Enabled should be “0”. */
+    uint8_t     num_call_follows;               /* This indicates the maximum number of Follow-on calls which can be made by one user without requiring re-insertion and re-validation of card. */
+    uint8_t     card_val_info;                  /* Card validation flags (see bit definitions below.) */
+    uint8_t     accs_mode_info;                 /* ACCS mode flags (see bit definitions below.) */
+    uint8_t     incoming_call_mode;             /* Incoming call mode (see bit definitions below.) */
     uint8_t     anti_fraud_for_incoming_call;
     uint8_t     OOS_POTS_flags;
-    uint8_t     datajack_visual_display;
+    uint8_t     datajack_display_delay;         /* Time in seconds. Indicates the time the terminal will delay before displaying the datajack prompt. */
     uint8_t     lang_scroll_order;
     uint8_t     lang_scroll_order2;
     uint8_t     num_of_languages;
-    uint8_t     rating_flags;
-    uint8_t     dialaround_timer;
-    uint8_t     ptr_international_access_operator;
-    uint8_t     inter_lata_aos_number;
-    uint8_t     international_access_aos_number;
+    uint8_t     rating_flags;                   /* Determines the type of set-based rating. */
+    uint8_t     dialaround_timer;               /* When making a dial around call, indicates the amount of time a caller needs to hold down the # before receiving dial tone. 0 = disabled. */
+    uint8_t     call_screen_list_ixl_oper_entry;
+    uint8_t     call_screen_list_inter_lata_aos_entry;
+    uint8_t     call_screen_list_ixl_aos_entry;
     uint8_t     datajack_grace_period;
     uint8_t     operator_collection_timer;
-    uint8_t     ptr_intra_lata_operator_access_num;
-    uint8_t     ptr_inter_lata_operator_access_num;
-    uint8_t     enable_adverts;
+    uint8_t     call_screen_list_intra_lata_oper_entry;
+    uint8_t     call_screen_list_inter_lata_oper_entry;
+    uint8_t     advertising_flags;                  /* Advertising mode flags (see bit definitions below.) */
     uint8_t     default_language;
-    uint8_t     display_called_number;
+    uint8_t     call_setup_param_flags;             /* Call setup parameter flags (see bit definitions below.) */
     uint8_t     dtmf_duration;
     uint8_t     interdigit_pause;
-    uint8_t     ppu_preauth_credit_limit;
-    uint8_t     coin_calling_features;
-    uint16_t    coin_call_overtime_period;
-    uint16_t    coin_call_pots_time;
-    uint8_t     international_min_digits;
-    uint8_t     default_rate_req_payment_type;
-    uint8_t     next_call_revalidation_frequency;
-    uint8_t     cutoff_on_disc_duration;
-    uint16_t    cdr_upload_timer_international;
-    uint16_t    cdr_upload_timer_domestic;
-    uint8_t     num_perf_stat_dialog_fails;
+    uint8_t     ppu_preauth_credit_limit;           /* SPARE K */
+    uint8_t     coin_calling_features;              /* Coin calling feature flags (see bit definitions below.) */
+    uint16_t    coin_call_overtime_period;          /* Time after indicated expiry of coin call before call is disconnected. This overtime period allows the user additional time to enter more coins to extend the duration of the call. The user is not billed for this additional time if they fail to enter more coins */
+    uint16_t    coin_call_pots_time;                /* Time after supplementary power is lost on a coin call before it is disconnected (while in fail to POTS mode). */
+    uint8_t     international_min_digits;           /* This does not include 01 or 011. Indicates the minimum number of digits required for an international call. */
+    uint8_t     default_rate_req_payment_type;      /* Contains the default payment type used in the rate request before the caller choses a payment type.  Between 2 and 16 */
+    uint8_t     next_call_revalidation_frequency;   /* Indicates thethe number of follow on calls that can be made before a card needs to be revalidated. */
+    uint8_t     cutoff_on_disc_duration;            /* The maximum duration (* 10ms) of a C.O. line break before the terminal will disconnect the call. */
+    uint16_t    cdr_upload_timer_international;     /* International Call Detail Record Upload timer. Indicates the amount of time after the CDR is created before it will automatically upload. */
+    uint16_t    cdr_upload_timer_domestic;          /* Non-International Call Detail Record Upload timer. Indicates the amount of time after the CDR is created before it will automatically upload. */
+    uint8_t     num_perf_stat_dialog_fails;         /* Indicates the number of dialog failures before the performance statistics message will be sent up at its regular time. Otherwise the terminal will not send up this message. */
     uint8_t     num_co_line_check_fails;
     uint8_t     num_alt_ncc_dialog_check_fails;
     uint8_t     num_failed_dialogs_until_oos;
     uint8_t     num_failed_dialogs_until_alarm;
-    uint8_t     smartcard_flags;
-    uint8_t     max_num_digits_manual_card_entry;
-    uint8_t     ptr_intra_aos_access_num;
-    uint8_t     carrier_reroute_flags;
-    uint8_t     min_num_digits_manual_card_entry;
-    uint8_t     max_num_smartcard_inserts;
-    uint8_t     max_num_diff_smartcard_inserts;
-    uint8_t     ptr_operator_aos_number;
-    uint8_t     datajack_flags;
+    uint8_t     smartcard_flags;                    /* Smart Card flag bits */
+    uint8_t     max_num_digits_manual_card_entry;   /* Maximum digits allowed for manually dialed card numbers. */
+    uint8_t     call_screen_list_zp_aos_entry;      /* A pointer to the AOS number located in the call screening list. */
+    uint8_t     carrier_reroute_flags;              /* Carrier reroute flags, see below. */
+    uint8_t     min_num_digits_manual_card_entry;   /* Minimum digits allowed for manually dialed card numbers. */
+    uint8_t     max_num_smartcard_inserts;          /* Maximum of total smart cards allowed to be inserted during a call. */
+    uint8_t     max_num_diff_smartcard_inserts;     /* Maximum of different smart cards allowed to be inserted during a call. */
+    uint8_t     call_screen_list_zm_aos_entry;      /* Is a pointer to the AOS number located in the call screening list. */
+    uint8_t     datajack_flags;                     /* Datajack flags */
     uint16_t    delay_on_hook_card_alarm;
     uint16_t    delay_on_hook_card_alarm_after_call;
     uint16_t    duration_of_card_alarm;
@@ -518,6 +518,96 @@ typedef struct dlog_mt_fconfig_opts {
     uint8_t     grace_period_international;
     uint8_t     settlement_time_datajack_calls;
 } dlog_mt_fconfig_opts_t;
+
+#define FC_CARD_AUTH_ON_LOCAL_CALLS             (1 << 0)    /* Indicates whether it is necessary for the terminal to validate a card for local calls. */
+#define FC_DELAYED_CARD_AUTHORIZATION           (1 << 1)    /* Indicates when to perform card authorization. */
+#define FC_CARD_AUTH_ON_MCE_LOCAL_CALLS         (1 << 2)    /* Indicates whether it is necessary for the terminal to validate MCE local calls. */
+#define FC_NO_NPA_ADDED_ZP_LOCAL_ACCS           (1 << 3)    /* “0” NPA added, “1” NPA not added. */
+#define FC_CARD_AUTH_BIT_4                      (1 << 4)    /* “0” No Card Authorization Required, “1” Card Authorization Required. */
+#define FC_CARD_AUTH_BIT_5                      (1 << 5)    /* “0” No Card Authorization Required, “1” Card Authorization Required. */
+#define FC_CARD_AUTH_BIT_6                      (1 << 6)    /* “0” No Card Authorization Required, “1” Card Authorization Required. */
+#define FC_IMMED_MCE_CARD_AUTH                  (1 << 7)    /* Indicates whether it is necessary for the terminal to validate immediately an MCE manually-entered card number or wait for the called number to be dialed before validating the card. */
+
+#define FC_ACCS_AVAILABLE                       (1 << 0)    /* Indicates whether ACCS is available for card validation. */
+#define FC_MCE_ROUTING                          (1 << 1)    /* “0” Routed to Millennium Manager, “1” Routed to ACCS */
+#define FC_MANUAL_DIALED_CARD_NUM_ENABLED       (1 << 2)    /* Indicates whether manually dialed calling card digits are buffered by the terminal for automatic download to ACCS when using next call. */
+#define FC_MANUALLY_DIALED_NCC_VALID_REQ        (1 << 3)    /* Indicates if Millennium Manager validation is required for manually dialed cardnumbers(1) or validation is not required(0). */
+#define FC_AOS_ENABLED                          (1 << 4)    /* Indicates if Automated Operator Services (AOS) is enabled (1) or disabled(0). */
+#define FC_ZERO_PLUS_LOCAL_CALLS_TO_NCC         (1 << 5)    /* “0” Terminal will do a 0 to 1 conversion. “1” Terminal will strip off leading 0 or 1. */
+#define FC_ACCS_INFO_BIT_6                      (1 << 6)    /* Reserved */
+#define FC_REMOVE_NPA_ZP_LOCAL_NCC_CALLS        (1 << 7)    /* “0” Terminal will not remove NPA “1” Terminal will remove NPA from 0+ NPA + TD calls. */
+                                                            /* Remove NPA on Local Calls (Note: a value of yes indicates that the terminal is to remove the NPA from 0+NPA+7D local calls.) */
+#define FC_CALL_MODE_NO_INCOMING                (0)         /* “0” Ringing Disabled, no answering of incoming data calls. */
+#define FC_CALL_MODE_INCOMING_VOICE_ONLY        (1)         /* “1” Ringing Enabled, answering voice calls only. */
+#define FC_CALL_MODE_RING_DISABLED_ANSWER_DATA  (2)         /* “2” Ringing Disabled, answering as data call immediately. */
+#define FC_CALL_MODE_RING_ENABLED_ANSWER_DATA   (3)         /* “3” Ringing Enabled, answering data call after specified number of rings. */
+
+#define FC_IN_SERVICE_ON_CDR_LIST_FULL          (1 << 0)    /* Flag used to determine whether the terminal will remain in service (1) or not in service (0) when the CDR list is full. */
+#define FC_TERM_RATE_DISPLAY_OPTION             (1 << 1)    /* Flag used to indicate if the card terminal will display an initial rate. */
+#define FC_INCOMING_CALL_FCA_PRECEDENCE         (1 << 2)    /* Flag used to tell the terminal which takes precedence, an incoming call (0) or an FCA/smart card alert(1). */
+#define FC_FCA_ON_CARD                          (1 << 3)    /* Flag used to tell the terminal whether the FCA /smart card alert will sound (1) or not sound (0), for a zero-value cash card. */
+#define FC_REVERT_TO_PRIMARY_NCC_NUM            (1 << 4)    /* If set, the terminal will revert to the primary Millennium Manager number at the call-in time if the terminal is currently using the secondary number. */
+#define FC_BLOCK_NO_RATE_CARRIER                (1 << 5)    /* MISC BIT 5 will be renamed BLOCK NO RATE CARRIER in a future release. */
+#define FC_RATED_CREDIT_CARD_CDR                (1 << 6)    /* MISC BIT 6 will be renamed RATED CREDIT CARD CDR in a future release. */
+#define FC_11_DIGIT_LOCAL_CALLS                 (1 << 7)    /* MISC BIT 7 will be renamed 11 DIGIT LOCAL CALLS in a future release. */
+
+#define FC_ADVERT_ENABLED                       (1 << 0)    /* Indicates whether Advertising is enabled on the terminal. */
+#define FC_REP_DIALER_ADVERTISING               (1 << 1)    /* Indicates if Rep Dialer/quick access key Advertising is enabled(“1”) or disabled(“0”). */
+#define FC_CALL_ESTABLISHED_ADVERTISING         (1 << 2)    /* Indicates if Call Established Advertising is enabled(“1”) or disabled(“0”). */
+#define FC_ENABLE_DATE_TIME_DISPLAY             (1 << 3)    /* Indicates if date-time display is enabled. */
+#define FC_TIME_FORMAT                          (1 << 4)    /* “0” 24 hour display, “1” 12 hour display. */
+#define FC_ADVERTISING_FLAGS_BIT_5              (1 << 5)    /* Reserved */
+#define FC_ADVERTISING_FLAGS_BIT_6              (1 << 6)    /* Reserved */
+#define FC_ADVERTISING_FLAGS_BIT_7              (1 << 7)    /* Reserved */
+
+#define FC_DISPLAY_CALLED_NUMBER                (1 << 0)    /* Indicates wether or not to display the called number. */
+#define FC_ENABLE_SERVLEV_DISP_FLASHING         (1 << 1)    /* Determines if the degraded service prompts flash (1) or display solid (0). */
+#define FC_CALL_SETUP_PARAMS_BIT_2              (1 << 2)    /* Reserved */
+#define FC_CALL_SETUP_PARAMS_BIT_3              (1 << 3)    /* Reserved */
+#define FC_CALL_SETUP_PARAMS_BIT_4              (1 << 4)    /* Reserved */
+#define FC_CALL_SETUP_PARAMS_BIT_5              (1 << 5)    /* Reserved */
+#define FC_CALL_SETUP_PARAMS_BIT_6              (1 << 6)    /* Reserved */
+#define FC_SUPPRESS_CALLING_PROMPT              (1 << 7)    /* Indicates whether Calling prompt displays while the terminal is dialing out. */
+
+/* Coin Calling Feature Flags */
+#define FC_COIN_CALL_OVERTIME                   (1 << 0)    /* Indicates whether an overtime period on coin calls is allowed for the user to insert coins to extend call duration. */
+#define FC_VOICE_FEEDBACK_ON_COIN_CALL          (1 << 1)    /* Indicates whether voice feedback is provided on coin calls */
+#define FC_COIN_CALL_SECOND_WARNING             (1 << 2)    /* Indicates whether the second warning is enabled for coin calls. */
+#define FC_COIN_CALL_FEATURES_BIT_3             (1 << 3)    /* Reserved */
+#define FC_COIN_CALL_FEATURES_BIT_4             (1 << 4)    /* Reserved */
+#define FC_COIN_CALL_FEATURES_BIT_5             (1 << 5)    /* Reserved */
+#define FC_COIN_CALL_FEATURES_BIT_6             (1 << 6)    /* Reserved */
+#define FC_COIN_CALL_FEATURES_BIT_7             (1 << 7)    /* Reserved */
+
+/* Smart Card flag bits */
+#define FC_SMART_CARD_FLAGS_BIT_0               (1 << 0)    /* Reserved */
+#define FC_SC_VALID_INTERNATIONAL_CALLS         (1 << 1)    /* Smart Card valid for international calls. */
+#define FC_SC_VALID_INTER_LATA_CALLS            (1 << 2)    /* Smart Card valid for Inter-LATA calls. */
+#define FC_SC_VALID_INTRA_LATA_CALLS            (1 << 3)    /* Smart Card valid for Intra-LATA calls. */
+#define FC_SC_VALID_LOCAL_CALLS                 (1 << 4)    /* Smart Card valid for Local calls. */
+#define FC_POST_PAYMENT_RATE_REQUEST            (1 << 5)    /* If the payment type chosen is different than the type used by the rate request, turning on this flag will trigger a second rate request. */
+#define FC_USE_TERMINAL_CARD_TABLE_DEF          (1 << 6)    /* ? */
+#define FC_RATE_INFO_NOT_DISPLAYED              (1 << 7)    /* ? */
+
+/* Carrier Re-Route flags */
+#define FC_BLOCK_REROUTE_COIN_CALL              (1 << 0)    /* Blocks (0) or redirects (1) invalid carrier coin calls. */
+#define FC_BLOCK_REROUTE_CREDIT_CARD_CALL       (1 << 1)    /* Blocks (0) or redirects (1) invalid carrier credit card calls. */
+#define FC_BLOCK_REROUTE_SMART_CARD_CALL        (1 << 2)    /* Blocks (0) or redirects (1) invalid carrier smart card calls. */
+#define FC_BLOCK_REROUTE_CALL_CARD_CALL         (1 << 3)    /* Blocks (0) or redirects (1) invalid carrier calling card calls. */
+#define FC_CARRIER_BLOCK_REROUTE_BIT_4          (1 << 4)    /* Reserved */
+#define FC_CARRIER_BLOCK_REROUTE_BIT_5          (1 << 5)    /* Reserved */
+#define FC_CARRIER_BLOCK_REROUTE_BIT_6          (1 << 6)    /* Reserved */
+#define FC_CARRIER_BLOCK_REROUTE_BIT_7          (1 << 7)    /* Reserved */
+
+/* Datajack flags */
+#define FC_DATAJACK_ENABLED                     (1 << 0)    /* Indicates wether terminal allows (1) or blocks (0) datajack calls. */
+#define FC_DATAJACK_MUTING                      (1 << 1)    /* Indicates when the handset is muted for a datajack call. */
+#define FC_DATAJACK_ALLOW_FREE_LOCAL_CALL       (1 << 2)    /* Indicates wether local datajack call are free (1) or chargeable (0). */
+#define FC_DATAJACK_ALLOW_DA_CALLS              (1 << 3)    /* Indicates wether directory assistance calls are allowed during a datajack call. */
+#define FC_DJ_FLAGS_BIT_4                       (1 << 4)    /* Reserved */
+#define FC_DJ_FLAGS_BIT_5                       (1 << 5)    /* Reserved */
+#define FC_DJ_FLAGS_BIT_6                       (1 << 6)    /* Reserved */
+#define FC_DJ_FLAGS_BIT_7                       (1 << 7)    /* Reserved */
 
 
 /* See TSTATUS, 2-637 */
