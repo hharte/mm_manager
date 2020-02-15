@@ -725,5 +725,6 @@ extern void dump_hex(uint8_t *data, int len);
 extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_buf, int num_buf_len);
 extern char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len);
 extern char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len);
+extern void print_bits(uint8_t bits, char *str_array[]);
 
 #pragma pack(pop)

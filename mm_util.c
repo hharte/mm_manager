@@ -185,3 +185,15 @@ char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_le
     return string_buf;
 
 }
+
+void print_bits(uint8_t bits, char *str_array[])
+{
+    int i = 0;
+    while (bits) {
+        if (bits & 1) {
+            printf("%s | ", str_array[i]);
+        }
+        bits >>= 1;
+        i++;
+    }
+}
