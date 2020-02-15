@@ -21,9 +21,9 @@
 #include<stdio.h>
 
 char *str_flags[4] = {
-    "---",
-    "   ",
-    "USA",
+    "---",  /* 0 - Invalid NPA */
+    "   ",  /* 1 - Unassigned */
+    "USA",  /* 2 - Local, Intra-LATA, Inter-LATA, depending on LCD Table */
     "For"
 };
 
