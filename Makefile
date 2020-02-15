@@ -34,7 +34,7 @@ CALLSCRN_OBJ = $(patsubst %,$(ODIR)/%,$(_CALLSCRN_OBJ))
 _CARRIER_OBJ = mm_carrier.o
 CARRIER_OBJ = $(patsubst %,$(ODIR)/%,$(_CARRIER_OBJ))
 
-_FEATRU_OBJ = mm_featru.o
+_FEATRU_OBJ = mm_featru.o mm_util.o
 FEATRU_OBJ = $(patsubst %,$(ODIR)/%,$(_FEATRU_OBJ))
 
 _LCD_OBJ = mm_lcd.o

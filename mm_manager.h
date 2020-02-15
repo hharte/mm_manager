@@ -511,9 +511,9 @@ typedef struct dlog_mt_fconfig_opts {
     uint16_t    duration_of_card_alarm;
     uint16_t    card_alarm_on_cadence;
     uint16_t    card_alarm_off_cadence;
-    uint16_t    delay_until_card_reader_blocked_alarm;
-    uint8_t     settlement_time;
-    uint8_t     grace_period_domestic;
+    uint16_t    card_reader_blocked_alarm_delay;
+    uint8_t     settlement_time;                    /* Check IAS Settle Time Before AS Between 0 and 255. */
+    uint8_t     grace_period_domestic;              /* Check IAS Domestic Grace Period Between 0 and 255. */
     uint8_t     ias_timeout;
     uint8_t     grace_period_international;
     uint8_t     settlement_time_datajack_calls;
@@ -545,7 +545,7 @@ typedef struct dlog_mt_fconfig_opts {
 #define FC_IN_SERVICE_ON_CDR_LIST_FULL          (1 << 0)    /* Flag used to determine whether the terminal will remain in service (1) or not in service (0) when the CDR list is full. */
 #define FC_TERM_RATE_DISPLAY_OPTION             (1 << 1)    /* Flag used to indicate if the card terminal will display an initial rate. */
 #define FC_INCOMING_CALL_FCA_PRECEDENCE         (1 << 2)    /* Flag used to tell the terminal which takes precedence, an incoming call (0) or an FCA/smart card alert(1). */
-#define FC_FCA_ON_CARD                          (1 << 3)    /* Flag used to tell the terminal whether the FCA /smart card alert will sound (1) or not sound (0), for a zero-value cash card. */
+#define FC_FCA_ON_CARD                          (1 << 3)    /* Flag used to tell the terminal whether the FCA / smart card alert will sound (1) or not sound (0), for a zero-value cash card. */
 #define FC_REVERT_TO_PRIMARY_NCC_NUM            (1 << 4)    /* If set, the terminal will revert to the primary Millennium Manager number at the call-in time if the terminal is currently using the secondary number. */
 #define FC_BLOCK_NO_RATE_CARRIER                (1 << 5)    /* MISC BIT 5 will be renamed BLOCK NO RATE CARRIER in a future release. */
 #define FC_RATED_CREDIT_CARD_CDR                (1 << 6)    /* MISC BIT 6 will be renamed RATED CREDIT CARD CDR in a future release. */

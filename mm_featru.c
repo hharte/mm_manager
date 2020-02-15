@@ -14,8 +14,6 @@
 #include <stdint.h>
 #include "mm_manager.h"
 
-void print_bits(uint8_t bits, char *str_array[]);
-
 const char *auth_bits_str[] = {
     "FC_CARD_AUTH_ON_LOCAL_CALLS",
     "FC_DELAYED_CARD_AUTHORIZATION",
@@ -125,11 +123,12 @@ const char *datajack_flags_str[] = {
 int main(int argc, char *argv[])
 {
     FILE *instream;
+    FILE *ostream = NULL;
     dlog_mt_fconfig_opts_t *featru_table;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_featru mm_table_1a.bin\n");
+               "\tmm_featru mm_table_1a.bin [outputfile.bin]\n");
         return (-1);
     }
 
@@ -142,21 +141,27 @@ int main(int argc, char *argv[])
         printf("Error reading ADMESS table.\n");
         if (featru_table != NULL) {
             free(featru_table);
+            fclose(instream);
             return (-2);
         }
     }
+
+    fclose(instream);
 
     printf("                             term_type: 0x%02x\n", featru_table->term_type);
     printf("                       display_present: %d\n", featru_table->display_present);
     printf("                      num_call_follows: %d\n", featru_table->num_call_follows);
     printf("                         card_val_info: 0x%02x\t", featru_table->card_val_info);
     print_bits(featru_table->card_val_info, (char **)auth_bits_str);
+    printf("\n");
     printf("                        accs_mode_info: 0x%02x\t", featru_table->accs_mode_info);
     print_bits(featru_table->accs_mode_info, (char **)accs_bits_str);
+    printf("\n");
     printf("                    incoming_call_mode: 0x%02x\t%s\n", featru_table->incoming_call_mode, call_mode_str[featru_table->incoming_call_mode]);
     printf("          anti_fraud_for_incoming_call: 0x%02x\n", featru_table->anti_fraud_for_incoming_call);
     printf("                        OOS_POTS_flags: 0x%02x\t", featru_table->OOS_POTS_flags);
     print_bits(featru_table->OOS_POTS_flags, (char **)misc_flags_str);
+    printf("\n");
     printf("                datajack_display_delay: %ds\n", featru_table->datajack_display_delay);
     printf("                     lang_scroll_order: 0x%02x\n", featru_table->lang_scroll_order);
     printf("                    lang_scroll_order2: 0x%02x\n", featru_table->lang_scroll_order2);
@@ -172,14 +177,17 @@ int main(int argc, char *argv[])
     printf("call_screen_list_inter_lata_oper_entry: 0x%02x\n", featru_table->call_screen_list_inter_lata_oper_entry);
     printf("                     advertising_flags: 0x%02x\t", featru_table->advertising_flags);
     print_bits(featru_table->advertising_flags, (char **)advertising_bits_str);
+    printf("\n");
     printf("                      default_language: %d\n", featru_table->default_language);
     printf("                call_setup_param_flags: 0x%02x\t", featru_table->call_setup_param_flags);
     print_bits(featru_table->call_setup_param_flags, (char **)call_setup_flags_str);
+    printf("\n");
     printf("                         dtmf_duration: %d (%dms)\n", featru_table->dtmf_duration, featru_table->dtmf_duration * 10);
     printf("                      interdigit_pause: %d (%dms)\n", featru_table->interdigit_pause, featru_table->interdigit_pause * 10);
     printf("              ppu_preauth_credit_limit: %d\n", featru_table->ppu_preauth_credit_limit);
     printf("                 coin_calling_features: 0x%02x\t", featru_table->coin_calling_features);
     print_bits(featru_table->coin_calling_features, (char **)coin_calling_features_str);
+    printf("\n");
     printf("             coin_call_overtime_period: %ds\n", featru_table->coin_call_overtime_period);
     printf("                   coin_call_pots_time: %ds\n", featru_table->coin_call_pots_time);
     printf("              international_min_digits: %d\n", featru_table->international_min_digits);
@@ -195,44 +203,55 @@ int main(int argc, char *argv[])
     printf("        num_failed_dialogs_until_alarm: %d\n", featru_table->num_failed_dialogs_until_alarm);
     printf("                       smartcard_flags: 0x%02x\t", featru_table->smartcard_flags);
     print_bits(featru_table->smartcard_flags, (char **)smartcard_flags_str);
+    printf("\n");
     printf("      max_num_digits_manual_card_entry: %d\n", featru_table->max_num_digits_manual_card_entry);
     printf("         call_screen_list_zp_aos_entry: 0x%02x\n", featru_table->call_screen_list_zp_aos_entry);
     printf("                 carrier_reroute_flags: 0x%02x\t", featru_table->carrier_reroute_flags);
     print_bits(featru_table->carrier_reroute_flags, (char **)carrier_reroute_flags_str);
+    printf("\n");
     printf("      min_num_digits_manual_card_entry: %d\n", featru_table->min_num_digits_manual_card_entry);
     printf("             max_num_smartcard_inserts: %d\n", featru_table->max_num_smartcard_inserts);
     printf("        max_num_diff_smartcard_inserts: %d\n", featru_table->max_num_diff_smartcard_inserts);
     printf("         call_screen_list_zm_aos_entry: 0x%02x\n", featru_table->call_screen_list_zm_aos_entry);
     printf("                        datajack_flags: 0x%02x\t", featru_table->datajack_flags);
     print_bits(featru_table->datajack_flags, (char **)datajack_flags_str);
+    printf("\n");
     printf("              delay_on_hook_card_alarm: %d\n", featru_table->delay_on_hook_card_alarm);
     printf("   delay_on_hook_card_alarm_after_call: %d\n", featru_table->delay_on_hook_card_alarm_after_call);
     printf("                duration_of_card_alarm: %d\n", featru_table->duration_of_card_alarm);
     printf("                 card_alarm_on_cadence: %d\n", featru_table->card_alarm_on_cadence);
     printf("                card_alarm_off_cadence: %d\n", featru_table->card_alarm_off_cadence);
-    printf(" delay_until_card_reader_blocked_alarm: %d\n", featru_table->delay_until_card_reader_blocked_alarm);
+    printf("       card_reader_blocked_alarm_delay: %d\n", featru_table->card_reader_blocked_alarm_delay);
     printf("                       settlement_time: %d\n", featru_table->settlement_time);
     printf("                 grace_period_domestic: %d\n", featru_table->grace_period_domestic);
     printf("                           ias_timeout: %d\n", featru_table->ias_timeout);
     printf("            grace_period_international: %d\n", featru_table->grace_period_international);
     printf("        settlement_time_datajack_calls: %d\n", featru_table->settlement_time_datajack_calls);
 
+    /* Modify FEATRU table */
+    featru_table->card_val_info |= FC_NO_NPA_ADDED_ZP_LOCAL_ACCS;
+    featru_table->accs_mode_info = 0;
+    featru_table->advertising_flags |= FC_REP_DIALER_ADVERTISING;
+    featru_table->advertising_flags &= ~FC_TIME_FORMAT;             /* 24-hour time format. */
+    featru_table->call_setup_param_flags |= FC_DISPLAY_CALLED_NUMBER;
+    featru_table->call_setup_param_flags &= ~FC_SUPPRESS_CALLING_PROMPT;
+    featru_table->datajack_flags &= ~FC_DATAJACK_ENABLED;
+    featru_table->grace_period_domestic = 5;                        // 5 second grace period.
+
+    if (argc > 2) {
+        ostream = fopen(argv[2], "wb");
+    }
+
+    /* If output file was specified, write it. */
+    if (ostream != NULL) {
+        printf("\nWriting new table to %s\n", argv[2]);
+        fwrite(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, ostream);
+        fclose(ostream);
+    }
+
     if (featru_table != NULL) {
         free(featru_table);
     }
 
     return (0);
-}
-
-void print_bits(uint8_t bits, char *str_array[])
-{
-    int i = 0;
-    while (bits) {
-        if (bits & 1) {
-            printf("%s | ", str_array[i]);
-        }
-        bits >>= 1;
-        i++;
-    }
-    printf("\n");
 }
