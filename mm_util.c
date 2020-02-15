@@ -130,6 +130,7 @@ char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_
 /* Call Type (lower 4-bits) of CALLTYP */
 char *call_type_str[16] = {
     "Incoming",
+    "Unanswered",
     "Abandoned",
     "Local",
     "Intra-LATA",
