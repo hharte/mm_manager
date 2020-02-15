@@ -31,7 +31,7 @@ NPA_OBJ = $(patsubst %,$(ODIR)/%,$(_NPA_OBJ))
 _CALLSCRN_OBJ = mm_callscrn.o mm_util.o
 CALLSCRN_OBJ = $(patsubst %,$(ODIR)/%,$(_CALLSCRN_OBJ))
 
-_CARRIER_OBJ = mm_carrier.o
+_CARRIER_OBJ = mm_carrier.o mm_util.o
 CARRIER_OBJ = $(patsubst %,$(ODIR)/%,$(_CARRIER_OBJ))
 
 _FEATRU_OBJ = mm_featru.o mm_util.o

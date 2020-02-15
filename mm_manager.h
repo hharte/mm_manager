@@ -409,10 +409,13 @@ typedef struct dlog_mt_carrier_table {
 
 /* CALLSCR (Call Screening List) pp. 2-33 */
 typedef struct call_screen_list_entry {
-    uint8_t  pad[4];                        /* Need to figure out what these are for. */
+    uint8_t  free_call_flags;               /* FREE (Free Call) pp. 2-189 */
+    uint8_t  call_type;                     /* CALLTYPE */
+    uint8_t  carrier_ref;                   /* Reference to the RATE/CARRIER table. A value of 255 means there is no reference. */
+    uint8_t  ident2;                        /* IDENT2 Flags, see pp. 2-193 */
     uint8_t  phone_number[9];               /* 0-terminated phone number, one digit per nibble. */
     uint8_t  class;                         /* This seems to indicate class of number */
-    uint8_t  spare[3];                      /* These might be spares, they are all 0's. */
+    uint8_t  spare[3];                      /* Reserved for future use. */
 } call_screen_list_entry_t;
 
 #define CALLSCRN_TABLE_MAX                      180
