@@ -28,10 +28,10 @@ char *str_rates[] = {
     "toll_inter_lata   ",
     "mm_inter_lata     ",
     "mm_local          ",
-    "      ????        ",
-    "      ????        ",
-    "      ????        ",
-    "      ????        ",
+    "      ?09?        ",
+    "      ?0a?        ",
+    "      ?0b?        ",
+    "      ?0c?        ",
 };
 
 int main(int argc, char *argv[])
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     FILE *instream;
     unsigned char c;
     int rate_index;
+    uint8_t unknown_bytes[39];
     char rate_str_initial[10];
     char rate_str_additional[10];
 
@@ -55,17 +56,23 @@ int main(int argc, char *argv[])
     printf("Nortel Millennium RATE Table (Table 73) Dump\n");
 
     /* Skip over unknown 39 bytes at the beginning of the RATE table */
-    fseek(instream, 39, SEEK_SET);
+    if (fread(unknown_bytes, 39, 1, instream) > 0) {
+        printf("39 Unknown bytes in beginning of RATE table:\n");
+        dump_hex(unknown_bytes, 39);
+    }
+
+    printf("\n+------------+-------------------------+----------------+--------------+-------------------+-----------------+\n" \
+           "| Index      | Type                    | Initial Period | Initial Rate | Additional Period | Additional Rate |\n" \
+           "+------------+-------------------------+----------------+--------------+-------------------+-----------------+");
 
     for (rate_index = 0; ; rate_index++) {
 
-        if (rate_index % 20 == 0) {
-            printf("\n+-----------------------------------------------------------------------------------------------------+\n" \
-                     "| Idx | Type                    | Initial Period | Initial Rate | Additional Period | Additional Rate |\n" \
-                     "+-----+-------------------------+----------------+--------------+-------------------+-----------------+");
-        }
-
         if (fread(&rate_entry, sizeof(rate_entry), 1, instream) > 0) {
+
+            if (rate_entry.type == 0 && rate_entry.initial_charge == 0 && rate_entry.additional_charge == 0 && \
+                rate_entry.initial_period == 0 && rate_entry.additional_period == 0) {
+                    continue;
+                }
 
             if (rate_entry.initial_period & FLAG_PERIOD_UNLIMITED) {
                 strcpy(rate_str_initial, "Unlimited");
@@ -78,8 +85,8 @@ int main(int argc, char *argv[])
                 sprintf(rate_str_additional, "   %5ds", rate_entry.additional_period);
             }
 
-            printf("\n| %3d | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
-                rate_index,
+            printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
+                rate_index, rate_index,
                 rate_entry.type,
                 str_rates[rate_entry.type],
                 rate_str_initial,
@@ -91,6 +98,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("\n+-----------------------------------------------------------------------------------------------------+\n");
+    printf("\n+------------------------------------------------------------------------------------------------------------+\n");
     return 0;
 }

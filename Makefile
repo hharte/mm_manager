@@ -40,7 +40,7 @@ FEATRU_OBJ = $(patsubst %,$(ODIR)/%,$(_FEATRU_OBJ))
 _LCD_OBJ = mm_lcd.o
 LCD_OBJ = $(patsubst %,$(ODIR)/%,$(_LCD_OBJ))
 
-_RATE_OBJ = mm_rate.o
+_RATE_OBJ = mm_rate.o mm_util.o
 RATE_OBJ = $(patsubst %,$(ODIR)/%,$(_RATE_OBJ))
 
 _SMCARD_OBJ = mm_smcard.o
