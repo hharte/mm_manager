@@ -188,7 +188,7 @@ carrier_table_entry_t new_carriers[] = {
 int main(int argc, char *argv[])
 {
     FILE *instream;
-    FILE *ostream;
+    FILE *ostream = NULL;
     int carrier_index;
     uint16_t carrier_num;
     char display_prompt_string[21];
