@@ -82,6 +82,7 @@
 #define DLOG_MT_NUM_PLAN_TABLE      0x3e    // 62: Numbering Plan Table
 #define DLOG_MT_RATE_REQUEST        0x3f    // 63: Rate Request Message – Universal
 #define DLOG_MT_RATE_RESPONSE       0x40    // 64: Rate Response Message – Universal
+#define DLOG_MT_AUTH_RESP_CODE      0x41    // 65: Authorization Response Message – Post MSR 1.5
 #define DLOG_MT_CARRIER_STATS_EXP   0x47    // 71: Expanded Carrier Call Statistics Message
 #define DLOG_MT_SPARE_TABLE         0x48    // 72: Spare Table
 #define DLOG_MT_RATE_TABLE          0x49    // 73: Rate Table
@@ -289,11 +290,16 @@ typedef struct dlog_mt_summary_call_stats {
     uint8_t stats[80];
 } dlog_mt_summary_call_stats_t;
 
+typedef struct carrier_stats_entry {
+    uint8_t carrier_ref;
+    uint8_t pad[58];
+} carrier_stats_entry_t;
+
 /* DLOG_MT_CARRIER_CALL_STATS 106 bytes */
 typedef struct dlog_mt_carrier_call_stats {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
-    uint8_t pad[94];
+    carrier_stats_entry_t carrier_stats[3];
 } dlog_mt_carrier_call_stats_t;
 
 /* DLOG_MT_CARRIER_STATS_EXP */
@@ -367,6 +373,12 @@ typedef struct dlog_mt_funf_card_auth {
     uint8_t card_ref_num;
     uint16_t seq;                           /* Authorization sequence number */
 } dlog_mt_funf_card_auth_t;
+
+/* DLOG_MT_AUTH_RESP_CODE */
+typedef struct dlog_mt_auth_resp_code {
+    uint8_t  resp_code;                     /* Authorization response code: 0=card valid, otherwise card invalid. */
+    uint8_t  pad[20];
+} dlog_mt_auth_resp_code_t;
 
 typedef struct carrier_table_entry {
     uint8_t  carrier_ref;                   /* Unique number for each carrier used to cross reference the carrier in other tables. */

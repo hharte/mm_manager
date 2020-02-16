@@ -83,8 +83,12 @@ uint8_t table_list_rev1_0[] = {
 
 uint8_t table_list_minimal[] = {
     DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARRIER_TABLE,
     DLOG_MT_CARD_TABLE,         /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,
+    DLOG_MT_CALL_SCREEN_LIST,
     DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_NUM_PLAN_TABLE,
     DLOG_MT_COIN_VAL_TABLE,     /* Required */
     DLOG_MT_INSTALL_PARAMS,     /* Required */
     DLOG_MT_FCONFIG_OPTS,       /* Required */
@@ -661,6 +665,22 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_call_stats_t);
                 printf("Seq: %d: DLOG_MT_CARRIER_CALL_STATS.\n", context->tx_seq);
+                printf("\t\tCarrier Call Statistics Record: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
+                        carr_stats->timestamp[0] + 1900,
+                        carr_stats->timestamp[1],
+                        carr_stats->timestamp[2],
+                        carr_stats->timestamp[3],
+                        carr_stats->timestamp[4],
+                        carr_stats->timestamp[5],
+                        carr_stats->timestamp2[0] + 1900,
+                        carr_stats->timestamp2[1],
+                        carr_stats->timestamp2[2],
+                        carr_stats->timestamp2[3],
+                        carr_stats->timestamp2[4],
+                        carr_stats->timestamp2[5]);
+                printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[0].carrier_ref);
+                printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[1].carrier_ref);
+                printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[2].carrier_ref);
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
@@ -707,7 +727,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 rate_response.rate.initial_charge = 125;
                 rate_response.rate.additional_period = 120;
                 rate_response.rate.additional_charge = 35;
-                *pack_payload++ = DLOG_MT_RATE_RESPONSE;
+                *pack_payload++ = DLOG_MT_AUTH_RESPONSE;
                 memcpy(pack_payload, &rate_response, sizeof(rate_response));
                 pack_payload += sizeof(rate_response);
                 break;
@@ -717,7 +737,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 char card_number_string[25] = { 0 };
                 char call_type_str[38] = { 0 };
 
-                dlog_mt_rate_response_t rate_response = { 0 };
+                dlog_mt_auth_resp_code_t auth_response = { 0 };
                 dlog_mt_funf_card_auth_t *auth_request = (dlog_mt_funf_card_auth_t *)ppayload;
                 ppayload += sizeof(dlog_mt_funf_card_auth_t);
 
@@ -725,7 +745,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 phone_num_to_string(card_number_string, sizeof(card_number_string), auth_request->card_number, sizeof(auth_request->card_number));
                 call_type_to_string(auth_request->call_type, call_type_str, sizeof(call_type_str));
 
-                printf("\t\tCard Auth request: Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, un2k:0x%04x\n",
+                printf("\t\tCard Auth request: Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
                         phone_number_string,
                         auth_request->seq,
                         card_number_string,
@@ -740,14 +760,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         auth_request->unknown,
                         auth_request->unknown2);
 
-                rate_response.rate.type = (uint8_t)mm_local;
-                rate_response.rate.initial_period = 60;
-                rate_response.rate.initial_charge = 125;
-                rate_response.rate.additional_period = 120;
-                rate_response.rate.additional_charge = 35;
-                *pack_payload++ = DLOG_MT_RATE_RESPONSE;
-                memcpy(pack_payload, &rate_response, sizeof(rate_response));
-                pack_payload += sizeof(rate_response);
+                auth_response.resp_code = 0;
+                *pack_payload++ = DLOG_MT_AUTH_RESP_CODE;
+                memcpy(pack_payload, &auth_response, sizeof(auth_response));
+                pack_payload += sizeof(auth_response);
                 break;
             }
             case DLOG_MT_END_DATA:
