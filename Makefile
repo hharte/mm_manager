@@ -31,6 +31,9 @@ NPA_OBJ = $(patsubst %,$(ODIR)/%,$(_NPA_OBJ))
 _CALLSCRN_OBJ = mm_callscrn.o mm_util.o
 CALLSCRN_OBJ = $(patsubst %,$(ODIR)/%,$(_CALLSCRN_OBJ))
 
+_CARD_OBJ = mm_card.o mm_util.o
+CARD_OBJ = $(patsubst %,$(ODIR)/%,$(_CARD_OBJ))
+
 _CARRIER_OBJ = mm_carrier.o mm_util.o
 CARRIER_OBJ = $(patsubst %,$(ODIR)/%,$(_CARRIER_OBJ))
 
@@ -49,7 +52,7 @@ SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_featru mm_lcd mm_rate mm_smcard
+all: mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_card mm_featru mm_lcd mm_rate mm_smcard
 
 mm_manager: $(MGR_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
@@ -61,6 +64,9 @@ mm_areacode: $(NPA_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_callscrn: $(CALLSCRN_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_card: $(CARD_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_carrier: $(CARRIER_OBJ)
