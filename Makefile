@@ -52,7 +52,9 @@ SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_card mm_featru mm_lcd mm_rate mm_smcard
+EXE = mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_card mm_featru mm_lcd mm_rate mm_smcard
+
+all: $(EXE)
 
 mm_manager: $(MGR_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
@@ -84,7 +86,10 @@ mm_rate: $(RATE_OBJ)
 mm_smcard: $(SMCARD_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-.PHONY: clean
+.PHONY: clean clobber
 
 clean:
 	rm -f $(ODIR)/*.o
+
+clobber: clean
+	rm -f $(EXE)
