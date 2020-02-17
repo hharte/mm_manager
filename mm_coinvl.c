@@ -23,15 +23,15 @@ const char *str_coin_name[] = {
     "CDN Dime         ",
     "CDN Quarter      ",
     "CDN Dollar       ",
-    "US  Nickel       ",
-    "US  Dime         ",
-    "US  Quarter      ",
+    "US Nickel        ",
+    "US Dime          ",
+    "US Quarter       ",
     "US Dollar        ",
     "CDN Steel Nickel ",
     "CDN Steel Dime   ",
     "CDN Steel Quarter",
     "Coin 13          ",
-    "Coin 14          ",
+    "New CDN Dollar   ",
     "Coin 15          ",
     "Coin 16          "
 };
@@ -50,7 +50,7 @@ enum coin_val_index {
     cdn_steel_dime,
     cdn_steel_quarter,
     coin_13,
-    coin_14,
+    cdn_dollar2,
     coin_15,
     coin_16
 };
@@ -152,6 +152,11 @@ int main(int argc, char *argv[])
     pcoinvl_table->coin_param[cdn_steel_quarter] = 0x03;
     pcoinvl_table->coin_value[cdn_steel_quarter] = 25;
     pcoinvl_table->coin_volume[cdn_steel_quarter] = 25;
+
+    /* Add coin params for New Canadian Dollar coin */
+    pcoinvl_table->coin_param[cdn_dollar2] = 0x03;
+    pcoinvl_table->coin_value[cdn_dollar2] = 100;
+    pcoinvl_table->coin_volume[cdn_dollar2] = 40;
 
     if (argc > 2) {
         ostream = fopen(argv[2], "wb");
