@@ -17,6 +17,7 @@
 int main(int argc, char *argv[])
 {
     FILE *instream;
+    FILE *ostream = NULL;
     int index;
     char vfd_string[21];
     int i;
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_admess mm_table_1d.bin\n");
+               "\tmm_admess mm_table_1d.bin [outputfile.bin]\n");
         return (-1);
     }
 
@@ -37,10 +38,13 @@ int main(int argc, char *argv[])
     if (fread(admess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) <= 0) {
         printf("Error reading ADMESS table.\n");
         if (admess_table != NULL) {
+            fclose(instream);
             free(admess_table);
             return (-2);
         }
     }
+
+    fclose(instream);
 
     printf("\n+----------------------------------------------------------+\n" \
             "| Idx  | Duration | Effects | Display Text         | Spare |\n" \
@@ -59,11 +63,24 @@ int main(int argc, char *argv[])
             admess_table->entry[index].spare);
     }
 
+    printf("+----------------------------------------------------------+\n");
+
+    if (argc > 2) {
+        ostream = fopen(argv[2], "wb");
+    }
+
+    /* Modify ADMESS table */
+
+    /* If output file was specified, write it. */
+    if (ostream != NULL) {
+        printf("\nWriting new table to %s\n", argv[2]);
+        fwrite(admess_table, sizeof(dlog_mt_advert_prompts_t), 1, ostream);
+        fclose(ostream);
+    }
+
     if (admess_table != NULL) {
         free(admess_table);
     }
-
-    printf("+----------------------------------------------------------+\n");
 
     return (0);
 }
