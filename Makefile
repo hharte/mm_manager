@@ -37,6 +37,9 @@ CARD_OBJ = $(patsubst %,$(ODIR)/%,$(_CARD_OBJ))
 _CARRIER_OBJ = mm_carrier.o mm_util.o
 CARRIER_OBJ = $(patsubst %,$(ODIR)/%,$(_CARRIER_OBJ))
 
+_COINVL_OBJ = mm_coinvl.o mm_util.o
+COINVL_OBJ = $(patsubst %,$(ODIR)/%,$(_COINVL_OBJ))
+
 _FEATRU_OBJ = mm_featru.o mm_util.o
 FEATRU_OBJ = $(patsubst %,$(ODIR)/%,$(_FEATRU_OBJ))
 
@@ -52,7 +55,7 @@ SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-EXE = mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_card mm_featru mm_lcd mm_rate mm_smcard
+EXE = mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_coinvl mm_card mm_featru mm_lcd mm_rate mm_smcard
 
 all: $(EXE)
 
@@ -72,6 +75,9 @@ mm_card: $(CARD_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_carrier: $(CARRIER_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_coinvl: $(COINVL_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_featru: $(FEATRU_OBJ)

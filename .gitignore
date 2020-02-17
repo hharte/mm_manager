@@ -2,8 +2,9 @@ mm_manager
 mm_admess
 mm_areacode
 mm_callscrn
-mm_carrier
 mm_card
+mm_carrier
+mm_coinvl
 mm_featru
 mm_lcd
 mm_rate
