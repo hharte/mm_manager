@@ -727,7 +727,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 rate_response.rate.initial_charge = 125;
                 rate_response.rate.additional_period = 120;
                 rate_response.rate.additional_charge = 35;
-                *pack_payload++ = DLOG_MT_AUTH_RESPONSE;
+                *pack_payload++ = DLOG_MT_RATE_RESPONSE;
                 memcpy(pack_payload, &rate_response, sizeof(rate_response));
                 pack_payload += sizeof(rate_response);
                 break;
