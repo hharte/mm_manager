@@ -17,7 +17,13 @@
 #include <arpa/inet.h>
 #include "mm_manager.h"
 
-/* Default Carrier Mapping strings: */
+/* Default Carrier Mapping strings
+ *
+ * See: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
+ *
+ * PIC = Presubscribed Interexchange Carrier:
+ * https://en.wikipedia.org/wiki/Interexchange_carrier#Carrier_identification_code
+ */
 const char *str_default_carrier[] = {
     "PIC Inter-LATA carrier       ",
     "Coin Inter-LATA carrier      ",
