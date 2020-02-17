@@ -56,6 +56,19 @@ uint8_t table_list_rev1_3[] = {
 uint8_t table_list_rev1_0[] = {
     DLOG_MT_INTL_SBR_TABLE,
     DLOG_MT_NPA_SBR_TABLE,
+    DLOG_MT_NPA_NXX_TABLE_16,
+    DLOG_MT_NPA_NXX_TABLE_15,
+    DLOG_MT_NPA_NXX_TABLE_14,
+    DLOG_MT_NPA_NXX_TABLE_13,
+    DLOG_MT_NPA_NXX_TABLE_12,
+    DLOG_MT_NPA_NXX_TABLE_11,
+    DLOG_MT_NPA_NXX_TABLE_10,
+    DLOG_MT_NPA_NXX_TABLE_9,
+    DLOG_MT_NPA_NXX_TABLE_8,
+    DLOG_MT_NPA_NXX_TABLE_7,
+    DLOG_MT_NPA_NXX_TABLE_6,
+    DLOG_MT_NPA_NXX_TABLE_5,
+    DLOG_MT_NPA_NXX_TABLE_4,
     DLOG_MT_NPA_NXX_TABLE_3,
     DLOG_MT_NPA_NXX_TABLE_2,
     DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
@@ -814,6 +827,7 @@ int mm_download_tables(mm_context_t *context)
 {
     uint8_t table_data = DLOG_MT_TABLE_UPD;
     int table_index;
+    int status;
     int table_len;
     uint8_t *table_buffer;
     uint8_t *table_list = table_list_rev1_3;
@@ -827,7 +841,10 @@ int mm_download_tables(mm_context_t *context)
     send_mm_table(context, &table_data, 1, 0);
 
     for (table_index = 0; table_list[table_index] > 0; table_index++) {
-        load_mm_table(table_list[table_index], &table_buffer, &table_len);
+        status = load_mm_table(table_list[table_index], &table_buffer, &table_len);
+
+        /* If table can't be loaded, continue to the next. */
+        if (status != 0) continue;
 
         switch(table_list[table_index]) {
             case DLOG_MT_INSTALL_PARAMS:
@@ -940,7 +957,7 @@ int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len)
     snprintf(fname, sizeof(fname), "./tables/mm_table_%02x.bin", table_id);
     if(!(stream = fopen(fname, "rb"))) {
         printf("Error loading %s\n", fname);
-        exit(-1);
+        return -1;
     }
 
     fseek(stream, 0, SEEK_END);
