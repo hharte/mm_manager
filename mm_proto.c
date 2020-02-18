@@ -142,7 +142,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     }
 
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
-        printf("%s: Receved disconnect flag!\n", __FUNCTION__);
+        printf("%s: Received disconnect flag!\n", __FUNCTION__);
         context->tx_seq = 0;
         if (context->use_modem == 1) {
             printf("%s: Hanging up modem.\n", __FUNCTION__);

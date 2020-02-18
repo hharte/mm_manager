@@ -604,6 +604,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 if (strcmp(control_version, "V1.0") == 0) {
                     context->phone_rev = 10;
+                } else if (strcmp(control_version, "V1.1") == 0) {
+                    context->phone_rev = 13;
                 } else if (strcmp(control_version, "V1.3") == 0) {
                     context->phone_rev = 13;
                 } else {
