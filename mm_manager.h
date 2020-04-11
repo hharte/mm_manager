@@ -400,6 +400,18 @@ typedef struct dlog_mt_carrier_table {
     uint8_t spare[10];
 } dlog_mt_carrier_table_t;
 
+typedef struct rdlist_table_entry {
+    uint8_t  pad[3];
+    uint8_t  phone_number[8];
+    char     display_prompt[40];
+    uint8_t  pad2[6];
+} rdlist_table_entry_t;
+
+#define RDLIST_MAX                  10
+typedef struct dlog_mt_rdlist_table {
+    rdlist_table_entry_t rd[10];
+} dlog_mt_rdlist_table_t;
+
 /* CONTROL_BYTE2 - CARRIER (Carrier) pp. 2-71 */
 #define CB2_FEATURE_GRP_B_PROMPT_FOR_NUM        (1 << 0)    /* FEATURE GRP B PROMPT FOR NUM */
 #define CB2_REM_CARRIER_PREFIX_ZM_LOCAL         (1 << 1)    /* REM CARRIER PREFIX ZM LOCAL */
