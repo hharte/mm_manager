@@ -122,8 +122,9 @@ int init_modem(int fd)
         return -1;
     }
 
-    printf("Set modulation to Bell 212.\n");
+    printf("Set modulation to Bell 212A.\n");
 //    status = send_at_command(fd, "AT&N2");	// 3-Com Business Modem 56K USB (use 1200 baud)
+//    status = send_at_command(fd, "ATB1");	// USR 5686 Modem
     status = send_at_command(fd, "AT+MS=B212");	// Lenovo 56K USB Modem
     if (status != 0) {
         return -1;
