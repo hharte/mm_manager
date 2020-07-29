@@ -749,10 +749,9 @@ If you find a bug, please provide the following information when you report the 
 
 
 
-1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a long time for the modem to detect this condition and go back on-hook.  One way around this is to kill `mm_manager` and restart it, before proceeding with the configuration download.
-2. `mm_manager` can run under the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) available on Windows 10.  Note, however, that there may be some issue with modem initialization.  To work around this, connect to your modem using a program like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) first, to make sure it is working, then quit Putty and run `mm_manager`.
-3. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
-4. Lots of tables are not well understood.  Please help figure more out if you can.
+1. `mm_manager` can run under the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) available on Windows 10.  Note, however, that there may be some issue with modem initialization.  To work around this, connect to your modem using a program like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) first, to make sure it is working, then quit Putty and run `mm_manager`.
+2. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
+3. Lots of tables are not well understood.  Please help figure more out if you can.
 
 
 ## Further Work Needed (Feel free to help!)

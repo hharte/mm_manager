@@ -130,6 +130,12 @@ int init_modem(int fd)
         return -1;
     }
 
+    printf("Set carrier wait timeout to 3 seconds.\n");
+    status = send_at_command(fd, "ATS7=3"); 	/* Wait 3 seconds for carrier. */
+    if (status != 0) {
+        return -1;
+    }
+
     printf("Set modem autoanswer.\n");
     status = send_at_command(fd, "ATS0=1");
 
