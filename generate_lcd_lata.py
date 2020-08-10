@@ -3,7 +3,7 @@
 #
 # (c) 2020, Howard M. Harte
 #
-# This script generates LCD tables fo the Nortel Millennium Payphone.
+# This script generates LCD tables for the Nortel Millennium Payphone.
 # It generates the LCD tables by looking up information from 
 # localcallingguide.com to determine the LATA, given an NPA-NXX.
 # This LATA is used and each exchange in the LATA is checked to
