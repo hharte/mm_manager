@@ -16,7 +16,7 @@
  * These two bits encode a value as follows:
  * 0 - Local Rate
  * 1 - ?
- * 2 - Long-distance NXX
+ * 2 - Intra-LATA toll NXX
  * 3 - Invalid (ie, the N11, the NPA itself.
  *
  * See: https://nationalnanpa.com/reports/reports_cocodes_assign.html
@@ -27,10 +27,10 @@
 #include<stdio.h>
 
 char *str_flags[4] = {
-    " L ",
-    " ? ",
-    "$LD",
-    " - "
+    " L ",  /* 0 - Local */
+    " ? ",  /* 1 - ??? Inter-LATA toll? */
+    "$LD",  /* 2 - Intra-LATA toll */
+    " - "   /* 3 - Invalid NPA/NXX */
 };
 
 int main(int argc, char *argv[])
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    printf("Nortel Millennium LCD Table (Tables 136-138) Dump\n\n");
+    printf("Nortel Millennium Double-Compressed LCD Table (Tables 136-138) Dump\n\n");
     npa_char[0] = fgetc(instream);
     if (npa_char[0] < 0x20 || npa_char[0] > 0x99) {
         printf("Invalid NPA!\n");

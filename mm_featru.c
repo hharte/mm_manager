@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    printf("Nortel Millennium FEATRU Table (Table 26) Dump\n");
+    printf("Nortel Millennium FEATRU Table 0x1a (26) Dump\n");
 
     featru_table = calloc(1, sizeof(dlog_mt_fconfig_opts_t));
     if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) <= 0) {

@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    printf("Nortel Millennium Credit Card Table (Table 134) Dump\n");
+    printf("Nortel Millennium Credit Card Table 0x86 (134) Dump\n");
 
     pcard_table = calloc(1, sizeof(dlog_mt_card_table_t));
     if (fread(pcard_table, sizeof(dlog_mt_card_table_t), 1, instream) <= 0) {
