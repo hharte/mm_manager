@@ -237,6 +237,10 @@ int main(int argc, char *argv[])
     featru_table->call_setup_param_flags &= ~FC_SUPPRESS_CALLING_PROMPT;
     featru_table->datajack_flags &= ~FC_DATAJACK_ENABLED;
     featru_table->grace_period_domestic = 5;                        // 5 second grace period.
+    featru_table->call_screen_list_ixl_aos_entry = 0;
+    featru_table->call_screen_list_inter_lata_aos_entry = 0;
+    featru_table->call_screen_list_zm_aos_entry = 0;
+    featru_table->call_screen_list_zp_aos_entry = 0;
 
     if (argc > 2) {
         ostream = fopen(argv[2], "wb");
