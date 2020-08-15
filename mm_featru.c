@@ -231,6 +231,7 @@ int main(int argc, char *argv[])
     /* Modify FEATRU table */
     featru_table->card_val_info |= FC_NO_NPA_ADDED_ZP_LOCAL_ACCS;
     featru_table->accs_mode_info = 0;
+    featru_table->anti_fraud_for_incoming_call = 0;                 /* Don't dial a digit when incoming call is answered. */
     featru_table->advertising_flags |= FC_REP_DIALER_ADVERTISING;
     featru_table->advertising_flags &= ~FC_TIME_FORMAT;             /* 24-hour time format. */
     featru_table->call_setup_param_flags |= FC_DISPLAY_CALLED_NUMBER;
