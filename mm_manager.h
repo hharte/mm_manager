@@ -341,6 +341,12 @@ typedef struct rate_table_entry {
     uint16_t additional_charge;
 } rate_table_entry_t;
 
+#define RATE_TABLE_MAX_ENTRIES  128
+typedef struct dlog_mt_rate_table {
+    uint8_t unknown[39];
+    rate_table_entry_t r[RATE_TABLE_MAX_ENTRIES];
+} dlog_mt_rate_table_t;
+
 /* DLOG_MT_RATE_REQUEST */
 typedef struct dlog_mt_rate_request {
     uint16_t seq;

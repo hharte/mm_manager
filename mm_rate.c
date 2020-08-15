@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include "mm_manager.h"
@@ -37,17 +38,18 @@ char *str_rates[] = {
 int main(int argc, char *argv[])
 {
     FILE *instream;
+    FILE *ostream = NULL;
     unsigned char c;
     int rate_index;
     uint8_t unknown_bytes[39];
     char rate_str_initial[10];
     char rate_str_additional[10];
-
-    rate_table_entry_t rate_entry;
+    dlog_mt_rate_table_t* prate_table;
+    rate_table_entry_t* prate;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_rate mm_table_49.bin\n");
+               "\tmm_rate mm_table_49.bin [outputfile.bin]\n");
         return (-1);
     }
 
@@ -55,49 +57,70 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium RATE Table (Table 73) Dump\n");
 
-    /* Skip over unknown 39 bytes at the beginning of the RATE table */
-    if (fread(unknown_bytes, 39, 1, instream) > 0) {
-        printf("39 Unknown bytes in beginning of RATE table:\n");
-        dump_hex(unknown_bytes, 39);
+    prate_table = calloc(1, sizeof(dlog_mt_rate_table_t));
+    if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) <= 0) {
+        printf("Error reading RATE table.\n");
+        if (prate_table != NULL) {
+            free(prate_table);
+            fclose(instream);
+            return (-2);
+        }
     }
+
+    /* Dump unknown 39 bytes at the beginning of the RATE table */
+    printf("39 Unknown bytes in beginning of RATE table:\n");
+    dump_hex(prate_table->unknown, 39);
 
     printf("\n+------------+-------------------------+----------------+--------------+-------------------+-----------------+\n" \
            "| Index      | Type                    | Initial Period | Initial Rate | Additional Period | Additional Rate |\n" \
            "+------------+-------------------------+----------------+--------------+-------------------+-----------------+");
 
-    for (rate_index = 0; ; rate_index++) {
+    for (rate_index = 0; rate_index < RATE_TABLE_MAX_ENTRIES; rate_index++) {
 
-        if (fread(&rate_entry, sizeof(rate_entry), 1, instream) > 0) {
+        prate = &prate_table->r[rate_index];
+        if (prate->type ==  0) continue;
 
-            if (rate_entry.type == 0 && rate_entry.initial_charge == 0 && rate_entry.additional_charge == 0 && \
-                rate_entry.initial_period == 0 && rate_entry.additional_period == 0) {
-                    continue;
-                }
-
-            if (rate_entry.initial_period & FLAG_PERIOD_UNLIMITED) {
-                strcpy(rate_str_initial, "Unlimited");
-            } else {
-                sprintf(rate_str_initial, "   %5ds", rate_entry.initial_period);
-            }
-            if (rate_entry.additional_period & FLAG_PERIOD_UNLIMITED) {
-                strcpy(rate_str_additional, "Unlimited");
-            } else {
-                sprintf(rate_str_additional, "   %5ds", rate_entry.additional_period);
+        if (prate->type == 0 && prate->initial_charge == 0 && prate->additional_charge == 0 && \
+            prate->initial_period == 0 && prate->additional_period == 0) {
+                continue;
             }
 
-            printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
-                rate_index, rate_index,
-                rate_entry.type,
-                str_rates[rate_entry.type],
-                rate_str_initial,
-                (float)rate_entry.initial_charge / 100,
-                rate_str_additional,
-                (float)rate_entry.additional_charge / 100 );
+        if (prate->initial_period & FLAG_PERIOD_UNLIMITED) {
+            strcpy(rate_str_initial, "Unlimited");
         } else {
-            break;
+            sprintf(rate_str_initial, "   %5ds", prate->initial_period);
         }
+        if (prate->additional_period & FLAG_PERIOD_UNLIMITED) {
+            strcpy(rate_str_additional, "Unlimited");
+        } else {
+            sprintf(rate_str_additional, "   %5ds", prate->additional_period);
+        }
+
+        printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
+            rate_index, rate_index,
+            prate->type,
+            str_rates[prate->type],
+            rate_str_initial,
+            (float)prate->initial_charge / 100,
+            rate_str_additional,
+            (float)prate->additional_charge / 100 );
     }
 
     printf("\n+------------------------------------------------------------------------------------------------------------+\n");
-    return 0;
+
+    if (argc == 3) {
+        ostream = fopen(argv[2], "wb");
+    }
+
+    /* If output file was specified, write it. */
+    if (ostream != NULL) {
+        printf("\nWriting new table to %s\n", argv[2]);
+        fwrite(prate_table, sizeof(dlog_mt_rate_table_t), 1, ostream);
+        fclose(ostream);
+    }
+    if (prate_table != NULL) {
+        free(prate_table);
+    }
+
+    return (0);
 }
