@@ -1,0 +1,200 @@
+Country_Name,ISO3166_1_Alpha_2,Dial,Rate
+Iran,IR,98,1
+Libya,LY,218,1
+Sudan,SD,249,1
+North Korea,KP,850,1
+Syria,SY,963,1
+Egypt,EG,20,35
+South Africa,ZA,27,35
+South Sudan,SS,211,35
+Western Sahara,EH,212,35
+Algeria,DZ,213,35
+Tunisia,TN,216,35
+Gambia,GM,220,35
+Senegal,SN,221,35
+Mauritania,MR,222,35
+Mali,ML,223,35
+Guinea,GN,224,35
+Côte d'Ivoire,CI,225,35
+Burkina Faso,BF,226,35
+Niger,NE,227,35
+Togo,TG,228,35
+Benin,BJ,229,35
+Mauritius,MU,230,35
+Liberia,LR,231,35
+Sierra Leone,SL,232,35
+Ghana,GH,233,35
+Nigeria,NG,234,35
+Chad,TD,235,35
+Central African Republic,CF,236,35
+Cameroon,CM,237,35
+Sao Tome and Principe,ST,239,35
+Equatorial Guinea,GQ,240,35
+Gabon,GA,241,35
+Congo - Brazzaville,CG,242,35
+Congo - Kinshasa,CD,243,35
+Angola,AO,244,35
+Guinea-Bissau,GW,245,35
+British Indian Ocean Territory,IO,246,35
+Seychelles,SC,248,35
+Rwanda,RW,250,35
+Ethiopia,ET,251,35
+Somalia,SO,252,35
+Djibouti,DJ,253,35
+Kenya,KE,254,35
+Tanzania,TZ,255,35
+Uganda,UG,256,35
+Burundi,BI,257,35
+Mozambique,MZ,258,35
+Zambia,ZM,260,35
+Madagascar,MG,261,35
+French Southern Territories,TF,262,35
+Mayotte,YT,262,35
+Réunion,RE,262,35
+Zimbabwe,ZW,263,35
+Namibia,NA,264,35
+Malawi,MW,265,35
+Lesotho,LS,266,35
+Botswana,BW,267,35
+Swaziland,SZ,268,35
+Comoros,KM,269,35
+St. Helena,SH,290,35
+Eritrea,ER,291,35
+Aruba,AW,297,35
+Faroe Islands,FO,298,35
+Greenland,GL,299,35
+Greece,GR,30,36
+Netherlands,NL,31,36
+Belgium,BE,32,36
+France,FR,33,36
+Spain,ES,34,36
+Hungary,HU,36,36
+Italy,IT,39,36
+Gibraltar,GI,350,36
+Portugal,PT,351,36
+Luxembourg,LU,352,36
+Ireland,IE,353,36
+Iceland,IS,354,36
+Albania,AL,355,36
+Malta,MT,356,36
+Cyprus,CY,357,36
+Finland,FI,358,36
+Ãland Islands,AX,358,36
+Bulgaria,BG,359,36
+Lithuania,LT,370,36
+Latvia,LV,371,36
+Estonia,EE,372,36
+Moldova,MD,373,36
+Armenia,AM,374,36
+Belarus,BY,375,36
+Andorra,AD,376,36
+Monaco,MC,377,36
+San Marino,SM,378,36
+Ukraine,UA,380,36
+Serbia,RS,381,36
+Montenegro,ME,382,36
+Croatia,HR,385,36
+Slovenia,SI,386,36
+Bosnia,BA,387,36
+Macedonia,MK,389,36
+Romania,RO,40,37
+Switzerland,CH,41,37
+Austria,AT,43,37
+UK,GB,44,37
+Denmark,DK,45,37
+Sweden,SE,46,37
+Norway,NO,47,37
+Poland,PL,48,37
+Germany,DE,49,37
+Czech Republic,CZ,420,37
+Slovakia,SK,421,37
+Liechtenstein,LI,423,37
+Peru,PE,51,38
+Mexico,MX,52,38
+Cuba,CU,53,38
+Argentina,AR,54,38
+Brazil,BR,55,38
+Chile,CL,56,38
+Colombia,CO,57,38
+Venezuela,VE,58,38
+Falkland Islands,FK,50,0
+St. Martin,MF,590,38
+Bolivia,BO,591,38
+Guyana,GY,592,38
+Ecuador,EC,593,38
+French Guiana,GF,594,38
+Paraguay,PY,595,38
+Martinique,MQ,596,38
+Suriname,SR,597,38
+Uruguay,UY,598,38
+Caribbean Netherlands,BQ,599,38
+Curaçao,CW,599,38
+Malaysia,MY,60,39
+Australia,AU,61,39
+Indonesia,ID,62,39
+Philippines,PH,63,39
+New Zealand,NZ,64,39
+Singapore,SG,65,39
+Thailand,TH,66,39
+Timor-Leste,TL,670,39
+Antarctica,AQ,672,39
+Heard & McDonald Islands,HM,672,39
+Norfolk Island,NF,672,39
+Brunei,BN,673,39
+Nauru,NR,674,39
+Papua New Guinea,PG,675,39
+Tonga,TO,676,39
+Solomon Islands,SB,677,39
+Vanuatu,VU,678,39
+Fiji,FJ,679,39
+Palau,PW,680,39
+Wallis & Futuna,WF,681,39
+Cook Islands,CK,682,39
+Niue,NU,683,39
+Samoa,WS,685,39
+Kiribati,KI,686,39
+New Caledonia,NC,687,39
+Tuvalu,TV,688,39
+French Polynesia,PF,689,39
+Tokelau,TK,690,39
+Micronesia,FM,691,39
+Marshall Islands,MH,692,39
+Japan,JP,81,52
+South Korea,KR,82,52
+Vietnam,VN,84,52
+China,CN,86,52
+Hong Kong,HK,852,52
+Macau,MO,853,52
+Cambodia,KH,855,52
+Laos,LA,856,52
+Pitcairn Islands,PN,870,52
+Bangladesh,BD,880,52
+Taiwan,TW,886,52
+Turkey,TR,90,53
+India,IN,91,53
+Pakistan,PK,92,53
+Afghanistan,AF,93,53
+Sri Lanka,LK,94,53
+Myanmar,MM,95,53
+Maldives,MV,960,53
+Lebanon,LB,961,53
+Jordan,JO,962,53
+Iraq,IQ,964,53
+Kuwait,KW,965,53
+Saudi Arabia,SA,966,53
+Yemen,YE,967,53
+Palestine,PS,970,53
+United Arab Emirates,AE,971,53
+Israel,IL,972,53
+Bahrain,BH,973,53
+Qatar,QA,974,53
+Bhutan,BT,975,53
+Mongolia,MN,976,53
+Nepal,NP,977,53
+Tajikistan,TJ,992,53
+Turkmenistan,TM,993,53
+Azerbaijan,AZ,994,53
+Georgia,GE,995,53
+Kyrgyzstan,KG,996,53
+Uzbekistan,UZ,998,53
+Russia,RU,7,54

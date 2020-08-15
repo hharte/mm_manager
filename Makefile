@@ -43,6 +43,9 @@ COINVL_OBJ = $(patsubst %,$(ODIR)/%,$(_COINVL_OBJ))
 _FEATRU_OBJ = mm_featru.o mm_util.o
 FEATRU_OBJ = $(patsubst %,$(ODIR)/%,$(_FEATRU_OBJ))
 
+_INTL_RATE_OBJ = mm_rateint.o mm_util.o
+INTL_RATE_OBJ = $(patsubst %,$(ODIR)/%,$(_INTL_RATE_OBJ))
+
 _LCD_OBJ = mm_lcd.o
 LCD_OBJ = $(patsubst %,$(ODIR)/%,$(_LCD_OBJ))
 
@@ -58,7 +61,7 @@ SMCARD_OBJ = $(patsubst %,$(ODIR)/%,$(_SMCARD_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-EXE = mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_coinvl mm_card mm_featru mm_lcd mm_rate mm_rdlist mm_smcard
+EXE = mm_manager mm_admess mm_areacode mm_callscrn mm_carrier mm_coinvl mm_card mm_featru mm_lcd mm_rate mm_rateint mm_rdlist mm_smcard
 
 all: $(EXE)
 
@@ -90,6 +93,9 @@ mm_lcd: $(LCD_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_rate: $(RATE_OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+mm_rateint: $(INTL_RATE_OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 mm_rdlist: $(RDLIST_OBJ)

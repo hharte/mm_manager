@@ -319,6 +319,33 @@ typedef struct dlog_mt_sw_version {
     uint8_t validator_hw_ver[2];
 } dlog_mt_sw_version_t;
 
+/* Constants and data structures for the RATEINT (Set Based Rating - International) pp. 2-326
+ *
+ * Thanks to æstrid for figuring out the data structures for the International
+ * Set-based Rating table, which is not documented in the Database Design
+ * Report MSR 2.1.
+ */
+
+/* Convert International Rate Table flags to RATE table entry */
+#define RATE_TABLE_OFFSET   28
+#define IXL_TO_RATE(x)      ((x) + RATE_TABLE_OFFSET)
+
+#define IXL_BLOCKED         1   // International blocked.
+#define IXL_NCC_RATED       0   // International rate is determined by the NCC.
+
+#define INTL_RATE_TABLE_MAX_ENTRIES  200
+typedef struct intl_rate_table_entry {
+    uint16_t ccode;
+    uint8_t flags;          // 0 calls in the NCC to rate, 1 is "blocked", 2 - 63 are rate indices in the RATE table (add RATE_TABLE_OFFSET)
+} intl_rate_table_entry_t;
+
+typedef struct dlg_mt_intl_sbr_table {
+    uint8_t flags;
+    uint8_t default_rate_index; // 28 + default_rate_index is the entry in the RATE table.
+    uint8_t spare;
+    intl_rate_table_entry_t irate[INTL_RATE_TABLE_MAX_ENTRIES];
+} dlg_mt_intl_sbr_table_t;
+
 #define FLAG_PERIOD_UNLIMITED   (1 << 15)
 
 typedef enum rate_type {
@@ -330,7 +357,8 @@ typedef enum rate_type {
     toll_intra_lata,        // 5 Toll Intra-lata
     toll_inter_lata,        // 6 Toll Inter-lata
     mm_inter_lata,          // 7 Millennium Manager rated Inter-lata
-    mm_local                // 8 Millennium Manager rated local
+    mm_local,               // 8 Millennium Manager rated local
+    mm_international        // 9 International??
 } rate_type_t;
 
 typedef struct rate_table_entry {
@@ -437,13 +465,13 @@ typedef struct dlog_mt_rdlist_table {
 #define CB_OUTDIAL_STRING_ORDER                 (1 << 6)    /* 0=FGB#, Called #, Card #; 1=FGB#, Card #, Called # */
 #define CB_FEATURE_GROUP_B                      (1 << 7)    /* Feature Group B is a category of free access to the carrier network. It usually uses 1-800 or 950xxx. */
 
-/* CALLSCR (Call Screening List) pp. 2-33 */
+/* CALLSCR (Call Screening List) pp. 2-33, and FREE (Free Call) pp. 2-187 */
 typedef struct call_screen_list_entry {
     uint8_t  free_call_flags;               /* FREE (Free Call) pp. 2-189 */
     uint8_t  call_type;                     /* CALLTYPE */
     uint8_t  carrier_ref;                   /* Reference to the RATE/CARRIER table. A value of 255 means there is no reference. */
     uint8_t  ident2;                        /* IDENT2 Flags, see pp. 2-193 */
-    uint8_t  phone_number[9];               /* 0-terminated phone number, one digit per nibble. */
+    uint8_t  phone_number[9];               /* 0-terminated phone number, one digit per nibble. F=single digit wildcard, B=link to another CALLSCR entry (in decimal.) */
     uint8_t  class;                         /* This seems to indicate class of number */
     uint8_t  spare[3];                      /* Reserved for future use. */
 } call_screen_list_entry_t;
