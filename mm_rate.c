@@ -29,7 +29,7 @@ char *str_rates[] = {
     "toll_inter_lata   ",
     "mm_inter_lata     ",
     "mm_local          ",
-    "      ?09?        ",
+    "international     ",
     "      ?0a?        ",
     "      ?0b?        ",
     "      ?0c?        ",
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    printf("Nortel Millennium RATE Table (Table 73) Dump\n");
+    printf("Nortel Millennium RATE Table 0x49 (73) Dump\n");
 
     prate_table = calloc(1, sizeof(dlog_mt_rate_table_t));
     if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) <= 0) {
