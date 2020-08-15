@@ -481,6 +481,48 @@ typedef struct dlog_mt_call_screen_list {
     call_screen_list_entry_t entry[CALLSCRN_TABLE_MAX];
 } dlog_mt_call_screen_list_t;
 
+#define CS_FREE_DENY_IND            (1 << 0)
+#define CS_ANSWER_SUPERVISION       (1 << 1)
+#define CS_KEYPAD_ENABLE_IND        (1 << 2)
+#define CS_FAIL_TO_POTS_ONLY        (1 << 3)
+#define CS_TRANSMITTER_MUTED        (1 << 4)
+#define CS_TIMEOUT_BEFORE_DIALING   (1 << 5)
+#define CS_DENY_CARD_PYMNT_IND      (1 << 6)
+#define CS_FEATURE_GROUP_B_NUMBER   (1 << 7)
+
+/* IDENT2 Flags, see pp. 2-193 */
+#define CS_IDENT2_DENY_MDS          (1 << 0)    // Deny to Message Delivery Service (MDS)
+#define CS_IDENT2_DENY_DJ           (1 << 1)    // Indicates if a call is deny to Datajack
+#define CS_IDENT2_ALW_RES_SVC       (1 << 2)    // Allow in restricted service
+#define CS_IDENT2_TGT_CDR_REC       (1 << 3)    // Targeted CDR Recording
+#define CS_IDENT2_PFX_ENB           (1 << 4)    // Prefix Enable
+#define CS_IDENT2_EMERG_ENB         (1 << 5)    // Emergency Number Enable
+#define CS_IDENT2_XLAT_FLAG         (1 << 6)    // Translation Flag: enables the feature translation of numbers.
+#define CS_IDENT2_RESERVED          (1 << 7)    // Reserved for future use.
+
+#define CS_CALLTYPE_INCOMING        (0)
+#define CS_CALLTYPE_UNANSWERED      (1)
+#define CS_CALLTYPE_ABANDONED       (2)
+#define CS_CALLTYPE_LOCAL           (3)
+#define CS_CALLTYPE_INTRA_LATA      (4)
+#define CS_CALLTYPE_INTER_LATA      (5)
+#define CS_CALLTYPE_INTERNATIONAL   (6)
+#define CS_CALLTYPE_OPERATOR        (7)
+#define CS_CALLTYPE_ZERO_PLUS       (8)
+#define CS_CALLTYPE_1800            (9)
+#define CS_CALLTYPE_DA              (10)                // Directory Assistance
+#define CS_CALLTYPE_DENIED          (11)
+#define CS_CALLTYPE_UNASSIGNED      (12)
+#define CS_CALLTYPE_UNASSIGNED2     (13)
+#define CS_CALLTYPE_E_PURSE         (14)
+#define CS_CALLTYPE_UNKNOWN         (15)
+
+#define CS_CLASS_REGULAR            (0x01)
+#define CS_CLASS_UNKNOWN_11         (0x11)
+#define CS_CLASS_INFORMATION        (0x41)
+#define CS_CLASS_OPERATOR           (0x81)
+#define CS_CLASS_DISABLED           (0)
+
 /* ADMESS (Advertising) pp. 2-5 */
 #define ADMESS_ATTR_PERMANENT                   0       // Permanent
 #define ADMESS_ATTR_FLASHING_SAME               1       // Flashing Same
