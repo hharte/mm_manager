@@ -650,9 +650,18 @@ typedef struct dlog_mt_fconfig_opts {
 #define FC_INCOMING_CALL_FCA_PRECEDENCE         (1 << 2)    /* Flag used to tell the terminal which takes precedence, an incoming call (0) or an FCA/smart card alert(1). */
 #define FC_FCA_ON_CARD                          (1 << 3)    /* Flag used to tell the terminal whether the FCA / smart card alert will sound (1) or not sound (0), for a zero-value cash card. */
 #define FC_REVERT_TO_PRIMARY_NCC_NUM            (1 << 4)    /* If set, the terminal will revert to the primary Millennium Manager number at the call-in time if the terminal is currently using the secondary number. */
-#define FC_BLOCK_NO_RATE_CARRIER                (1 << 5)    /* MISC BIT 5 will be renamed BLOCK NO RATE CARRIER in a future release. */
-#define FC_RATED_CREDIT_CARD_CDR                (1 << 6)    /* MISC BIT 6 will be renamed RATED CREDIT CARD CDR in a future release. */
-#define FC_11_DIGIT_LOCAL_CALLS                 (1 << 7)    /* MISC BIT 7 will be renamed 11 DIGIT LOCAL CALLS in a future release. */
+#define FC_BLOCK_NO_RATE_CARRIER                (1 << 5)    /* MISC BIT 5 / BLOCK NO RATE CARRIER: MTR 2.x: Block Carrier calls without internal rate. */
+#define FC_RATED_CREDIT_CARD_CDR                (1 << 6)    /* MISC BIT 6 / RATED CREDIT CARD CDR: Creditcard CDRs should contain the charged amount for the calls. */
+#define FC_11_DIGIT_LOCAL_CALLS                 (1 << 7)    /* MISC BIT 7 / 11 DIGIT LOCAL CALLS: MTR 2.x: Force 11-digit-dialing on local calls */
+
+#define FC_ENABLE_NPA_SBR                       (1 << 0)    /* Enable NPA Set-based rating. */
+#define FC_ENABLE_IXL_SBR                       (1 << 1)    /* Enable International Set-based rating. */
+#define FC_ENABLE_DIAL_AROUND                   (1 << 2)    /* Enable dial-around timer. */
+#define FC_SHOW_INIT_ADDL_RATE                  (1 << 3)    /* Display initial and additional rate. */
+#define FC_ROUND_UP_CHARGE                      (1 << 4)    /* Round up the charge */
+#define FC_7_DIGIT_NO_WAIT                      (1 << 5)    /* 7-Digit no-wait. */
+#define FC_RATING_BIT6                          (1 << 6)
+#define FC_RATING_BIT7                          (1 << 7)
 
 #define FC_ADVERT_ENABLED                       (1 << 0)    /* Indicates whether Advertising is enabled on the terminal. */
 #define FC_REP_DIALER_ADVERTISING               (1 << 1)    /* Indicates if Rep Dialer/quick access key Advertising is enabled(“1”) or disabled(“0”). */

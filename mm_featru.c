@@ -54,6 +54,17 @@ const char *misc_flags_str[] = {
     "FC_11_DIGIT_LOCAL_CALLS"
 };
 
+const char *rating_flags_str[] = {
+    "FC_ENABLE_NPA_SBR",
+    "FC_ENABLE_IXL_SBR",
+    "FC_ENABLE_DIAL_AROUND",
+    "FC_SHOW_INIT_ADDL_RATE",
+    "FC_ROUND_UP_CHARGE",
+    "FC_7_DIGIT_NO_WAIT",
+    "FC_RATING_BIT6",
+    "FC_RATING_BIT7"
+};
+
 const char *advertising_bits_str[] = {
     "FC_ADVERT_ENABLED",
     "FC_REP_DIALER_ADVERTISING",
@@ -166,7 +177,9 @@ int main(int argc, char *argv[])
     printf("                     lang_scroll_order: 0x%02x\n", featru_table->lang_scroll_order);
     printf("                    lang_scroll_order2: 0x%02x\n", featru_table->lang_scroll_order2);
     printf("                      num_of_languages: %d\n", featru_table->num_of_languages);
-    printf("                          rating_flags: 0x%02x\n", featru_table->rating_flags);
+    printf("                          rating_flags: 0x%02x\t", featru_table->rating_flags);
+    print_bits(featru_table->rating_flags, (char **)rating_flags_str);
+    printf("\n");
     printf("                      dialaround_timer: %d\n", featru_table->dialaround_timer);
     printf("       call_screen_list_ixl_oper_entry: 0x%02x\n", featru_table->call_screen_list_ixl_oper_entry);
     printf(" call_screen_list_inter_lata_aos_entry: 0x%02x\n", featru_table->call_screen_list_inter_lata_aos_entry);
