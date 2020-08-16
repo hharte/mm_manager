@@ -245,6 +245,8 @@ int main(int argc, char *argv[])
     featru_table->card_val_info |= FC_NO_NPA_ADDED_ZP_LOCAL_ACCS;
     featru_table->accs_mode_info = 0;
     featru_table->anti_fraud_for_incoming_call = 0;                 /* Don't dial a digit when incoming call is answered. */
+    featru_table->OOS_POTS_flags = ( FC_IN_SERVICE_ON_CDR_LIST_FULL | FC_TERM_RATE_DISPLAY_OPTION | FC_INCOMING_CALL_FCA_PRECEDENCE | FC_FCA_ON_CARD | FC_REVERT_TO_PRIMARY_NCC_NUM | FC_RATED_CREDIT_CARD_CDR ); // FC_11_DIGIT_LOCAL_CALLS
+    featru_table->rating_flags = ( FC_ENABLE_NPA_SBR | FC_ENABLE_IXL_SBR | FC_SHOW_INIT_ADDL_RATE | FC_ENABLE_DIAL_AROUND ); // FC_ROUND_UP_CHARGE FC_7_DIGIT_NO_WAIT
     featru_table->advertising_flags |= FC_REP_DIALER_ADVERTISING;
     featru_table->advertising_flags &= ~FC_TIME_FORMAT;             /* 24-hour time format. */
     featru_table->call_setup_param_flags |= FC_DISPLAY_CALLED_NUMBER;
