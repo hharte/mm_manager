@@ -721,6 +721,28 @@ typedef struct dlog_mt_fconfig_opts {
 #define FC_DJ_FLAGS_BIT_6                       (1 << 6)    /* Reserved */
 #define FC_DJ_FLAGS_BIT_7                       (1 << 7)    /* Reserved */
 
+/* Installation and Servicing Table (INSTSV) pp. 2.236 */
+/* also: https://wiki.millennium.management/dlog:dlog_mt_install_parms */
+typedef struct dlog_mt_install_params {
+    uint8_t access_code[4];                     /* This value will be compared to a password entered by the maintenance person, to verify access to the terminal. */
+    uint8_t key_card_number[5];                 /* This is the telephone number to be dialed by the terminal when it is being tested by the installer or maintenance person. It is usually the number of a maintenance phone for the Telco. */
+    uint8_t flags;                              /* See bit definitions below. */
+    uint8_t tx_packet_delay;			/* in 10ms increments, This is the amount of time that the terminal should pause between packet transmissions to the Millennium Manager. This is used to assist the Millennium Manager in recognizing when the end of a packet has been reached and a new packet is being received. */
+    uint8_t rx_packet_gap;			/* in 10ms increments, This is the amount of time delay that the Millennium Manager will insert prior to the frame character at the start of a packet. It is used by the terminal when receiving the packet, to distinguish a frame character at the start of a packet from characters which may be part of the data inside the packet. */
+    uint8_t retries_until_oos;			/* This is the number of failed attempts to contact the Millennium Manager that the terminal will make before switching to its out-of-service condition. */
+    uint8_t coin_service_flags;			/* Coin servicing flags: Cashbox Query Menu is Accessible via craft interface */
+    uint16_t coinbox_lock_timeout;		/* Time in seconds from when the cash box lock is opened until an alarm is sent to the Millennium Manager. This is a timeout on the time required to collect the cash box. */
+    uint8_t predial_string[4];                  /* Predial string for the primary NCC. */
+    uint8_t predial_string_alt[4];              /* TPredial string for the secondary NCC. */
+    uint8_t spare[12];                          /* Some used for MTR2.x. */
+} dlog_mt_install_params_t;
+
+#define INSTSV_PREDIAL_STRING_ENABLE            (1 << 0)    /* Predial string enable. */
+#define INSTSV_PREDIAL_STRING_ENABLE_1P         (1 << 1)    /* Predial string enable for 1+ calls. */
+#define INSTSV_PREDIAL_STRING_ENABLE_IXL        (1 << 2)    /* Predial string enable for International calls. */
+#define INSTSV_PREDIAL_STRING_ENABLE_ALL        (1 << 3)    /* Predial string enabled for all all except free calls. */
+
+#define INSTSV_CASHBOX_QUERY_MENU_ENABLE        (1 << 0)    /* Cashbox Query Menu is Accessible via craft interface. */
 
 /* See TSTATUS, 2-637 */
 #define TSTATUS_HANDSET_DISCONT_IND             (1 << 0)
