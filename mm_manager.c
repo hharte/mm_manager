@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
     mm_context.debuglevel = 0;
     mm_context.connected = 0;
 
-    printf("mm_manager v0.5 - (c) 2020, Howard M. Harte\n\n");
+    printf("mm_manager v0.5 [%s] - (c) 2020, Howard M. Harte\n\n", VERSION);
 
     index = 0;
     mm_context.ncc_number[0][0] = '\0';

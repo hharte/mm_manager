@@ -13,7 +13,8 @@
 #
 IDIR =.
 CC=gcc
-CFLAGS=-I$(IDIR)
+GIT_VERSION := "$(shell git describe --dirty --always --tags)"
+CFLAGS=-I$(IDIR) -DVERSION=\"$(GIT_VERSION)\"
 
 ODIR=obj
 
