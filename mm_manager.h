@@ -173,6 +173,24 @@ typedef struct dlog_mt_call_back_req {
     uint8_t callback_time[6];
 } dlog_mt_call_back_req_t;
 
+typedef struct dlog_mt_ncc_term_params {
+    uint8_t terminal_id[5];
+    uint8_t pri_ncc_number[10];
+    uint8_t sec_ncc_number[10];
+    uint8_t unknown[22];
+} dlog_mt_ncc_term_params_t;
+
+/* From TERM table, pp. 2-517 */
+typedef struct dlog_mt_call_in_params {
+    uint8_t call_in_start_date[3];      /* Call-in start date YY:MM:DD */
+    uint8_t call_in_start_time[3];      /* Call-in start date HH:MM:SS */
+    uint8_t call_in_interval[3];        /* Call-in inteval DD:HH:MM */
+    uint8_t call_back_retry_time[2];    /* Call-back retry time MM:SS */
+    uint8_t cdr_threshold;              /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
+    uint8_t unknown_timestamp[6];       /* Looks like a timestamp, but not sure what it's for. */
+    uint8_t unknown[2];
+} dlog_mt_call_in_params_t;
+
 typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
@@ -361,7 +379,6 @@ typedef struct dlog_mt_rate_request {
     uint8_t pad[6];
 } dlog_mt_rate_request_t;
 
-/* DLOG_MT_RATE_RESPONSE  (24 bytes) */
 /* DLOG_MT_RATE_RESPONSE  (25 bytes) */
 typedef struct dlog_mt_rate_response {
     rate_table_entry_t rate;
@@ -839,7 +856,8 @@ int send_mm_table(mm_context_t *context, uint8_t* payload, int len, int end_of_d
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
-int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer, int table_len);
+int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
+int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 
 /* MM Protocol */
 extern int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
@@ -859,6 +877,7 @@ extern int hangup_modem(int fd);
 extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
 extern void dump_hex(uint8_t *data, int len);
 extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_buf, int num_buf_len);
+extern uint8_t string_to_bcd_a(char* number_string, uint8_t* buffer, uint8_t buff_len);
 extern char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len);
 extern char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len);
 extern void print_bits(uint8_t bits, char *str_array[]);

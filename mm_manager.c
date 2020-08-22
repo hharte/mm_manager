@@ -21,6 +21,8 @@
 
 #include "mm_manager.h"
 
+#define JAN12020 1577865600
+
 /* Terminal Table Lists for Rev 1.3 and Rev 1.0 Control PCP */
 uint8_t table_list_rev1_3[] = {
     DLOG_MT_INTL_SBR_TABLE,
@@ -362,14 +364,17 @@ int main(int argc, char *argv[])
 
         while((receive_mm_table(&mm_context, &mm_table) == 0) && (mm_context.connected == 1)) {
         }
-        if(mm_context.use_modem == 1) {
-            time ( &rawtime );
-            ptm = localtime ( &rawtime );
-
-            printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Disconnected.\n\n",
-                ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
-
+        if (mm_context.use_modem == 1) {
+            time(&rawtime);
+        } else {
+            rawtime = JAN12020;
         }
+
+        ptm = localtime ( &rawtime );
+
+        printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Disconnected.\n\n",
+            ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+
     }
 
     return 0;
@@ -434,25 +439,21 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     /* When using the modem, fill the current time.  If not using the modem, use
                     * a static time, so that results can be automatically checked.
                     */
-                    time ( &rawtime );
-                    ptm = localtime ( &rawtime );
-
-                    *pack_payload++ = (ptm->tm_year & 0xff);     /* Fill current years since 1900 */
-                    *pack_payload++ = (ptm->tm_mon+1 & 0xff);    /* Fill current month (1-12) */
-                    *pack_payload++ = (ptm->tm_mday & 0xff);     /* Fill current day (0-31) */
-                    *pack_payload++ = (ptm->tm_hour & 0xff);     /* Fill current hour (0-23) */
-                    *pack_payload++ = (ptm->tm_min & 0xff);      /* Fill current minute (0-59) */
-                    *pack_payload++ = (ptm->tm_sec & 0xff);      /* Fill current second (0-59) */
-                    *pack_payload++ = (ptm->tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
+                    time(&rawtime);
                 } else {
-                    *pack_payload++ = 119;  // Year
-                    *pack_payload++ = 11;   // Month
-                    *pack_payload++ = 9;    // Day
-                    *pack_payload++ = 12;   // Hours
-                    *pack_payload++ = 34;   // Minutes
-                    *pack_payload++ = 56;   // Seconds
-                    *pack_payload++ = 1;    // Day of week
+                    rawtime = JAN12020;
                 }
+
+                ptm = localtime(&rawtime);
+
+                *pack_payload++ = (ptm->tm_year & 0xff);     /* Fill current years since 1900 */
+                *pack_payload++ = (ptm->tm_mon+1 & 0xff);    /* Fill current month (1-12) */
+                *pack_payload++ = (ptm->tm_mday & 0xff);     /* Fill current day (0-31) */
+                *pack_payload++ = (ptm->tm_hour & 0xff);     /* Fill current hour (0-23) */
+                *pack_payload++ = (ptm->tm_min & 0xff);      /* Fill current minute (0-59) */
+                *pack_payload++ = (ptm->tm_sec & 0xff);      /* Fill current second (0-59) */
+                *pack_payload++ = (ptm->tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
+
                 printf("Current day/time: %04d-%02d-%02d / %2d:%02d:%02d\n", timestamp[0]+1900,
                                                                             timestamp[1],
                                                                             timestamp[2],
@@ -901,16 +902,19 @@ int mm_download_tables(mm_context_t *context)
     send_mm_table(context, &table_data, 1, 0);
 
     for (table_index = 0; table_list[table_index] > 0; table_index++) {
-        status = load_mm_table(table_list[table_index], &table_buffer, &table_len);
-
-        /* If table can't be loaded, continue to the next. */
-        if (status != 0) continue;
 
         switch(table_list[table_index]) {
+            case DLOG_MT_CALL_IN_PARMS:
+                status = generate_call_in_parameters(context, &table_buffer, &table_len);
+                break;
             case DLOG_MT_NCC_TERM_PARAMS:
-                rewrite_term_access_parameters(context, table_buffer, table_len);
+                status = generate_term_access_parameters(context, &table_buffer, &table_len);
                 break;
             default:
+                status = load_mm_table(table_list[table_index], &table_buffer, &table_len);
+
+                /* If table can't be loaded, continue to the next. */
+                if (status != 0) continue;
                 break;
         }
         send_mm_table(context, table_buffer, table_len, 0);
@@ -1085,70 +1089,104 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     return 0;
 }
 
-#define TERM_ID_OFFSET 1
-#define PRI_NCC_OFFSET 6
-#define SEC_NCC_OFFSET 16
-
-int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer, int table_len)
+int generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int *len)
 {
     int i;
+    dlog_mt_ncc_term_params_t *pncc_term_params;
+    uint8_t *pbuffer;
 
-    /* Blank out the primary NCC number. */
-    for (i=0; i <= 10; i++) {
-        table_buffer[SEC_NCC_OFFSET + i] = 0;
-    }
+    *len = sizeof(dlog_mt_ncc_term_params_t) + 1;
+    pbuffer = calloc(1, *len);
+    pbuffer[0] = DLOG_MT_NCC_TERM_PARAMS;
 
-    /* Blank out the secondary NCC number. */
-    for (i=0; i <= 10; i++) {
-        table_buffer[SEC_NCC_OFFSET + i] = 0;
-    }
+    pncc_term_params = (dlog_mt_ncc_term_params_t *)&pbuffer[1];
 
-    printf("\nRewriting Terminal Access Parameters table:\n" \
-           "\t  Terminal ID:  %s\n", context->phone_number);
+    printf("\nGenerating Terminal Access Parameters table:\n" \
+           "\t  Terminal ID: %s\n", context->phone_number);
 
     // Rewrite table with our Terminal ID (phone number)
     for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
-        table_buffer[TERM_ID_OFFSET + i]  = (context->phone_number[i * 2    ] - '0') << 4;
-        table_buffer[TERM_ID_OFFSET + i] |= (context->phone_number[i * 2 + 1] - '0');
+        pncc_term_params->terminal_id[i]  = (context->phone_number[i * 2    ] - '0') << 4;
+        pncc_term_params->terminal_id[i] |= (context->phone_number[i * 2 + 1] - '0');
     }
 
     // Rewrite table with Primary NCC phone number
     printf("\t  Primary NCC: %s\n", context->ncc_number[0]);
-    for (i = 0; i < (strlen(context->ncc_number[0])); i++) {
-        if (i % 2 == 0) {
-            if (context->ncc_number[0][i] == '0') {
-                table_buffer[PRI_NCC_OFFSET + (i >> 1)]  = 0xa0;
-            } else {
-                table_buffer[PRI_NCC_OFFSET + (i >> 1)]  = (context->ncc_number[0][i] - '0') << 4;
-            }
-        } else {
-            if (context->ncc_number[0][i] == '0') {
-                table_buffer[PRI_NCC_OFFSET + (i >> 1)] |= 0x0a;
-            } else {
-                table_buffer[PRI_NCC_OFFSET + (i >> 1)] |= (context->ncc_number[0][i] - '0');
-            }
-        }
+    string_to_bcd_a(context->ncc_number[0], pncc_term_params->pri_ncc_number, 10);
+
+    // Rewrite table with Secondary NCC phone number, if provided.
+    if (strlen(context->ncc_number[1]) > 0) {
+        printf("\tSecondary NCC: %s\n", context->ncc_number[1]);
+        string_to_bcd_a(context->ncc_number[1], pncc_term_params->sec_ncc_number, 10);
     }
 
-    if (strlen(context->ncc_number[1]) > 0) {
-        // Rewrite table with Secondary NCC phone number
-        printf("\tSecondary NCC: %s\n\n", context->ncc_number[1]);
-        for (i = 0; i < strlen(context->ncc_number[1]); i++) {
-            if (i % 2 == 0) {
-                if (context->ncc_number[1][i] == '0') {
-                    table_buffer[SEC_NCC_OFFSET + (i >> 1)]  = 0xa0;
-                } else {
-                    table_buffer[SEC_NCC_OFFSET + (i >> 1)]  = (context->ncc_number[1][i] - '0') << 4;
-                }
-            } else {
-                if (context->ncc_number[1][i] == '0') {
-                    table_buffer[SEC_NCC_OFFSET + (i >> 1)] |= 0x0a;
-                } else {
-                    table_buffer[SEC_NCC_OFFSET + (i >> 1)] |= (context->ncc_number[1][i] - '0');
-                }
-            }
-        }
+    *buffer = pbuffer;
+
+    return 0;
+}
+
+int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len)
+{
+    int i;
+    dlog_mt_call_in_params_t* pcall_in_params;
+    uint8_t* pbuffer;
+    time_t rawtime;
+    struct tm* ptm;
+
+    *len = sizeof(dlog_mt_call_in_params_t) + 1;
+    pbuffer = calloc(1, *len);
+    pbuffer[0] = DLOG_MT_CALL_IN_PARMS;
+
+    pcall_in_params = (dlog_mt_call_in_params_t*)&pbuffer[1];
+
+    printf("\nGenerating Call-In table:\n");
+
+    if (context->use_modem == 1) {
+        /* When using the modem, fill the current time.  If not using the modem, use
+        * a static time, so that results can be automatically checked.
+        */
+        time(&rawtime);
     }
+    else {
+        rawtime = JAN12020;
+    }
+
+    ptm = localtime(&rawtime);
+
+    printf("seconds: %ld\n", rawtime);
+
+    pcall_in_params->call_in_start_date[0] = (ptm->tm_year & 0xff);     /* Call-in start YY */
+    pcall_in_params->call_in_start_date[1] = (ptm->tm_mon + 1 & 0xff);  /* Call in start MM */
+    pcall_in_params->call_in_start_date[2] = (ptm->tm_mday & 0xff);     /* Call in start DD */
+    pcall_in_params->call_in_start_time[0] = (ptm->tm_hour & 0xff);     /* Call-in start HH */
+    pcall_in_params->call_in_start_time[1] = (ptm->tm_min & 0xff);      /* Call-in start MM */
+    pcall_in_params->call_in_start_time[2] = (ptm->tm_sec & 0xff);      /* Call-in start SS */
+    pcall_in_params->call_in_interval[0]   = 0;                         /* Call-in inteval DD */
+    pcall_in_params->call_in_interval[1]   = 12;                        /* Call-in inteval HH */
+    pcall_in_params->call_in_interval[2]   = 0;                         /* Call-in inteval MM */
+    pcall_in_params->call_back_retry_time[0] = 59;                      /* Call-back retry time MM */
+    pcall_in_params->call_back_retry_time[1] = 0;                       /* Call-back retry time SS */
+    pcall_in_params->cdr_threshold = 4;                                 /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
+    pcall_in_params->unknown_timestamp[0] = (ptm->tm_year+1 & 0xff);    /* Unknown timestamp YY (2020) */
+    pcall_in_params->unknown_timestamp[1] = (ptm->tm_mon + 1 & 0xff);   /* Unknown timestamp MM */
+    pcall_in_params->unknown_timestamp[2] = (ptm->tm_mday & 0xff);      /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[3] = 2;                          /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[4] = 0;                          /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[5] = 0;                          /* Unknown timestamp */
+    pcall_in_params->unknown[0] = 16;
+    pcall_in_params->unknown[1] = 14;
+
+    printf("\tCall-in start date: %04d-%02d-%02d\n",
+        ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday);
+    printf("\tCall-in start time: %02d:%02d:%02d\n",
+        ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    printf("\tCall-in interval:   %02dD:%02dH:%02dM\n",
+        pcall_in_params->call_in_interval[0], pcall_in_params->call_in_interval[1], pcall_in_params->call_in_interval[2]);
+    printf("\tCall-back retry:    %02dm:%02ds\n",
+        pcall_in_params->call_back_retry_time[0], pcall_in_params->call_back_retry_time[1]);
+    printf("\tCDR Threshold:      %d\n", pcall_in_params->cdr_threshold);
+
+    *buffer = pbuffer;
 
     return 0;
 }

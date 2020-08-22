@@ -100,6 +100,33 @@ extern char *phone_num_to_string(char *string_buf, int string_buf_len, uint8_t* 
     return string_buf;
 }
 
+/* Convert NULL terminated string to packed BCD (0 digits replaced with 0xa) */
+extern uint8_t string_to_bcd_a(char *number_string, uint8_t *buffer, uint8_t buff_len)
+{
+    uint8_t i;
+
+    for (i = 0; (i < (strlen(number_string)) && (i < buff_len)); i++) {
+        if (i % 2 == 0) {
+            if (number_string[i] == '0') {
+                buffer[(i >> 1)] = 0xa0;
+            }
+            else {
+                buffer[(i >> 1)] = (number_string[i] - '0') << 4;
+            }
+        }
+        else {
+            if (number_string[i] == '0') {
+                buffer[(i >> 1)] |= 0x0a;
+            }
+            else {
+                buffer[(i >> 1)] |= (number_string[i] - '0');
+            }
+        }
+    }
+
+    return (i);
+}
+
 /* Lookup table to translate number string into text.  Not sure what B, C, D, E, F are used for. */
 const char pn_lut[16] = { '\0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'B', 'C', 'D', 'E', 'F' };
 
