@@ -836,7 +836,7 @@ int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, int len, int end_of_data);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len);
-int rewrite_instserv_parameters(mm_context_t *context, uint8_t *table_buffer, int table_len);
+int rewrite_instserv_parameters(mm_context_t *context, dlog_mt_install_params_t *pinstsv_table, int table_len);
 int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer, int table_len);
 
 /* MM Protocol */

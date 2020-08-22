@@ -863,7 +863,7 @@ int mm_download_tables(mm_context_t *context)
 
         switch(table_list[table_index]) {
             case DLOG_MT_INSTALL_PARAMS:
-                rewrite_instserv_parameters(context, table_buffer, table_len);
+                rewrite_instserv_parameters(context, (dlog_mt_install_params_t *)&table_buffer[1], table_len);
                 break;
             case DLOG_MT_NCC_TERM_PARAMS:
                 rewrite_term_access_parameters(context, table_buffer, table_len);
@@ -1008,11 +1008,9 @@ int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len)
     return 0;
 }
 
-#define ACCESS_CODE_OFFSET 1
-int rewrite_instserv_parameters(mm_context_t *context, uint8_t *table_buffer, int table_len)
+int rewrite_instserv_parameters(mm_context_t *context, dlog_mt_install_params_t *pinstsv_table, int table_len)
 {
     int i;
-
     if (strlen(context->access_code) != 7) {
         printf("Error: Access Code must be 7-digits\n");
     }
@@ -1023,12 +1021,12 @@ int rewrite_instserv_parameters(mm_context_t *context, uint8_t *table_buffer, in
     // Rewrite table with our Access Code
     for (i = 0; i < (strlen(context->access_code)); i++) {
         if (i % 2 == 0) {
-            table_buffer[ACCESS_CODE_OFFSET + (i >> 1)]  = (context->access_code[i] - '0') << 4;
+            pinstsv_table->access_code[i >> 1]  = (context->access_code[i] - '0') << 4;
         } else {
-            table_buffer[ACCESS_CODE_OFFSET + (i >> 1)] |= (context->access_code[i] - '0');
+            pinstsv_table->access_code[i >> 1] |= (context->access_code[i] - '0');
         }
     }
-    table_buffer[ACCESS_CODE_OFFSET + 3] |= 0x0e;   /* Terminate the Access Code with 0xe */
+    pinstsv_table->access_code[3] |= 0x0e;   /* Terminate the Access Code with 0xe */
 
     return 0;
 }
