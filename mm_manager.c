@@ -187,6 +187,7 @@ int main(int argc, char *argv[])
 
     opterr = 0;
     mm_context.logstream = NULL;
+    mm_context.cdr_stream = NULL;
     mm_context.use_modem = 0;
     mm_context.tx_seq = 0;
     mm_context.debuglevel = 0;
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
     mm_context.ncc_number[1][0] = '\0';
     mm_context.minimal_table_set = 0;
 
-    while ((c = getopt (argc, argv, "rvmb:l:f:ha:n:s")) != -1) {
+    while ((c = getopt (argc, argv, "rvmb:c:l:f:ha:n:s")) != -1) {
         switch (c)
         {
             case 'h':
@@ -209,6 +210,7 @@ int main(int argc, char *argv[])
                 printf("\t-v verbose (multiple v's increase verbosity.)\n" \
                        "\t-f <filename> modem device or file\n" \
                        "\t-h this help.\n"
+                       "\t-c <cdrfile.csv> - Write Call Detail Records to a CSV file.\n" \
                        "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n" \
                        "\t-m use serial modem (specify device with -f)\n" \
                        "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n" \
@@ -223,6 +225,21 @@ int main(int argc, char *argv[])
                 } else {
                     strncpy(mm_context.access_code, optarg, 8);
                     break;
+                }
+                break;
+            case 'c':
+                if ((mm_context.cdr_stream = fopen(optarg, "a+")) < 0) {
+                    (void)fprintf(stderr,
+                        "mm_manager: %s: %s\n", optarg, strerror(errno));
+                    exit(1);
+                }
+                fseek(mm_context.cdr_stream, 0, SEEK_END);
+                if (ftell(mm_context.cdr_stream) == 0) {
+                    printf("Creating CDR file '%s'\n", optarg);
+                    fprintf(mm_context.cdr_stream, "TERMINAL_ID,SEQ,TIMESTAMP,DURATION,TYPE,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE\n");
+                    fflush(mm_context.cdr_stream);
+                } else {
+                    printf("Appending to existing CDR file '%s'\n", optarg);
                 }
                 break;
             case 'v':
@@ -509,7 +526,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requestd: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
+                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
                     cdr->start_timestamp[0] + 1900,
                     cdr->start_timestamp[1],
                     cdr->start_timestamp[2],
@@ -527,6 +544,29 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     cdr->carrier_code,
                     cdr->rate_type,
                     cdr->seq);
+
+                if (context->cdr_stream != NULL) {
+                    fprintf(context->cdr_stream, "%s,%d,%04d-%02d-%02d %02d:%02d:%02d,%lu,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
+                        context->phone_number,
+                        cdr->seq,
+                        cdr->start_timestamp[0] + 1900,
+                        cdr->start_timestamp[1],
+                        cdr->start_timestamp[2],
+                        cdr->start_timestamp[3],
+                        cdr->start_timestamp[4],
+                        cdr->start_timestamp[5],
+                        cdr->call_duration[0] * 3600 +
+                        cdr->call_duration[1] * 60 +
+                        cdr->call_duration[2],
+                        call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
+                        phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num, sizeof(cdr->called_num)),
+                        phone_num_to_string(card_number_string, sizeof(card_number_string), cdr->card_num, sizeof(cdr->card_num)),
+                        (float)cdr->call_cost[1] / 100,
+                        (float)cdr->call_cost[0] / 100,
+                        cdr->carrier_code,
+                        cdr->rate_type);
+                    fflush(context->cdr_stream);
+                }
 
                 if (context->debuglevel > 2) dump_hex(cdr->pad, sizeof(cdr->pad));
 

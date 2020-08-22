@@ -129,6 +129,7 @@ typedef struct mm_context {
     int fd;
     FILE *logstream;
     FILE *bytestream;
+    FILE *cdr_stream;
     char phone_rev;
     char phone_number[11];
     char access_code[8];
