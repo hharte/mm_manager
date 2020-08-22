@@ -182,6 +182,11 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
         }
     }
 
+    /* Insert Tx packet delay when using a modem, in 10ms increments. */
+    if (context->use_modem == 1) {
+        usleep(context->instsv.rx_packet_gap * 10000);
+    }
+
     pkt.hdr.start = START_BYTE;
 
     if (payload != NULL) {

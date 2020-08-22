@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <string.h>  /* String function definitions */
 
+#include "mm_manager.h"
+
 #define POLY 0xa001     /* Polynomial to use for CRC-16 calculation */
 
 /* Calculate CRC-16 checksum using 0xA001 polynomial. */
@@ -196,4 +198,19 @@ void print_bits(uint8_t bits, char *str_array[])
         bits >>= 1;
         i++;
     }
+}
+
+int mm_read_instsv_params(dlog_mt_install_params_t *instsv, char *filename)
+{
+    FILE *instream = NULL;
+    instream = fopen(filename, "rb");
+
+    if (fread(instsv, sizeof(dlog_mt_install_params_t), 1, instream) <= 0) {
+        printf("Error reading INSTSV table.\n");
+            return (-1);
+    }
+
+    fclose(instream);
+
+    return (0);
 }

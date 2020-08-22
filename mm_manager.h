@@ -125,29 +125,6 @@
 #define CASHBOX_STATUS_BOTH_EXCEEDED    0x03    // Both dollar value and percent threshold exceeded
 #define CASHBOX_STATUS_FULL             0x04    // Cashbox totally full
 
-typedef struct mm_context {
-    int fd;
-    FILE *logstream;
-    FILE *bytestream;
-    FILE *cdr_stream;
-    char phone_rev;
-    char phone_number[11];
-    char access_code[8];
-    char ncc_number[2][21];
-    uint8_t rx_seq;
-    uint8_t tx_seq;
-    uint8_t first_chunk;
-    uint8_t table_num;
-    int table_offset;
-    uint8_t table[10 * 1024];
-    int table_len;
-    uint8_t curr_table;
-    uint8_t use_modem;
-    uint8_t debuglevel;
-    uint8_t connected;
-    uint8_t minimal_table_set;
-} mm_context_t;
-
 #pragma pack(push)
 #pragma pack(1)         /* Pack data structures for communication with terminal. */
 
@@ -728,11 +705,11 @@ typedef struct dlog_mt_install_params {
     uint8_t access_code[4];                     /* This value will be compared to a password entered by the maintenance person, to verify access to the terminal. */
     uint8_t key_card_number[5];                 /* This is the telephone number to be dialed by the terminal when it is being tested by the installer or maintenance person. It is usually the number of a maintenance phone for the Telco. */
     uint8_t flags;                              /* See bit definitions below. */
-    uint8_t tx_packet_delay;			/* in 10ms increments, This is the amount of time that the terminal should pause between packet transmissions to the Millennium Manager. This is used to assist the Millennium Manager in recognizing when the end of a packet has been reached and a new packet is being received. */
-    uint8_t rx_packet_gap;			/* in 10ms increments, This is the amount of time delay that the Millennium Manager will insert prior to the frame character at the start of a packet. It is used by the terminal when receiving the packet, to distinguish a frame character at the start of a packet from characters which may be part of the data inside the packet. */
-    uint8_t retries_until_oos;			/* This is the number of failed attempts to contact the Millennium Manager that the terminal will make before switching to its out-of-service condition. */
-    uint8_t coin_service_flags;			/* Coin servicing flags: Cashbox Query Menu is Accessible via craft interface */
-    uint16_t coinbox_lock_timeout;		/* Time in seconds from when the cash box lock is opened until an alarm is sent to the Millennium Manager. This is a timeout on the time required to collect the cash box. */
+    uint8_t tx_packet_delay;                    /* in 10ms increments, This is the amount of time that the terminal should pause between packet transmissions to the Millennium Manager. This is used to assist the Millennium Manager in recognizing when the end of a packet has been reached and a new packet is being received. */
+    uint8_t rx_packet_gap;                      /* in 10ms increments, This is the amount of time delay that the Millennium Manager will insert prior to the frame character at the start of a packet. It is used by the terminal when receiving the packet, to distinguish a frame character at the start of a packet from characters which may be part of the data inside the packet. */
+    uint8_t retries_until_oos;                  /* This is the number of failed attempts to contact the Millennium Manager that the terminal will make before switching to its out-of-service condition. */
+    uint8_t coin_service_flags;                 /* Coin servicing flags: Cashbox Query Menu is Accessible via craft interface */
+    uint16_t coinbox_lock_timeout;              /* Time in seconds from when the cash box lock is opened until an alarm is sent to the Millennium Manager. This is a timeout on the time required to collect the cash box. */
     uint8_t predial_string[4];                  /* Predial string for the primary NCC. */
     uint8_t predial_string_alt[4];              /* TPredial string for the secondary NCC. */
     uint8_t spare[12];                          /* Some used for MTR2.x. */
@@ -830,6 +807,30 @@ typedef struct dlog_mt_scard_parm_table {
     uint8_t     spare[6];                               /* Spare */
 } dlog_mt_scard_parm_table_t;
 
+typedef struct mm_context {
+    int fd;
+    FILE *logstream;
+    FILE *bytestream;
+    FILE *cdr_stream;
+    char phone_rev;
+    char phone_number[11];
+    char ncc_number[2][21];
+    uint8_t rx_seq;
+    uint8_t tx_seq;
+    uint8_t first_chunk;
+    uint8_t table_num;
+    int table_offset;
+    uint8_t table[10 * 1024];
+    int table_len;
+    uint8_t curr_table;
+    uint8_t use_modem;
+    uint8_t debuglevel;
+    uint8_t connected;
+    uint8_t minimal_table_set;
+    dlog_mt_install_params_t instsv;
+} mm_context_t;
+
+
 
 /* MM Table Operations */
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
@@ -837,7 +838,7 @@ int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, int len, int end_of_data);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len);
-int rewrite_instserv_parameters(mm_context_t *context, dlog_mt_install_params_t *pinstsv_table, int table_len);
+int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
 int rewrite_term_access_parameters(mm_context_t *context, uint8_t *table_buffer, int table_len);
 
 /* MM Protocol */
@@ -861,5 +862,6 @@ extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_
 extern char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len);
 extern char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len);
 extern void print_bits(uint8_t bits, char *str_array[]);
+extern int mm_read_instsv_params(dlog_mt_install_params_t *instsv, char *filename);
 
 #pragma pack(pop)

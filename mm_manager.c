@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
     int index;
     int c;
     int baudrate = 19200;
+    char access_code_str[8];
 
     time_t rawtime;
     struct tm *ptm;
@@ -193,14 +194,17 @@ int main(int argc, char *argv[])
     mm_context.debuglevel = 0;
     mm_context.connected = 0;
 
-    strncpy(mm_context.access_code, "2727378", 8); /* Default access code: "CRASERV" */
-
     printf("mm_manager v0.5 - (c) 2020, Howard M. Harte\n\n");
 
     index = 0;
     mm_context.ncc_number[0][0] = '\0';
     mm_context.ncc_number[1][0] = '\0';
     mm_context.minimal_table_set = 0;
+
+    if (mm_read_instsv_params(&mm_context.instsv, "tables/mm_table_1f.bin")) {
+        fprintf (stderr, "Error reading install parameters from tables/mm_table_1f.bin.\n");
+        return -1;
+    }
 
     while ((c = getopt (argc, argv, "rvmb:c:l:f:ha:n:s")) != -1) {
         switch (c)
@@ -222,9 +226,10 @@ int main(int argc, char *argv[])
                 if (strlen(optarg) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
                     return(-1);
-                } else {
-                    strncpy(mm_context.access_code, optarg, 8);
-                    break;
+                }
+                if (rewrite_instserv_parameters(optarg, &mm_context.instsv, "tables/mm_table_1f.bin")) {
+                    printf("Error updating INSTSV parameters\n");
+                    return (-1);
                 }
                 break;
             case 'c':
@@ -296,13 +301,14 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    printf("Using access code: %s\n", mm_context.access_code);
+    printf("Using access code: %s\n", phone_num_to_string(access_code_str, sizeof(access_code_str), mm_context.instsv.access_code, sizeof(mm_context.instsv.access_code)));
+    printf("Manager Inter-packet Tx gap: %dms.\n", mm_context.instsv.rx_packet_gap * 10);
 
     if(strlen(mm_context.ncc_number[0]) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context.ncc_number[0]);
 
         if(strlen(mm_context.ncc_number[1]) == 0) {
-            strncpy(mm_context.ncc_number[1], mm_context.ncc_number[0], strlen(mm_context.ncc_number[0]));
+            strncpy(mm_context.ncc_number[1], mm_context.ncc_number[0], sizeof(mm_context.ncc_number[1]));
         }
 
         printf("Using Secondary NCC number: %s\n", mm_context.ncc_number[1]);
@@ -368,7 +374,6 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
 
 int receive_mm_table(mm_context_t *context, mm_table_t *table)
 {
@@ -546,7 +551,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     cdr->seq);
 
                 if (context->cdr_stream != NULL) {
-                    fprintf(context->cdr_stream, "%s,%d,%04d-%02d-%02d %02d:%02d:%02d,%lu,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
+                    fprintf(context->cdr_stream, "%s,%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
                         context->phone_number,
                         cdr->seq,
                         cdr->start_timestamp[0] + 1900,
@@ -902,9 +907,6 @@ int mm_download_tables(mm_context_t *context)
         if (status != 0) continue;
 
         switch(table_list[table_index]) {
-            case DLOG_MT_INSTALL_PARAMS:
-                rewrite_instserv_parameters(context, (dlog_mt_install_params_t *)&table_buffer[1], table_len);
-                break;
             case DLOG_MT_NCC_TERM_PARAMS:
                 rewrite_term_access_parameters(context, table_buffer, table_len);
                 break;
@@ -1048,25 +1050,37 @@ int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len)
     return 0;
 }
 
-int rewrite_instserv_parameters(mm_context_t *context, dlog_mt_install_params_t *pinstsv_table, int table_len)
+int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename)
 {
+    FILE *ostream = NULL;
+
     int i;
-    if (strlen(context->access_code) != 7) {
+    if (strlen(access_code) != 7) {
         printf("Error: Access Code must be 7-digits\n");
     }
 
-    printf("\nRewriting Installation / Servicing Parameters table:\n" \
-           "\t  Access Code: %s", context->access_code);
-
     // Rewrite table with our Access Code
-    for (i = 0; i < (strlen(context->access_code)); i++) {
+    for (i = 0; i < (strlen(access_code)); i++) {
         if (i % 2 == 0) {
-            pinstsv_table->access_code[i >> 1]  = (context->access_code[i] - '0') << 4;
+            pinstsv_table->access_code[i >> 1]  = (access_code[i] - '0') << 4;
         } else {
-            pinstsv_table->access_code[i >> 1] |= (context->access_code[i] - '0');
+            pinstsv_table->access_code[i >> 1] |= (access_code[i] - '0');
         }
     }
     pinstsv_table->access_code[3] |= 0x0e;   /* Terminate the Access Code with 0xe */
+
+    if(!(ostream = fopen(filename, "wb"))) {
+        printf("Error writing %s\n", filename);
+        return -1;
+    }
+
+    /* If output file was specified, write it. */
+    if (ostream != NULL) {
+        printf("Rewriting %s with access code: %s\n", filename, access_code);
+
+        fwrite(pinstsv_table, sizeof(dlog_mt_install_params_t), 1, ostream);
+        fclose(ostream);
+    }
 
     return 0;
 }
