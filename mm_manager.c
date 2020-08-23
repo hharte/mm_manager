@@ -1132,6 +1132,7 @@ int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* le
     uint8_t* pbuffer;
     time_t rawtime;
     struct tm* ptm;
+    uint8_t call_in_hour;
 
     *len = sizeof(dlog_mt_call_in_params_t) + 1;
     pbuffer = calloc(1, *len);
@@ -1153,12 +1154,21 @@ int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* le
 
     ptm = localtime(&rawtime);
 
-    printf("seconds: %ld\n", rawtime);
+    /* Interestingly, the terminal will call in starting at the call-in time, and continue
+     * calling in at intervals specified, up until midnight.  After that, the terminal will
+     * not call in until the call-in time the following day.  Since we want to call in twice
+     * a day, set the call-in hour to a time in the AM, so the subsequent call 12 hours later
+     * will be in the PM of the same day.
+     */
+    call_in_hour = (ptm->tm_hour & 0xff);
+    if (call_in_hour >= 12) { /* If after noon, set back to the AM. */
+        call_in_hour -= 12;
+    }
 
     pcall_in_params->call_in_start_date[0] = (ptm->tm_year & 0xff);     /* Call-in start YY */
     pcall_in_params->call_in_start_date[1] = (ptm->tm_mon + 1 & 0xff);  /* Call in start MM */
     pcall_in_params->call_in_start_date[2] = (ptm->tm_mday & 0xff);     /* Call in start DD */
-    pcall_in_params->call_in_start_time[0] = (ptm->tm_hour & 0xff);     /* Call-in start HH */
+    pcall_in_params->call_in_start_time[0] = call_in_hour;              /* Call-in start HH */
     pcall_in_params->call_in_start_time[1] = (ptm->tm_min & 0xff);      /* Call-in start MM */
     pcall_in_params->call_in_start_time[2] = (ptm->tm_sec & 0xff);      /* Call-in start SS */
     pcall_in_params->call_in_interval[0]   = 0;                         /* Call-in inteval DD */
