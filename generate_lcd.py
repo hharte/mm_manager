@@ -99,7 +99,12 @@ else:
 
 if args.debug: print(sc[['NPA', 'NXX', 'RateCenter']])
 
-rc = sc[sc['RateCenter'].str.match('|'.join(args.ratecenters))]
+def prepRateForRegex(r):
+    return r'^' + r + '$'
+
+rate_centers = map(prepRateForRegex,args.ratecenters)
+
+rc = sc[sc['RateCenter'].str.match('|'.join(rate_centers))]
 if args.debug: print(rc[['NPA', 'NXX', 'RateCenter']])
 
 # Get list of unique NPAs that have NXX in matching rate centers.
