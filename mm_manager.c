@@ -1112,12 +1112,12 @@ int generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int
 
     // Rewrite table with Primary NCC phone number
     printf("\t  Primary NCC: %s\n", context->ncc_number[0]);
-    string_to_bcd_a(context->ncc_number[0], pncc_term_params->pri_ncc_number, 10);
+    string_to_bcd_a(context->ncc_number[0], pncc_term_params->pri_ncc_number, sizeof(pncc_term_params->pri_ncc_number));
 
     // Rewrite table with Secondary NCC phone number, if provided.
     if (strlen(context->ncc_number[1]) > 0) {
         printf("\tSecondary NCC: %s\n", context->ncc_number[1]);
-        string_to_bcd_a(context->ncc_number[1], pncc_term_params->sec_ncc_number, 10);
+        string_to_bcd_a(context->ncc_number[1], pncc_term_params->sec_ncc_number, sizeof(pncc_term_params->sec_ncc_number));
     }
 
     *buffer = pbuffer;

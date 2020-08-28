@@ -105,7 +105,9 @@ extern uint8_t string_to_bcd_a(char *number_string, uint8_t *buffer, uint8_t buf
 {
     uint8_t i;
 
-    for (i = 0; (i < (strlen(number_string)) && (i < buff_len)); i++) {
+    memset(buffer, 0, buff_len);
+
+    for (i = 0; (i < (strlen(number_string)) && (i < (buff_len * 2))); i++) {
         if (i % 2 == 0) {
             if (number_string[i] == '0') {
                 buffer[(i >> 1)] = 0xa0;
