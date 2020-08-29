@@ -302,6 +302,7 @@ typedef struct dlog_mt_carrier_call_stats {
 typedef struct dlog_mt_carrier_stats_exp {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
+    uint8_t unknown[231];
 } dlog_mt_carrier_stats_exp_t;
 
 /* DLOG_MT_SW_VERSION (TSWVERS pp. 2-647) */

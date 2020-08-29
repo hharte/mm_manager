@@ -760,8 +760,22 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_CARRIER_STATS_EXP: {
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
-                printf("Seq: %d: TABLE_ID_EXP_CARR_CALL_STATS.\n", context->tx_seq);
-                *pack_payload++ = DLOG_MT_END_DATA;
+                printf("Seq: %d: DLOG_MT_CARRIER_STATS_EXP.\n", context->tx_seq);
+                printf("\t\tExpanded Carrier Statistics: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
+                        carr_stats->timestamp[0] + 1900,
+                        carr_stats->timestamp[1],
+                        carr_stats->timestamp[2],
+                        carr_stats->timestamp[3],
+                        carr_stats->timestamp[4],
+                        carr_stats->timestamp[5],
+                        carr_stats->timestamp2[0] + 1900,
+                        carr_stats->timestamp2[1],
+                        carr_stats->timestamp2[2],
+                        carr_stats->timestamp2[3],
+                        carr_stats->timestamp2[4],
+                        carr_stats->timestamp2[5]);
+                dump_hex((uint8_t *)carr_stats->unknown, sizeof(carr_stats->unknown));
+
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
