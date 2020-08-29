@@ -176,7 +176,7 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
 
     if (context->debuglevel > 3) {
         if (payload != NULL) {
-            printf("T<--M Sending packet: Terminal: %s, tx_seq=%d\n", context->phone_number, context->tx_seq);
+            printf("T<--M Sending packet: Terminal: %s, tx_seq=%d\n", context->terminal_id, context->tx_seq);
         } else {
             printf("T<--M Sending ACK: rx_seq=%d\n", context->rx_seq);
         }
@@ -195,8 +195,8 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
         pkt.payload_len = len + PKT_TABLE_ID_OFFSET; /* add room for the phone number. */
 
         for (int i=0; i < PKT_TABLE_ID_OFFSET; i++) {
-            pkt.payload[i]  = (context->phone_number[i * 2    ] - '0') << 4;
-            pkt.payload[i] |= (context->phone_number[i * 2 + 1] - '0');
+            pkt.payload[i]  = (context->terminal_id[i * 2    ] - '0') << 4;
+            pkt.payload[i] |= (context->terminal_id[i * 2 + 1] - '0');
         }
         if(len > 0) {
             memcpy(&pkt.payload[PKT_TABLE_ID_OFFSET], payload, len);

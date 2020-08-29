@@ -831,7 +831,7 @@ typedef struct mm_context {
     FILE *bytestream;
     FILE *cdr_stream;
     char phone_rev;
-    char phone_number[11];
+    char terminal_id[11];   /* The terminal's phone number */
     char ncc_number[2][21];
     uint8_t rx_seq;
     uint8_t tx_seq;
@@ -846,6 +846,7 @@ typedef struct mm_context {
     uint8_t connected;
     uint8_t minimal_table_set;
     dlog_mt_install_params_t instsv;
+    cashbox_status_univ_t cashbox_status;
 } mm_context_t;
 
 
@@ -855,10 +856,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, int len, int end_of_data);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
-int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len);
+int load_mm_table(char *terminal_id, uint8_t table_id, uint8_t **buffer, int *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
 int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
+int update_terminal_cash_box_staus_table(char *terminal_id, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */
 extern int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
@@ -881,7 +883,7 @@ extern char *phone_num_to_string(char *string_buf, int string_len, uint8_t* num_
 extern uint8_t string_to_bcd_a(char* number_string, uint8_t* buffer, uint8_t buff_len);
 extern char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len);
 extern char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len);
+extern char *timestamp_to_string(uint8_t *timestamp, char *string_buf, int string_buf_len);
 extern void print_bits(uint8_t bits, char *str_array[]);
-extern int mm_read_instsv_params(dlog_mt_install_params_t *instsv, char *filename);
 
 #pragma pack(pop)

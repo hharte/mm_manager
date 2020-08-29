@@ -18,6 +18,7 @@
 #include <errno.h>   /* Error number definitions */
 #include <time.h>    /* time_t, struct tm, time, gmtime */
 #include <libgen.h>
+#include <sys/stat.h>
 
 #include "mm_manager.h"
 
@@ -182,6 +183,8 @@ int main(int argc, char *argv[])
     char *modem_dev = NULL;
     int index;
     int c;
+    uint8_t *instsv_table_buffer;
+    int table_len;
     int baudrate = 19200;
     char access_code_str[8];
 
@@ -203,10 +206,13 @@ int main(int argc, char *argv[])
     mm_context.ncc_number[1][0] = '\0';
     mm_context.minimal_table_set = 0;
 
-    if (mm_read_instsv_params(&mm_context.instsv, "tables/mm_table_1f.bin")) {
-        fprintf (stderr, "Error reading install parameters from tables/mm_table_1f.bin.\n");
+    if (load_mm_table(NULL, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
+        fprintf (stderr, "Error reading install parameters from tables/default/mm_table_1f.bin.\n");
         return -1;
     }
+
+    memcpy(&mm_context.instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
+    free(instsv_table_buffer);
 
     while ((c = getopt (argc, argv, "rvmb:c:l:f:ha:n:s")) != -1) {
         switch (c)
@@ -388,6 +394,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     uint8_t *pack_payload = ack_payload;
     char serial_number[11];
     char terminal_version[12];
+    char timestamp_str[20];
+    char timestamp2_str[20];
     uint8_t *ppayload;
     uint8_t cashbox_pending = 0;
     uint8_t table_download_pending = 0;
@@ -407,10 +415,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
     if(pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
 
-        phone_num_to_string(context->phone_number, sizeof(context->phone_number), ppayload, PKT_TABLE_ID_OFFSET);
+        phone_num_to_string(context->terminal_id, sizeof(context->terminal_id), ppayload, PKT_TABLE_ID_OFFSET);
         ppayload += PKT_TABLE_ID_OFFSET;
 
-        if (context->debuglevel > 1) printf("\tReceived packet from phone# %s\n", context->phone_number);
+        if (context->debuglevel > 1) printf("\tReceived packet from phone# %s\n", context->terminal_id);
     } else {
         table->table_id = 0;
         printf("Error: Received an ACK without expecting it!\n");
@@ -500,13 +508,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     alarm_index = alarm->alarm_id;
                 }
 
-                printf("\t\tAlarm: %04d-%02d-%02d %02d:%02d:%02d: Type: %d (0x%02x) - %s\n",
-                    alarm->timestamp[0] + 1900,
-                    alarm->timestamp[1],
-                    alarm->timestamp[2],
-                    alarm->timestamp[3],
-                    alarm->timestamp[4],
-                    alarm->timestamp[5],
+                printf("\t\tAlarm: %s: Type: %d (0x%02x) - %s\n",
+                    timestamp_to_string(alarm->timestamp, timestamp_str, sizeof(timestamp_str)),
                     alarm->alarm_id, alarm->alarm_id,
                     alarm_type_str[alarm_index]);
                 break;
@@ -532,13 +535,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                printf("\t\tCDR: %04d-%02d-%02d %02d:%02d:%02d, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
-                    cdr->start_timestamp[0] + 1900,
-                    cdr->start_timestamp[1],
-                    cdr->start_timestamp[2],
-                    cdr->start_timestamp[3],
-                    cdr->start_timestamp[4],
-                    cdr->start_timestamp[5],
+                printf("\t\tCDR: %s, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
+                    timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
                     cdr->call_duration[0],
                     cdr->call_duration[1],
                     cdr->call_duration[2],
@@ -552,15 +550,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     cdr->seq);
 
                 if (context->cdr_stream != NULL) {
-                    fprintf(context->cdr_stream, "%s,%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
-                        context->phone_number,
+                    fprintf(context->cdr_stream, "%s,%d,%s,%d,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
+                        context->terminal_id,
                         cdr->seq,
-                        cdr->start_timestamp[0] + 1900,
-                        cdr->start_timestamp[1],
-                        cdr->start_timestamp[2],
-                        cdr->start_timestamp[3],
-                        cdr->start_timestamp[4],
-                        cdr->start_timestamp[5],
+                        timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
                         cdr->call_duration[0] * 3600 +
                         cdr->call_duration[1] * 60 +
                         cdr->call_duration[2],
@@ -595,13 +588,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 ppayload += sizeof(dlog_mt_cash_box_collection_t);
 
-                printf("\t\t%04d-%02d-%02d %02d:%02d:%02d: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
-                        cash_box_collection->timestamp[0] + 1900,
-                        cash_box_collection->timestamp[1],
-                        cash_box_collection->timestamp[2],
-                        cash_box_collection->timestamp[3],
-                        cash_box_collection->timestamp[4],
-                        cash_box_collection->timestamp[5],
+                printf("\t\t%s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+                        timestamp_to_string(cash_box_collection->timestamp, timestamp_str, sizeof(timestamp_str)),
                         (float)cash_box_collection->currency_value / 100,
                         cash_box_collection->percent_full,
                         cash_box_collection->coin_count[COIN_COUNT_CA_NICKELS],
@@ -683,16 +671,16 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_CASH_BOX_STATUS: {
-                cashbox_status_univ_t *cashbox_status = (cashbox_status_univ_t *)ppayload;
+                cashbox_status_univ_t *cashbox_status = &context->cashbox_status;
+
+                /* Save cashbox status in our context */
+                memcpy(cashbox_status, ppayload, sizeof(cashbox_status_univ_t));
+
                 ppayload += sizeof(cashbox_status_univ_t);
 
-                printf("\t\tCashbox status: %04d-%02d-%02d %02d:%02d:%02d: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
-                        cashbox_status->timestamp[0] + 1900,
-                        cashbox_status->timestamp[1],
-                        cashbox_status->timestamp[2],
-                        cashbox_status->timestamp[3],
-                        cashbox_status->timestamp[4],
-                        cashbox_status->timestamp[5],
+                update_terminal_cash_box_staus_table(context->terminal_id, &context->cashbox_status);
+                printf("\t\tCashbox status: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+                        timestamp_to_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
                         (float)cashbox_status->currency_value / 100,
                         cashbox_status->percent_full,
                         cashbox_status->coin_count[COIN_COUNT_CA_NICKELS],
@@ -709,19 +697,9 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
 
-                printf("\t\tPerformance Statistics Record: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
-                        perf_stats->timestamp[0] + 1900,
-                        perf_stats->timestamp[1],
-                        perf_stats->timestamp[2],
-                        perf_stats->timestamp[3],
-                        perf_stats->timestamp[4],
-                        perf_stats->timestamp[5],
-                        perf_stats->timestamp2[0] + 1900,
-                        perf_stats->timestamp2[1],
-                        perf_stats->timestamp2[2],
-                        perf_stats->timestamp2[3],
-                        perf_stats->timestamp2[4],
-                        perf_stats->timestamp2[5]);
+                printf("\t\tPerformance Statistics Record: From: %s, to: %s:\n",
+                        timestamp_to_string(perf_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
+                        timestamp_to_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
                 break;
             }
             case DLOG_MT_CALL_IN: {
@@ -739,19 +717,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_call_stats_t);
                 printf("Seq: %d: DLOG_MT_CARRIER_CALL_STATS.\n", context->tx_seq);
-                printf("\t\tCarrier Call Statistics Record: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
-                        carr_stats->timestamp[0] + 1900,
-                        carr_stats->timestamp[1],
-                        carr_stats->timestamp[2],
-                        carr_stats->timestamp[3],
-                        carr_stats->timestamp[4],
-                        carr_stats->timestamp[5],
-                        carr_stats->timestamp2[0] + 1900,
-                        carr_stats->timestamp2[1],
-                        carr_stats->timestamp2[2],
-                        carr_stats->timestamp2[3],
-                        carr_stats->timestamp2[4],
-                        carr_stats->timestamp2[5]);
+                printf("\t\tCarrier Call Statistics Record: From: %s, to: %s:\n",
+                        timestamp_to_string(carr_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
+                        timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
+
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[0].carrier_ref);
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[1].carrier_ref);
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[2].carrier_ref);
@@ -761,19 +730,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
                 printf("Seq: %d: DLOG_MT_CARRIER_STATS_EXP.\n", context->tx_seq);
-                printf("\t\tExpanded Carrier Statistics: From %04d-%02d-%02d %02d:%02d:%02d, to: %04d-%02d-%02d %02d:%02d:%02d:\n",
-                        carr_stats->timestamp[0] + 1900,
-                        carr_stats->timestamp[1],
-                        carr_stats->timestamp[2],
-                        carr_stats->timestamp[3],
-                        carr_stats->timestamp[4],
-                        carr_stats->timestamp[5],
-                        carr_stats->timestamp2[0] + 1900,
-                        carr_stats->timestamp2[1],
-                        carr_stats->timestamp2[2],
-                        carr_stats->timestamp2[3],
-                        carr_stats->timestamp2[4],
-                        carr_stats->timestamp2[5]);
+                printf("\t\tExpanded Carrier Statistics: From: %s, to: %s:\n",
+                        timestamp_to_string(carr_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
+                        timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
+
                 dump_hex((uint8_t *)carr_stats->unknown, sizeof(carr_stats->unknown));
 
                 break;
@@ -794,13 +754,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 ppayload += sizeof(dlog_mt_rate_request_t);
 
                 phone_num_to_string(phone_number, sizeof(phone_number), dlog_mt_rate_request->phone_number, sizeof(dlog_mt_rate_request->phone_number));
-                printf("\t\tRate request: %04d-%02d-%02d %02d:%02d:%02d: Phone number: %s, seq=%d, %d,%d,%d,%d,%d,%d.\n",
-                        dlog_mt_rate_request->timestamp[0] + 1900,
-                        dlog_mt_rate_request->timestamp[1],
-                        dlog_mt_rate_request->timestamp[2],
-                        dlog_mt_rate_request->timestamp[3],
-                        dlog_mt_rate_request->timestamp[4],
-                        dlog_mt_rate_request->timestamp[5],
+                printf("\t\tRate request: %s: Phone number: %s, seq=%d, %d,%d,%d,%d,%d,%d.\n",
+                        timestamp_to_string(dlog_mt_rate_request->timestamp, timestamp_str, sizeof(timestamp_str)),
                         phone_number,
                         dlog_mt_rate_request->seq,
                         dlog_mt_rate_request->pad[0],
@@ -872,16 +827,24 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
     /* Send cash box status if requested by terminal */
     if (cashbox_pending == 1) {
-        cashbox_status_univ_t cashbox_status = {
-            .timestamp = { 90, 1, 1, 0, 0, 0 }, /* January 1, 1990 00:00:00 */
-            {0}
-        };
-
-        *pack_payload++ = DLOG_MT_CASH_BOX_STATUS;
+        int table_len;
+        uint8_t *table_buffer;
 
         printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n", context->tx_seq);
-        memcpy(pack_payload, &cashbox_status, sizeof(cashbox_status_univ_t));
-        pack_payload += sizeof(cashbox_status);
+        if (load_mm_table(context->terminal_id, DLOG_MT_CASH_BOX_STATUS, &table_buffer, &table_len) == 0) {
+            memcpy(pack_payload, table_buffer, table_len);
+            free(table_buffer);
+            pack_payload += table_len;
+        } else { /* No cashbox staus saved for this terminal, use default */
+            cashbox_status_univ_t empty_cashbox_status = {
+                .timestamp = { 99, 1, 1, 0, 0, 0 }, /* January 1, 1999 00:00:00 */
+                {0}
+            };
+
+            *pack_payload++ = DLOG_MT_CASH_BOX_STATUS;
+            memcpy(pack_payload, &empty_cashbox_status, sizeof(cashbox_status_univ_t));
+            pack_payload += sizeof(cashbox_status_univ_t);
+        }
     }
 
     if (dont_send_reply == 0) {
@@ -925,7 +888,7 @@ int mm_download_tables(mm_context_t *context)
                 status = generate_term_access_parameters(context, &table_buffer, &table_len);
                 break;
             default:
-                status = load_mm_table(table_list[table_index], &table_buffer, &table_len);
+                status = load_mm_table(context->terminal_id, table_list[table_index], &table_buffer, &table_len);
 
                 /* If table can't be loaded, continue to the next. */
                 if (status != 0) continue;
@@ -996,11 +959,11 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
 
         if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
             for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
-                context->phone_number[i*2] = ((pkt->payload[i] & 0xf0) >> 4) + '0';
-                context->phone_number[i*2+1] = (pkt->payload[i] & 0x0f) + '0';
+                context->terminal_id[i*2] = ((pkt->payload[i] & 0xf0) >> 4) + '0';
+                context->terminal_id[i*2+1] = (pkt->payload[i] & 0x0f) + '0';
             }
-            context->phone_number[10] = '\0';
-            if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->phone_number);
+            context->terminal_id[10] = '\0';
+            if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->terminal_id);
 
             if((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
                (pkt->payload[6] == table_id)) {
@@ -1021,7 +984,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
 }
 
 
-int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len)
+int load_mm_table(char* terminal_id, uint8_t table_id, uint8_t **buffer, int *len)
 {
     FILE *stream;
     char fname[80];
@@ -1029,10 +992,18 @@ int load_mm_table(uint8_t table_id, uint8_t **buffer, int *len)
     long size;
     uint8_t *bufp;
 
-    snprintf(fname, sizeof(fname), "./tables/mm_table_%02x.bin", table_id);
+    if (terminal_id != NULL) {
+        snprintf(fname, sizeof(fname), "./tables/%s/mm_table_%02x.bin", terminal_id, table_id);
+    } else {
+        snprintf(fname, sizeof(fname), "./tables/default/mm_table_%02x.bin", table_id);
+    }
+
     if(!(stream = fopen(fname, "rb"))) {
-        printf("Error loading %s\n", fname);
-        return -1;
+        snprintf(fname, sizeof(fname), "./tables/default/mm_table_%02x.bin", table_id);
+        if(!(stream = fopen(fname, "rb"))) {
+            printf("Could not load table %d.\n", table_id);
+            return -1;
+        }
     }
 
     fseek(stream, 0, SEEK_END);
@@ -1116,12 +1087,12 @@ int generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int
     pncc_term_params = (dlog_mt_ncc_term_params_t *)&pbuffer[1];
 
     printf("\nGenerating Terminal Access Parameters table:\n" \
-           "\t  Terminal ID: %s\n", context->phone_number);
+           "\t  Terminal ID: %s\n", context->terminal_id);
 
     // Rewrite table with our Terminal ID (phone number)
     for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
-        pncc_term_params->terminal_id[i]  = (context->phone_number[i * 2    ] - '0') << 4;
-        pncc_term_params->terminal_id[i] |= (context->phone_number[i * 2 + 1] - '0');
+        pncc_term_params->terminal_id[i]  = (context->terminal_id[i * 2    ] - '0') << 4;
+        pncc_term_params->terminal_id[i] |= (context->terminal_id[i * 2 + 1] - '0');
     }
 
     // Rewrite table with Primary NCC phone number
@@ -1213,4 +1184,45 @@ int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* le
     *buffer = pbuffer;
 
     return 0;
+}
+
+int create_terminal_specific_directory(char *terminal_id) {
+    char dirname[80];
+    int status = 0;
+    errno = 0;
+
+    snprintf(dirname, sizeof(dirname), "tables/%s", terminal_id);
+
+    status = mkdir(dirname, 0755);
+
+    if(status != 0 && errno != EEXIST) {
+        printf("Failed to create directory: %s\n", dirname);
+        return (-1);
+    }
+
+    printf("Created directory: %s\n", dirname);
+    return(status);
+}
+
+int update_terminal_cash_box_staus_table(char *terminal_id, cashbox_status_univ_t *cashbox_status) {
+    int status = 0;
+    FILE *ostream = NULL;
+    char filename[80];
+
+    snprintf(filename, sizeof(filename), "tables/%s/mm_table_26.bin", terminal_id);
+    printf("Saving CASH_BOX_STATUS_UNIV for terminal %s to %s\n", terminal_id, filename);
+
+    /* Make sure the terminal-specific directory exists, create if needed. */
+    create_terminal_specific_directory(terminal_id);
+
+    if(!(ostream = fopen(filename, "wb"))) {
+        printf("Error writing %s\n", filename);
+        return -1;
+    }
+    if (ostream != NULL) {
+        fwrite(cashbox_status, sizeof(cashbox_status_univ_t), 1, ostream);
+        fclose(ostream);
+    }
+
+    return(status);
 }
