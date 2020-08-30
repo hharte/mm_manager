@@ -174,6 +174,7 @@ const char *alarm_type_str[] = {
 /* >39 */   "Unknown Alarm!"
 };
 
+
 int main(int argc, char *argv[])
 {
     FILE *instream;
@@ -181,6 +182,7 @@ int main(int argc, char *argv[])
     mm_table_t mm_table;
     int status;
     char *modem_dev = NULL;
+    char *table_dir = NULL;
     int index;
     int c;
     uint8_t *instsv_table_buffer;
@@ -198,28 +200,25 @@ int main(int argc, char *argv[])
     mm_context.tx_seq = 0;
     mm_context.debuglevel = 0;
     mm_context.connected = 0;
+    mm_context.terminal_id[0] = '\0';
 
     printf("mm_manager v0.5 [%s] - (c) 2020, Howard M. Harte\n\n", VERSION);
 
     index = 0;
     mm_context.ncc_number[0][0] = '\0';
     mm_context.ncc_number[1][0] = '\0';
+
+    strcpy(mm_context.default_table_dir, "tables/default");
+    strcpy(mm_context.term_table_dir, "tables");
     mm_context.minimal_table_set = 0;
 
-    if (load_mm_table(NULL, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
-        fprintf (stderr, "Error reading install parameters from tables/default/mm_table_1f.bin.\n");
-        return -1;
-    }
-
-    memcpy(&mm_context.instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
-    free(instsv_table_buffer);
-
-    while ((c = getopt (argc, argv, "rvmb:c:l:f:ha:n:s")) != -1) {
+    while ((c = getopt (argc, argv, "rvmb:c:d:l:f:ha:n:st:")) != -1) {
         switch (c)
         {
             case 'h':
-                printf("usage: %s [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>]\n", basename(argv[0]));
+                printf("usage: %s [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n", basename(argv[0]));
                 printf("\t-v verbose (multiple v's increase verbosity.)\n" \
+                       "\t-d default_table_dir - default table directory.\n" \
                        "\t-f <filename> modem device or file\n" \
                        "\t-h this help.\n"
                        "\t-c <cdrfile.csv> - Write Call Detail Records to a CSV file.\n" \
@@ -227,7 +226,8 @@ int main(int argc, char *argv[])
                        "\t-m use serial modem (specify device with -f)\n" \
                        "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n" \
                        "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
-                       "\t-s small - Download only minimum required tables to terminal.\n");
+                       "\t-s small - Download only minimum required tables to terminal.\n" \
+                       "\t-t term_table_dir - terminal-specific table directory.\n");
                        return(0);
                        break;
             case 'a':
@@ -235,6 +235,14 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
                     return(-1);
                 }
+
+                if (load_mm_table(&mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
+                    fprintf (stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context.default_table_dir);
+                    return -1;
+                }
+                memcpy(&mm_context.instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
+                free(instsv_table_buffer);
+
                 if (rewrite_instserv_parameters(optarg, &mm_context.instsv, "tables/mm_table_1f.bin")) {
                     printf("Error updating INSTSV parameters\n");
                     return (-1);
@@ -291,6 +299,12 @@ int main(int argc, char *argv[])
                 printf("NOTE: Using minimum required table list for download.\n");
                 mm_context.minimal_table_set = 1;
                 break;
+            case 'd':
+                strcpy(mm_context.default_table_dir, optarg);
+                break;
+            case 't':
+                strcpy(mm_context.term_table_dir, optarg);
+                break;
             case '?':
                 if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n' || optopt == 'b')
                     fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -308,6 +322,16 @@ int main(int argc, char *argv[])
         printf ("Non-option argument %s\n", argv[index]);
         return 0;
     }
+
+    printf("Default Table directory: %s\n", mm_context.default_table_dir);
+    printf("Terminal-specific Table directory: %s/<terminal_id>\n", mm_context.term_table_dir);
+
+    if (load_mm_table(&mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
+        fprintf (stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context.default_table_dir);
+        return -1;
+    }
+    memcpy(&mm_context.instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
+    free(instsv_table_buffer);
 
     printf("Using access code: %s\n", phone_num_to_string(access_code_str, sizeof(access_code_str), mm_context.instsv.access_code, sizeof(mm_context.instsv.access_code)));
     printf("Manager Inter-packet Tx gap: %dms.\n", mm_context.instsv.rx_packet_gap * 10);
@@ -678,7 +702,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 ppayload += sizeof(cashbox_status_univ_t);
 
-                update_terminal_cash_box_staus_table(context->terminal_id, &context->cashbox_status);
+                update_terminal_cash_box_staus_table(context, &context->cashbox_status);
                 printf("\t\tCashbox status: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
                         timestamp_to_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
                         (float)cashbox_status->currency_value / 100,
@@ -831,7 +855,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
         uint8_t *table_buffer;
 
         printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n", context->tx_seq);
-        if (load_mm_table(context->terminal_id, DLOG_MT_CASH_BOX_STATUS, &table_buffer, &table_len) == 0) {
+        if (load_mm_table(context, DLOG_MT_CASH_BOX_STATUS, &table_buffer, &table_len) == 0) {
             memcpy(pack_payload, table_buffer, table_len);
             free(table_buffer);
             pack_payload += table_len;
@@ -888,7 +912,7 @@ int mm_download_tables(mm_context_t *context)
                 status = generate_term_access_parameters(context, &table_buffer, &table_len);
                 break;
             default:
-                status = load_mm_table(context->terminal_id, table_list[table_index], &table_buffer, &table_len);
+                status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
 
                 /* If table can't be loaded, continue to the next. */
                 if (status != 0) continue;
@@ -919,7 +943,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_d
 
     table_id = payload[0];
     bytes_remaining = len;
-    printf("\nSending Table ID %d (0x%02x)...\n", table_id, table_id);
+    printf("Sending Table ID %d (0x%02x)...\n", table_id, table_id);
     while (bytes_remaining > 0) {
         if (bytes_remaining > 245) {
             chunk_len = 245;
@@ -935,7 +959,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_d
         printf("Table %d progress: (%3ld%%) - %ld / %d \n", table_id, ((p - payload) * 100) / len, p - payload, len);
     }
 
-    if (context->debuglevel > 1) printf("Sending end of data message.\n");
+    if (context->debuglevel > 1) printf("Sending end of data message.\n\n");
 
     if(end_of_data != 0) {
         send_mm_packet(context, &end_of_data_msg, sizeof(end_of_data_msg), 0);
@@ -984,24 +1008,24 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
 }
 
 
-int load_mm_table(char* terminal_id, uint8_t table_id, uint8_t **buffer, int *len)
+int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int *len)
 {
     FILE *stream;
-    char fname[80];
+    char fname[TABLE_PATH_MAX_LEN];
     uint8_t c;
     long size;
     uint8_t *bufp;
 
-    if (terminal_id != NULL) {
-        snprintf(fname, sizeof(fname), "./tables/%s/mm_table_%02x.bin", terminal_id, table_id);
+    if (context->terminal_id[0] != '\0') {
+        snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, context->terminal_id, table_id);
     } else {
-        snprintf(fname, sizeof(fname), "./tables/default/mm_table_%02x.bin", table_id);
+        snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
     }
 
     if(!(stream = fopen(fname, "rb"))) {
-        snprintf(fname, sizeof(fname), "./tables/default/mm_table_%02x.bin", table_id);
+        snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
         if(!(stream = fopen(fname, "rb"))) {
-            printf("Could not load table %d.\n", table_id);
+            printf("Could not load table %d from %s.\n", table_id, fname);
             return -1;
         }
     }
@@ -1033,7 +1057,7 @@ int load_mm_table(char* terminal_id, uint8_t table_id, uint8_t **buffer, int *le
         *len = *len + 1;
     }
 
-    printf("\nLoaded table ID %d (0x%02x) from %s (%d bytes).\n", table_id, table_id, fname, *len - 1);
+    printf("Loaded table ID %d (0x%02x) from %s (%d bytes).\n", table_id, table_id, fname, *len - 1);
     fclose(stream);
 
     return 0;
@@ -1186,12 +1210,12 @@ int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* le
     return 0;
 }
 
-int create_terminal_specific_directory(char *terminal_id) {
+int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
     char dirname[80];
     int status = 0;
     errno = 0;
 
-    snprintf(dirname, sizeof(dirname), "tables/%s", terminal_id);
+    snprintf(dirname, sizeof(dirname), "%s/%s", table_dir, terminal_id);
 
     status = mkdir(dirname, 0755);
 
@@ -1204,16 +1228,16 @@ int create_terminal_specific_directory(char *terminal_id) {
     return(status);
 }
 
-int update_terminal_cash_box_staus_table(char *terminal_id, cashbox_status_univ_t *cashbox_status) {
+int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status) {
     int status = 0;
     FILE *ostream = NULL;
-    char filename[80];
+    char filename[TABLE_PATH_MAX_LEN];
 
-    snprintf(filename, sizeof(filename), "tables/%s/mm_table_26.bin", terminal_id);
-    printf("Saving CASH_BOX_STATUS_UNIV for terminal %s to %s\n", terminal_id, filename);
+    snprintf(filename, sizeof(filename), "%s/%s/mm_table_26.bin", context->term_table_dir, context->terminal_id);
+    printf("Saving CASH_BOX_STATUS_UNIV for terminal %s to %s\n", context->terminal_id, filename);
 
     /* Make sure the terminal-specific directory exists, create if needed. */
-    create_terminal_specific_directory(terminal_id);
+    create_terminal_specific_directory(context->term_table_dir, context->terminal_id);
 
     if(!(ostream = fopen(filename, "wb"))) {
         printf("Error writing %s\n", filename);

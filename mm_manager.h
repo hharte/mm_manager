@@ -825,6 +825,8 @@ typedef struct dlog_mt_scard_parm_table {
     uint8_t     spare[6];                               /* Spare */
 } dlog_mt_scard_parm_table_t;
 
+#define TABLE_PATH_MAX_LEN   283
+
 typedef struct mm_context {
     int fd;
     FILE *logstream;
@@ -833,6 +835,8 @@ typedef struct mm_context {
     char phone_rev;
     char terminal_id[11];   /* The terminal's phone number */
     char ncc_number[2][21];
+    char default_table_dir[TABLE_PATH_MAX_LEN];
+    char term_table_dir[TABLE_PATH_MAX_LEN];
     uint8_t rx_seq;
     uint8_t tx_seq;
     uint8_t first_chunk;
@@ -856,11 +860,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, int len, int end_of_data);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
-int load_mm_table(char *terminal_id, uint8_t table_id, uint8_t **buffer, int *len);
+int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
 int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
-int update_terminal_cash_box_staus_table(char *terminal_id, cashbox_status_univ_t *cashbox_status);
+int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */
 extern int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
