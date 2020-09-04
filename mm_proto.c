@@ -42,7 +42,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     uint8_t *pktbufp;
     uint8_t pkt_received = 0;
     char *bytep;
-    unsigned int databyte;
+    unsigned int databyte = 0;
     unsigned int bytecnt = 0;
     int bytes_processed;
     uint8_t l2_state = L2_STATE_SEARCH_FOR_START;
@@ -157,6 +157,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             printf("%s: Error: Terminating due to EOF!\n", __FUNCTION__);
             fflush(stdout);
             status |= PKT_ERROR_EOF;
+            fclose(context->bytestream);
             exit(0);
         }
     }
