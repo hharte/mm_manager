@@ -858,7 +858,7 @@ typedef struct mm_context {
 /* MM Table Operations */
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
-int send_mm_table(mm_context_t *context, uint8_t* payload, int len, int end_of_data);
+int send_mm_table(mm_context_t *context, uint8_t* payload, int len);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);

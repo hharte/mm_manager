@@ -414,7 +414,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 {
     mm_packet_t *pkt = &table->pkt;
     int i;
-    uint8_t ack_payload[245] = {  0 };
+    uint8_t ack_payload[245] = { 0 };
     uint8_t *pack_payload = ack_payload;
     char serial_number[11];
     char terminal_version[12];
@@ -880,7 +880,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
         if (pack_payload - ack_payload == 0) {
             *pack_payload++ = DLOG_MT_END_DATA;
         }
-        send_mm_table(context, ack_payload, (pack_payload - ack_payload), end_of_data);
+
+        send_mm_table(context, ack_payload, (pack_payload - ack_payload));
+
+        if (end_of_data == 1) {
+            uint8_t end_of_data_msg = DLOG_MT_END_DATA;
+            send_mm_table(context, &end_of_data_msg, sizeof(end_of_data_msg));
+        }
     }
     if (table_download_pending == 1) {
         mm_download_tables(context);
@@ -905,7 +911,7 @@ int mm_download_tables(mm_context_t *context)
     /* If -s was specified, download only the minimal config */
     if (context->minimal_table_set == 1) table_list = table_list_minimal;
 
-    send_mm_table(context, &table_data, 1, 0);
+    send_mm_table(context, &table_data, 1);
 
     for (table_index = 0; table_list[table_index] > 0; table_index++) {
 
@@ -924,7 +930,7 @@ int mm_download_tables(mm_context_t *context)
                 if (status != 0) continue;
                 break;
         }
-        send_mm_table(context, table_buffer, table_len, 0);
+        send_mm_table(context, table_buffer, table_len);
 
         /* For all tables except END_OF_DATA, expect a table ACK. */
         if (table_list[table_index] != DLOG_MT_END_DATA) {
@@ -937,7 +943,7 @@ int mm_download_tables(mm_context_t *context)
 }
 
 
-int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_data)
+int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
 {
     int i;
     mm_packet_t pkt;
@@ -945,7 +951,6 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_d
     int chunk_len;
     uint8_t *p = payload;
     uint8_t table_id;
-    uint8_t end_of_data_msg = DLOG_MT_END_DATA;
 
     table_id = payload[0];
     bytes_remaining = len;
@@ -963,13 +968,6 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len, int end_of_d
         p += chunk_len;
         bytes_remaining -= chunk_len;
         printf("\tTable %d (0x%02x) progress: (%3ld%%) - %ld / %d \n", table_id, table_id, ((p - payload) * 100) / len, p - payload, len);
-    }
-
-    if(end_of_data != 0) {
-        if (context->debuglevel > 1) printf("\tSending end of data message.\n\n");
-
-        send_mm_packet(context, &end_of_data_msg, sizeof(end_of_data_msg), 0);
-        if (wait_for_mm_ack(context) != 0) return -1;
     }
 
     return 0;
