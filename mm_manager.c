@@ -428,8 +428,9 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     uint8_t status;
 
     if ((status = receive_mm_packet(context, pkt)) != 0) {
-        // Send retry.
-        send_mm_ack(context, FLAG_RETRY);
+        if ((status & PKT_ERROR_DISCONNECT) == 0) {
+            send_mm_ack(context, FLAG_RETRY);   /* Retry unless the terminal disconnected. */
+        }
         return 0;
     }
 
