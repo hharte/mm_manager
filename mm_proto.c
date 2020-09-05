@@ -37,8 +37,8 @@
  */
 int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
 {
-    char buf[100];  // buffer to hold line of data from UART protocol analyzer */
-    uint8_t pktbuf[1024];
+    char buf[100] = { 0 };  // buffer to hold line of data from UART protocol analyzer */
+    uint8_t pktbuf[1024] = { 0 };
     uint8_t *pktbufp;
     uint8_t pkt_received = 0;
     char *bytep;
@@ -137,12 +137,8 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
         }
     }
 
-    if (context->debuglevel > 0) {
-        print_mm_packet(RX, pkt);
-    }
-
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
-        printf("%s: Received disconnect flag!\n", __FUNCTION__);
+        printf("%s: Received disconnect flag from terminal.\n", __FUNCTION__);
         context->tx_seq = 0;
         if (context->use_modem == 1) {
             printf("%s: Hanging up modem.\n", __FUNCTION__);
@@ -154,13 +150,19 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
 
     if (context->use_modem == 0) {
         if(feof(context->bytestream)) {
-            printf("%s: Error: Terminating due to EOF!\n", __FUNCTION__);
+            printf("%s: Terminating due to EOF.\n", __FUNCTION__);
             fflush(stdout);
             status |= PKT_ERROR_EOF;
             fclose(context->bytestream);
             exit(0);
         }
     }
+
+    if (context->debuglevel > 3) {
+        printf("\nRaw Packet received: ");
+        dump_hex(&pkt->hdr.start, pkt->hdr.pktlen+1);
+    }
+
     return status;
 }
 
@@ -223,8 +225,8 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
         print_mm_packet(TX, &pkt);
     }
 
-    if (context->debuglevel > 2) {
-        printf("\n\nRaw Packet: ");
+    if (context->debuglevel > 3) {
+        printf("\nRaw Packet transmitted: ");
         dump_hex(&pkt.hdr.start, pkt.hdr.pktlen+1);
     }
 
@@ -256,8 +258,9 @@ int wait_for_mm_ack(mm_context_t *context)
     mm_packet_t pkt;
 
     if(receive_mm_packet(context, &pkt) == 0) {
-        if(pkt.payload_len == 0) {
-            if(pkt.hdr.flags & FLAG_ACK) {
+        if (context->debuglevel > 2) print_mm_packet(RX, &pkt);
+        if (pkt.payload_len == 0) {
+            if (pkt.hdr.flags & FLAG_ACK) {
             } else {
                 printf("\tERROR: Got NULL packet without ACK flag set!\n");
                 context->tx_seq = 0;

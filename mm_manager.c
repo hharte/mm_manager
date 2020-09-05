@@ -373,6 +373,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    mm_context.cdr_ack_buffer_len = 0;
+
     while(1) {
         if(mm_context.use_modem == 1) {
             printf("Waiting for call from terminal...\n");
@@ -386,6 +388,7 @@ int main(int argc, char *argv[])
                     ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
 
                 mm_context.connected = 1;
+                mm_context.cdr_ack_buffer_len = 0;
             } else {
                 printf("Timed out waiting for connect, retrying...\n");
                 continue;
@@ -410,11 +413,24 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint8_t length)
+{
+    if (context->cdr_ack_buffer_len + length > sizeof(context->cdr_ack_buffer)) {
+        printf("ERROR: %s: cdr_ack_buffer_len exceeded.\n", __FUNCTION__);
+        return (-1);
+    }
+
+    memcpy(&context->cdr_ack_buffer[context->cdr_ack_buffer_len], buffer, length);
+    context->cdr_ack_buffer_len += length;
+
+    return(0);
+}
+
 int receive_mm_table(mm_context_t *context, mm_table_t *table)
 {
     mm_packet_t *pkt = &table->pkt;
     int i;
-    uint8_t ack_payload[245] = { 0 };
+    uint8_t ack_payload[PKT_TABLE_DATA_LEN_MAX] = { 0 };
     uint8_t *pack_payload = ack_payload;
     char serial_number[11];
     char terminal_version[12];
@@ -428,6 +444,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     uint8_t status;
 
     if ((status = receive_mm_packet(context, pkt)) != 0) {
+        if (context->debuglevel > 2) print_mm_packet(RX, pkt);
         if ((status & PKT_ERROR_DISCONNECT) == 0) {
             send_mm_ack(context, FLAG_RETRY);   /* Retry unless the terminal disconnected. */
         }
@@ -558,6 +575,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 char phone_number_string[21];
                 char card_number_string[21];
                 char call_type_str[38];
+                uint8_t cdr_ack_buf[3];
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
@@ -598,9 +616,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     dump_hex(cdr->pad, sizeof(cdr->pad));
                 }
 
-                *pack_payload++ = DLOG_MT_CDR_DETAILS_ACK;
-                *pack_payload++ = cdr->seq & 0xFF;
-                *pack_payload++ = (cdr->seq >> 8) & 0xFF;
+                dont_send_reply = 1;
+
+                cdr_ack_buf[0] = DLOG_MT_CDR_DETAILS_ACK;
+                cdr_ack_buf[1] = cdr->seq & 0xFF;
+                cdr_ack_buf[2] = (cdr->seq >> 8) & 0xFF;
+
+                append_to_cdr_ack_buffer(context, cdr_ack_buf, sizeof(cdr_ack_buf));
                 break;
             }
             case DLOG_MT_ATN_REQ_CDR_UPL: {
@@ -753,6 +775,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[0].carrier_ref);
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[1].carrier_ref);
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[2].carrier_ref);
+                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
@@ -764,7 +787,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
                 dump_hex((uint8_t *)carr_stats->unknown, sizeof(carr_stats->unknown));
-
+                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
@@ -773,7 +796,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 printf("Summary call stats:\n");
                 dump_hex((uint8_t *)dlog_mt_summary_call_stats, sizeof(dlog_mt_summary_call_stats));
-
+                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_RATE_REQUEST: {
@@ -839,8 +862,26 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_END_DATA:
-                printf("\tSeq: %d: DLOG_MT_END_DATA.\n", context->tx_seq);
-                *pack_payload++ = DLOG_MT_END_DATA;
+                dont_send_reply = 0;
+                if (context->cdr_ack_buffer_len == 0) {
+                    if (pack_payload - ack_payload == 0) {
+                        printf("Sending empty DLOG_MT_END_DATA.\n");
+                        *pack_payload++ = DLOG_MT_END_DATA;
+                        end_of_data = 0;
+                    } else {
+                        printf("Seq: %d: Appending DLOG_MT_END_DATA to reply.\n", context->tx_seq);
+                        *pack_payload++ = DLOG_MT_END_DATA;
+                        end_of_data = 0;
+                    }
+                } else {
+                    printf("CDR ACK buffer len: %d\n", context->cdr_ack_buffer_len);
+                    memcpy(pack_payload, context->cdr_ack_buffer, context->cdr_ack_buffer_len);
+                    pack_payload += context->cdr_ack_buffer_len;
+                    printf("Seq: %d: Sending CDR ACKs in response to DLOG_MT_END_DATA.\n", context->tx_seq);
+                    end_of_data = 1;
+                    context->cdr_ack_buffer_len = 0;
+                }
+
                 break;
             case DLOG_MT_TAB_UPD_ACK:
                 printf("\tSeq: %d: DLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", context->tx_seq, *ppayload);
@@ -877,10 +918,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     }
 
     if (dont_send_reply == 0) {
-        if (pack_payload - ack_payload == 0) {
-            *pack_payload++ = DLOG_MT_END_DATA;
-        }
-
         send_mm_table(context, ack_payload, (pack_payload - ack_payload));
 
         if (end_of_data == 1) {
@@ -956,8 +993,8 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
     bytes_remaining = len;
     printf("\tSending Table ID %d (0x%02x) %s...\n", table_id, table_id, table_to_string(table_id));
     while (bytes_remaining > 0) {
-        if (bytes_remaining > 245) {
-            chunk_len = 245;
+        if (bytes_remaining > PKT_TABLE_DATA_LEN_MAX) {
+            chunk_len = PKT_TABLE_DATA_LEN_MAX;
         } else {
             chunk_len = bytes_remaining;
         }
@@ -967,7 +1004,9 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
         if (wait_for_mm_ack(context) != 0) return -1;
         p += chunk_len;
         bytes_remaining -= chunk_len;
-        printf("\tTable %d (0x%02x) progress: (%3ld%%) - %ld / %d \n", table_id, table_id, ((p - payload) * 100) / len, p - payload, len);
+        printf("\tTable %d (0x%02x) %s progress: (%3ld%%) - %ld / %d \n",
+            table_id, table_id, table_to_string(table_id),
+            ((p - payload) * 100) / len, p - payload, len);
     }
 
     return 0;
@@ -986,15 +1025,12 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
         context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
 
         if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
-            for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
-                context->terminal_id[i*2] = ((pkt->payload[i] & 0xf0) >> 4) + '0';
-                context->terminal_id[i*2+1] = (pkt->payload[i] & 0x0f) + '0';
-            }
-            context->terminal_id[10] = '\0';
+            phone_num_to_string(context->terminal_id, sizeof(context->terminal_id), pkt->payload, PKT_TABLE_ID_OFFSET);
             if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->terminal_id);
+            if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
             if((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
-               (pkt->payload[6] == table_id)) {
+               (pkt->payload[PKT_TABLE_DATA_OFFSET] == table_id)) {
                 if (context->debuglevel > 0) printf("Seq: %d: Received ACK for table %d (0x%02x)\n", context->rx_seq, table_id, table_id);
                 send_mm_ack(context, 0);
             } else {
@@ -1002,7 +1038,6 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
                     __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
                 return (-1);
             }
-
         }
     } else {
         printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",

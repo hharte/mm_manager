@@ -34,6 +34,8 @@
 #define PKT_TABLE_ID_OFFSET         (0x05)
 #define PKT_TABLE_DATA_OFFSET       (PKT_TABLE_ID_OFFSET + 1)
 
+#define PKT_TABLE_DATA_LEN_MAX      (245)   // Maximum table data length
+
 /* TERMSCH (Terminal Schedule) pp. 2-533
  * Renamed per https://wiki.millennium.management/dlog:start
  */
@@ -843,6 +845,8 @@ typedef struct mm_context {
     uint8_t table_num;
     int table_offset;
     uint8_t table[10 * 1024];
+    uint8_t cdr_ack_buffer[PKT_TABLE_DATA_LEN_MAX];
+    uint8_t cdr_ack_buffer_len;
     int table_len;
     uint8_t curr_table;
     uint8_t use_modem;
