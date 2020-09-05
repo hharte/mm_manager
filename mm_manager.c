@@ -174,6 +174,12 @@ const char *alarm_type_str[] = {
 /* >39 */   "Unknown Alarm!"
 };
 
+const char *stats_call_type_str_lut[4] = {
+    "Local        ",
+    "Inter-LATA   ",
+    "Intra-LATA   ",
+    "International"
+};
 
 int main(int argc, char *argv[])
 {
@@ -201,6 +207,7 @@ int main(int argc, char *argv[])
     mm_context.debuglevel = 0;
     mm_context.connected = 0;
     mm_context.terminal_id[0] = '\0';
+    mm_context.trans_data_in_progress = 0;
 
     printf("mm_manager v0.5 [%s] - (c) 2020, Howard M. Harte\n\n", VERSION);
 
@@ -439,7 +446,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     uint8_t *ppayload;
     uint8_t cashbox_pending = 0;
     uint8_t table_download_pending = 0;
-    uint8_t dont_send_reply = 0;
     uint8_t end_of_data = 0;
     uint8_t status;
 
@@ -616,13 +622,18 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     dump_hex(cdr->pad, sizeof(cdr->pad));
                 }
 
-                dont_send_reply = 1;
-
                 cdr_ack_buf[0] = DLOG_MT_CDR_DETAILS_ACK;
                 cdr_ack_buf[1] = cdr->seq & 0xFF;
                 cdr_ack_buf[2] = (cdr->seq >> 8) & 0xFF;
 
-                append_to_cdr_ack_buffer(context, cdr_ack_buf, sizeof(cdr_ack_buf));
+                /* If terminal is transferring multiple tables, queue the CDR response for later, after receiving DLOG_MT_END_DATA */
+                if (context->trans_data_in_progress == 1) {
+                    append_to_cdr_ack_buffer(context, cdr_ack_buf, sizeof(cdr_ack_buf));
+                } else {
+                    /* If receiving a CDR as part of a credit card auth, etc, send the CDR ack immediately. */
+                    memcpy(pack_payload, cdr_ack_buf, sizeof(cdr_ack_buf));
+                    pack_payload += sizeof(cdr_ack_buf);
+                }
                 break;
             }
             case DLOG_MT_ATN_REQ_CDR_UPL: {
@@ -631,6 +642,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 printf("\t\tSeq: %d: DLOG_MT_ATN_REQ_CDR_UPL, cdr_req_type=%02x (0x%02x)\n", context->tx_seq, cdr_req_type, cdr_req_type);
 
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
+                context->trans_data_in_progress = 1;
                 break;
             }
             case DLOG_MT_CASH_BOX_COLLECTION: {
@@ -756,11 +768,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_CALL_IN: {
                 printf("\tSeq: %d: DLOG_MT_CALL_IN.\n", context->tx_seq);
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
+                context->trans_data_in_progress = 1;
                 break;
             }
             case DLOG_MT_CALL_BACK: {
                 printf("\tSeq: %d: DLOG_MT_CALL_BACK.\n", context->tx_seq);
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
+                context->trans_data_in_progress = 1;
                 break;
             }
             case DLOG_MT_CARRIER_CALL_STATS:
@@ -775,10 +789,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[0].carrier_ref);
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[1].carrier_ref);
                 printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[2].carrier_ref);
-                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
+                carrier_stats_exp_entry_t *pcarr_stats_entry;
+
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
                 printf("\tSeq: %d: DLOG_MT_CARRIER_STATS_EXP.\n", context->tx_seq);
@@ -786,8 +801,43 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         timestamp_to_string(carr_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
-                dump_hex((uint8_t *)carr_stats->unknown, sizeof(carr_stats->unknown));
-                dont_send_reply = 1;
+                for (int carrier = 0; carrier < CARRIER_STATS_EXP_MAX_CARRIERS; carrier++) {
+                    pcarr_stats_entry = &carr_stats->carrier[carrier];
+
+                    printf("\t\t\tCarrier Ref: %d (0x%02x): ", pcarr_stats_entry->carrier_ref, pcarr_stats_entry->carrier_ref);
+
+                    /* If no calls have been made using this carrier, skip it. */
+                    if (pcarr_stats_entry->total_call_duration[3] +
+                        pcarr_stats_entry->total_call_duration[2] +
+                        pcarr_stats_entry->total_call_duration[1] +
+                        pcarr_stats_entry->total_call_duration[0] == 0) {
+                            printf("No calls.\n");
+                            continue;
+                        }
+
+                    printf("Stats vintage: %d\n", carr_stats->stats_vintage);
+
+                    for (int j = 0; j < STATS_EXP_CALL_TYPE_MAX; j++) {
+                        printf("\t\t\t\t%s stats:\t", stats_call_type_str_lut[j]);
+                        for (int i = 0; i < STATS_EXP_PAYMENT_TYPE_MAX; i++) {
+                            printf("%d, ", pcarr_stats_entry->stats[j][i]);
+                        }
+                        printf("\n");
+                    }
+
+                    printf("\t\t\t\tOperator Assisted Call Count: %d\n", pcarr_stats_entry->operator_assist_call_count);
+                    printf("\t\t\t\t0+ Call Count: %d\n", pcarr_stats_entry->zero_plus_call_count);
+                    printf("\t\t\t\tFree Feature B Call Count: %d\n", pcarr_stats_entry->free_featb_call_count);
+                    printf("\t\t\t\tDirectory Assistance Call Count: %d\n", pcarr_stats_entry->directory_assist_call_count);
+                    printf("\t\t\t\tTotal Call duration: %02d:%02d:%02d:%02d\n",
+                        pcarr_stats_entry->total_call_duration[3],
+                        pcarr_stats_entry->total_call_duration[2],
+                        pcarr_stats_entry->total_call_duration[1],
+                        pcarr_stats_entry->total_call_duration[0]);
+                    printf("\t\t\t\tTotal Insert Mode Calls: %d\n", pcarr_stats_entry->total_insert_mode_calls);
+                    printf("\t\t\t\tTotal Manual Mode Calls: %d\n", pcarr_stats_entry->total_manual_mode_calls);
+                }
+
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
@@ -796,7 +846,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 printf("Summary call stats:\n");
                 dump_hex((uint8_t *)dlog_mt_summary_call_stats, sizeof(dlog_mt_summary_call_stats));
-                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_RATE_REQUEST: {
@@ -862,7 +911,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_END_DATA:
-                dont_send_reply = 0;
+                context->trans_data_in_progress = 0;
                 if (context->cdr_ack_buffer_len == 0) {
                     if (pack_payload - ack_payload == 0) {
                         printf("Sending empty DLOG_MT_END_DATA.\n");
@@ -917,7 +966,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
         }
     }
 
-    if (dont_send_reply == 0) {
+    if (context->trans_data_in_progress == 0) {
         send_mm_table(context, ack_payload, (pack_payload - ack_payload));
 
         if (end_of_data == 1) {
@@ -1004,7 +1053,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
         if (wait_for_mm_ack(context) != 0) return -1;
         p += chunk_len;
         bytes_remaining -= chunk_len;
-        printf("\tTable %d (0x%02x) %s progress: (%3ld%%) - %ld / %d \n",
+        printf("\tTable %d (0x%02x) %s progress: (%3ld%%) - %4ld / %4d \n",
             table_id, table_id, table_to_string(table_id),
             ((p - payload) * 100) / len, p - payload, len);
     }

@@ -300,11 +300,30 @@ typedef struct dlog_mt_carrier_call_stats {
     carrier_stats_entry_t carrier_stats[3];
 } dlog_mt_carrier_call_stats_t;
 
-/* DLOG_MT_CARRIER_STATS_EXP */
+/* See TCARRST (Terminal Carrier Call Statistics) pp. 2-406 */
+#define STATS_EXP_CALL_TYPE_MAX     4
+#define STATS_EXP_PAYMENT_TYPE_MAX  12
+
+typedef struct carrier_stats_exp_entry {
+    uint8_t carrier_ref;
+    uint16_t stats[4][12];                  /* 4 call types: local, Intra-LATA, Inter-LATA, IXL.  12 stats each. */
+    uint16_t operator_assist_call_count;
+    uint16_t zero_plus_call_count;
+    uint16_t free_featb_call_count;
+    uint16_t directory_assist_call_count;
+    uint8_t total_call_duration[4];         /* SS:MM:HH:DD */
+    uint16_t total_insert_mode_calls;
+    uint16_t total_manual_mode_calls;
+    uint16_t spare_counter;
+} carrier_stats_exp_entry_t;
+
+/* DLOG_MT_CARRIER_STATS_EXP TCARRST (Terminal Carrier Call Statistics) pp. 2-406 */
+#define CARRIER_STATS_EXP_MAX_CARRIERS  2
 typedef struct dlog_mt_carrier_stats_exp {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
-    uint8_t unknown[231];
+    uint8_t stats_vintage;
+    carrier_stats_exp_entry_t carrier[CARRIER_STATS_EXP_MAX_CARRIERS];
 } dlog_mt_carrier_stats_exp_t;
 
 /* DLOG_MT_SW_VERSION (TSWVERS pp. 2-647) */
@@ -848,6 +867,7 @@ typedef struct mm_context {
     uint8_t cdr_ack_buffer[PKT_TABLE_DATA_LEN_MAX];
     uint8_t cdr_ack_buffer_len;
     int table_len;
+    uint8_t trans_data_in_progress;
     uint8_t curr_table;
     uint8_t use_modem;
     uint8_t debuglevel;
