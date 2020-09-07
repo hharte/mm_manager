@@ -810,10 +810,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     printf("\t\t\tCarrier Ref: %d (0x%02x): ", pcarr_stats_entry->carrier_ref, pcarr_stats_entry->carrier_ref);
 
                     /* If no calls have been made using this carrier, skip it. */
-                    if (pcarr_stats_entry->total_call_duration[3] +
-                        pcarr_stats_entry->total_call_duration[2] +
-                        pcarr_stats_entry->total_call_duration[1] +
-                        pcarr_stats_entry->total_call_duration[0] == 0) {
+                    if (pcarr_stats_entry->total_call_duration == 0) {
                             printf("No calls.\n");
                             continue;
                         }
@@ -832,11 +829,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     printf("\t\t\t\t0+ Call Count: %d\n", pcarr_stats_entry->zero_plus_call_count);
                     printf("\t\t\t\tFree Feature B Call Count: %d\n", pcarr_stats_entry->free_featb_call_count);
                     printf("\t\t\t\tDirectory Assistance Call Count: %d\n", pcarr_stats_entry->directory_assist_call_count);
-                    printf("\t\t\t\tTotal Call duration: %02d:%02d:%02d:%02d\n",
-                        pcarr_stats_entry->total_call_duration[3],
-                        pcarr_stats_entry->total_call_duration[2],
-                        pcarr_stats_entry->total_call_duration[1],
-                        pcarr_stats_entry->total_call_duration[0]);
+                    printf("\t\t\t\tTotal Call duration: %u\n", pcarr_stats_entry->total_call_duration);
                     printf("\t\t\t\tTotal Insert Mode Calls: %d\n", pcarr_stats_entry->total_insert_mode_calls);
                     printf("\t\t\t\tTotal Manual Mode Calls: %d\n", pcarr_stats_entry->total_manual_mode_calls);
                 }
@@ -849,8 +842,31 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_summary_call_stats_t *dlog_mt_summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_summary_call_stats_t);
 
-                printf("Summary call stats:\n");
-                dump_hex((uint8_t *)dlog_mt_summary_call_stats, sizeof(dlog_mt_summary_call_stats));
+                printf("Summary Call Statistics: From: %s, to: %s:\n",
+                        timestamp_to_string(dlog_mt_summary_call_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
+                        timestamp_to_string(dlog_mt_summary_call_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
+
+                printf("\t\t\t\tstats:\t");
+                for (int j = 0; j < 16; j++) {
+                    printf("%d, ", dlog_mt_summary_call_stats->stats[j]);
+                }
+                printf("\n\t\t\t\tRep Dialer Peg Counts:\t");
+
+                for (int j = 0; j < 10; j++) {
+                    printf("%d, ", dlog_mt_summary_call_stats->rep_dialer_peg_count[j]);
+                }
+
+                printf("\n\t\t\t\tTotal Call duration: %u\n", //02d:%02d:%02d:%02d\n",
+                    dlog_mt_summary_call_stats->total_call_duration);
+
+                printf("\t\t\t\tTotal Off-hook duration: %u\n", //02d:%02d:%02d:%02d\n",
+                    dlog_mt_summary_call_stats->total_time_off_hook);
+
+                printf("\t\t\t\tFree Feature B Call Count: %d\n", dlog_mt_summary_call_stats->free_featb_call_count);
+                printf("\t\t\t\tCompleted 1-800 billable Count: %d\n", dlog_mt_summary_call_stats->completed_1800_billable_count);
+                printf("\t\t\t\tDatajack calls attempted: %d\n", dlog_mt_summary_call_stats->datajack_calls_attempt_count);
+                printf("\t\t\t\tDatajack calls completed: %d\n", dlog_mt_summary_call_stats->datajack_calls_complete_count);
+
                 dont_send_reply = 1;
                 break;
             }

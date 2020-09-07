@@ -285,7 +285,16 @@ typedef struct dlog_mt_perf_stats_record {
 
 /* DLOG_MT_SUMMARY_CALL_STATS */
 typedef struct dlog_mt_summary_call_stats {
-    uint8_t stats[80];
+    uint8_t timestamp[6];                   /* Summary period start timestamp. */
+    uint8_t timestamp2[6];                  /* Summary period end timestamp. */
+    uint16_t stats[16];                     /* Call counts for different types of calls. */
+    uint16_t rep_dialer_peg_count[10];      /* Counts for each of the reperatory dialer keys. */
+    uint32_t total_call_duration;           /* Total call duration (seconds,) timed from answer supervision to on-hook. */
+    uint32_t total_time_off_hook;           /* The total amount of time (seconds) the receiver was off-hook. */
+    uint16_t free_featb_call_count;         /* The number of Feature Group B calls. */
+    uint16_t datajack_calls_attempt_count;  /* Number of datajack calls attempted. */
+    uint16_t completed_1800_billable_count; /* Number of completed 1-800 calls that were billable. */
+    uint16_t datajack_calls_complete_count; /* Datajack calls that were completed. */
 } dlog_mt_summary_call_stats_t;
 
 typedef struct carrier_stats_entry {
@@ -311,7 +320,7 @@ typedef struct carrier_stats_exp_entry {
     uint16_t zero_plus_call_count;
     uint16_t free_featb_call_count;
     uint16_t directory_assist_call_count;
-    uint8_t total_call_duration[4];         /* SS:MM:HH:DD */
+    uint32_t total_call_duration;           /* Total call duration (seconds) */
     uint16_t total_insert_mode_calls;
     uint16_t total_manual_mode_calls;
     uint16_t spare_counter;
