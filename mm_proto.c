@@ -256,21 +256,27 @@ int send_mm_ack(mm_context_t *context, uint8_t flags)
 int wait_for_mm_ack(mm_context_t *context)
 {
     mm_packet_t pkt;
+    int status;
 
-    if(receive_mm_packet(context, &pkt) == 0) {
+    if((status = receive_mm_packet(context, &pkt)) == 0) {
         if (context->debuglevel > 2) print_mm_packet(RX, &pkt);
         if (pkt.payload_len == 0) {
             if (pkt.hdr.flags & FLAG_ACK) {
             } else {
-                printf("\tERROR: Got NULL packet without ACK flag set!\n");
+                printf("\tError: Got NULL packet without ACK flag set!\n");
                 context->tx_seq = 0;
            }
         }
         return 0;
     }
-    printf("Error getting ACK, returning -1\n");
-    fflush(stdout);
-    return -1;
+
+    if ((status & PKT_ERROR_DISCONNECT) == 0) {
+        printf("Error getting ACK, returning -1\n");
+        fflush(stdout);
+        return -1;
+    }
+
+    return 0;
 }
 
 int print_mm_packet(int direction, mm_packet_t *pkt)
@@ -293,11 +299,11 @@ int print_mm_packet(int direction, mm_packet_t *pkt)
         pkt->hdr.pktlen, pkt->payload_len, pkt->trailer.crc);
 
     if(pkt->trailer.crc != pkt->calculated_crc) {
-        printf("\t*** CRC ERROR, calculated: %04x ***\n", pkt->calculated_crc);
+        printf("\t*** CRC Error, calculated: %04x ***\n", pkt->calculated_crc);
         status = -1;
     }
     if(pkt->trailer.end != STOP_BYTE) {
-        printf("\t*** FRAMING ERROR, expected STOP=0x03, got STOP=%02x ***\n", pkt->trailer.end);
+        printf("\t*** Framing Error, expected STOP=0x03, got STOP=%02x ***\n", pkt->trailer.end);
         status = -1;
     }
 
