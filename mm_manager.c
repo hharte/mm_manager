@@ -445,6 +445,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     char timestamp2_str[20];
     uint8_t *ppayload;
     uint8_t cashbox_pending = 0;
+    uint8_t dont_send_reply = 0;
     uint8_t table_download_pending = 0;
     uint8_t end_of_data = 0;
     uint8_t status;
@@ -629,6 +630,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 /* If terminal is transferring multiple tables, queue the CDR response for later, after receiving DLOG_MT_END_DATA */
                 if (context->trans_data_in_progress == 1) {
                     append_to_cdr_ack_buffer(context, cdr_ack_buf, sizeof(cdr_ack_buf));
+                    dont_send_reply = 1;
                 } else {
                     /* If receiving a CDR as part of a credit card auth, etc, send the CDR ack immediately. */
                     memcpy(pack_payload, cdr_ack_buf, sizeof(cdr_ack_buf));
@@ -663,6 +665,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         cash_box_collection->coin_count[COIN_COUNT_US_DIMES],
                         cash_box_collection->coin_count[COIN_COUNT_US_QUARTERS],
                         cash_box_collection->coin_count[COIN_COUNT_US_DOLLARS]);
+                *pack_payload++ = DLOG_MT_END_DATA;
                 break;
             }
             case DLOG_MT_TERM_STATUS: {
@@ -838,6 +841,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     printf("\t\t\t\tTotal Manual Mode Calls: %d\n", pcarr_stats_entry->total_manual_mode_calls);
                 }
 
+                dont_send_reply = 1;
+
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
@@ -846,6 +851,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 printf("Summary call stats:\n");
                 dump_hex((uint8_t *)dlog_mt_summary_call_stats, sizeof(dlog_mt_summary_call_stats));
+                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_RATE_REQUEST: {
@@ -911,6 +917,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_END_DATA:
+                dont_send_reply = 0;
                 context->trans_data_in_progress = 0;
                 if (context->cdr_ack_buffer_len == 0) {
                     if (pack_payload - ack_payload == 0) {
@@ -966,7 +973,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
         }
     }
 
-    if (context->trans_data_in_progress == 0) {
+    if (dont_send_reply == 0) {
         send_mm_table(context, ack_payload, (pack_payload - ack_payload));
 
         if (end_of_data == 1) {
@@ -974,6 +981,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             send_mm_table(context, &end_of_data_msg, sizeof(end_of_data_msg));
         }
     }
+
     if (table_download_pending == 1) {
         mm_download_tables(context);
     }
@@ -1083,7 +1091,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
                 if (context->debuglevel > 0) printf("Seq: %d: Received ACK for table %d (0x%02x)\n", context->rx_seq, table_id, table_id);
                 send_mm_ack(context, 0);
             } else {
-                printf("%s: ERROR: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
+                printf("%s: Error: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
                     __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
                 return (-1);
             }
