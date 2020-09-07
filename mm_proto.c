@@ -154,6 +154,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             fflush(stdout);
             status |= PKT_ERROR_EOF;
             fclose(context->bytestream);
+            fclose(context->cdr_stream);
             exit(0);
         }
     }

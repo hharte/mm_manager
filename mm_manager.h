@@ -865,8 +865,8 @@ typedef struct mm_context {
     char phone_rev;
     char terminal_id[11];   /* The terminal's phone number */
     char ncc_number[2][21];
-    char default_table_dir[TABLE_PATH_MAX_LEN];
-    char term_table_dir[TABLE_PATH_MAX_LEN];
+    char default_table_dir[256];
+    char term_table_dir[256];
     uint8_t rx_seq;
     uint8_t tx_seq;
     uint8_t first_chunk;
