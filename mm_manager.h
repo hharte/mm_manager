@@ -193,6 +193,19 @@ typedef struct dlog_mt_call_in_params {
     uint8_t unknown[2];
 } dlog_mt_call_in_params_t;
 
+/* From CALLST (Call Statistics Parameters) pp. 2-36 */
+typedef struct dlog_mt_call_stat_params {
+    uint8_t callstats_start_time[2];    /* Call stats start date HH:MM */
+    uint8_t callstats_duration;         /* Indicates the number of days over which call statistics will be accumulated. */
+    uint8_t callstats_threshold;        /* Indicates the number of Call Statistics records that the terminal will store before automatically calling in to the Millennium Manager to upload them. */
+    uint8_t timestamp[4][2];            /* These timestamps, entered in the terminal's local time, are used with the Call Statistics Start Time to partition the 24-hour recording period into as many as 5 time periods. */
+    uint8_t enable;                     /* 0=No (Disabled), 1=Yes (Enabled), 2=Summarized Carrier Statistics */
+    uint8_t cdr_threshold;              /* Indicates the number of Full CDR Logging records that the terminal will store before automatically calling in to the Millennium Manager to upload them. */
+    uint8_t cdr_start_time[2];          /* HH:MM Indicates the time of day the terminal should begin full CDR logging, in the terminal local time. */
+    uint8_t cdr_duration_days;          /* Indicates the number of days over which to perform Full CDR Logging. */
+    uint8_t cdr_duration_hours_flags;   /* 0-23, Bit 6: Indicates whether statistics should be recorded for all complete calls except local coin. */
+} dlog_mt_call_stat_params_t;
+
 typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
@@ -897,6 +910,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
 int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
+int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
 int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */

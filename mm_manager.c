@@ -1103,6 +1103,9 @@ int mm_download_tables(mm_context_t *context)
             case DLOG_MT_NCC_TERM_PARAMS:
                 status = generate_term_access_parameters(context, &table_buffer, &table_len);
                 break;
+            case DLOG_MT_CALL_STAT_PARMS:
+                status = generate_call_stat_parameters(context, &table_buffer, &table_len);
+                break;
             default:
                 printf("\t");
                 status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
@@ -1389,6 +1392,59 @@ int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* le
     printf("\tCDR Threshold:      %d\n", pcall_in_params->cdr_threshold);
 
     *buffer = pbuffer;
+
+    return 0;
+}
+
+int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+{
+    int i;
+    dlog_mt_call_stat_params_t *pcall_stat_params;
+    uint8_t *pbuffer;
+
+    *len = sizeof(dlog_mt_call_stat_params_t) + 1;
+    pbuffer = calloc(1, *len);
+    pbuffer[0] = DLOG_MT_CALL_STAT_PARMS;
+
+    pcall_stat_params = (dlog_mt_call_stat_params_t *)&pbuffer[1];
+
+    printf("\nGenerating Call Stat Parameters table:\n");
+    pcall_stat_params->callstats_start_time[0] = 0; /* HH */
+    pcall_stat_params->callstats_start_time[1] = 0; /* MM */
+    pcall_stat_params->callstats_duration = 1;      /* Indicates the number of days over which call statistics will be accumulated. */
+    pcall_stat_params->callstats_threshold = 10;
+    pcall_stat_params->timestamp[0][0] = 0;         /* HH */
+    pcall_stat_params->timestamp[0][1] = 0;         /* MM */
+    pcall_stat_params->timestamp[1][0] = 0;         /* HH */
+    pcall_stat_params->timestamp[1][1] = 0;         /* MM */
+    pcall_stat_params->timestamp[2][0] = 0;         /* HH */
+    pcall_stat_params->timestamp[2][1] = 0;         /* MM */
+    pcall_stat_params->timestamp[3][0] = 0;         /* HH */
+    pcall_stat_params->timestamp[3][1] = 0;         /* MM */
+    pcall_stat_params->enable = 4;
+    pcall_stat_params->cdr_threshold = 50;
+    pcall_stat_params->cdr_start_time[0] = 0;       /* HH */
+    pcall_stat_params->cdr_start_time[1] = 0;       /* MM */
+    pcall_stat_params->cdr_duration_days = 255;
+    pcall_stat_params->cdr_duration_hours_flags = 0;
+    *buffer = pbuffer;
+
+    printf("\tStart time:     %02d:%02d\n",
+        pcall_stat_params->callstats_start_time[0], pcall_stat_params->callstats_start_time[1]);
+    printf("\tDuration:       %02dd\n", pcall_stat_params->callstats_duration);
+    printf("\tThreshold:      %02d\n", pcall_stat_params->callstats_threshold);
+
+    for(i = 0; i < 4; i++) {
+        printf("\tTimestamp[%d]:   %02d:%02d\n", i,
+            pcall_stat_params->timestamp[i][0], pcall_stat_params->timestamp[i][1]);
+    }
+
+    printf("\tEnable:         0x%02x\n", pcall_stat_params->enable);
+    printf("\tCDR Threshold:  %d\n", pcall_stat_params->cdr_threshold);
+    printf("\tCDR Start Time: %02d:%02d\n",
+        pcall_stat_params->cdr_start_time[0], pcall_stat_params->cdr_start_time[1]);
+    printf("\tCDR Duration:   %dd:%dh\n", pcall_stat_params->cdr_duration_days, pcall_stat_params->cdr_duration_hours_flags & 0x1f);
+    printf("\tCDR Flags:      0x%02x\n", pcall_stat_params->cdr_duration_hours_flags & 0xe0);
 
     return 0;
 }
