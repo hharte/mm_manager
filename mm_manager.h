@@ -283,7 +283,7 @@ typedef struct dlog_mt_perf_stats_record {
     uint8_t pad[85];
 } dlog_mt_perf_stats_record_t;
 
-/* DLOG_MT_SUMMARY_CALL_STATS */
+/* DLOG_MT_SUMMARY_CALL_STATS - TCALSTE (Terminal Call Statistics Enhanced) pp. 2-393 */
 typedef struct dlog_mt_summary_call_stats {
     uint8_t timestamp[6];                   /* Summary period start timestamp. */
     uint8_t timestamp2[6];                  /* Summary period end timestamp. */
@@ -299,7 +299,7 @@ typedef struct dlog_mt_summary_call_stats {
 
 typedef struct carrier_stats_entry {
     uint8_t carrier_ref;
-    uint8_t pad[58];
+    uint16_t stats[29];
 } carrier_stats_entry_t;
 
 /* DLOG_MT_CARRIER_CALL_STATS 106 bytes */

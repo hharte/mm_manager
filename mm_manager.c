@@ -181,6 +181,57 @@ const char *stats_call_type_str_lut[4] = {
     "International"
 };
 
+const char *stats_to_str_lut[29] = {
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "InterLATA Coin",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28"
+};
+
+const char *TCALSTE_stats_to_str_lut[16] = {
+    "        Local",
+    "   Intra-LATA",
+    "   Inter-LATA",
+    "International",
+    "     Incoming",
+    "   Unanswered",
+    "    Abandoned",
+    "  Oper Assist",
+    "           0+",
+    "   1-800 Free",
+    "       Denied",
+    "   Dir Assist",
+    "         Free",
+    "    Follow-On",
+    " Fail to POTS",
+    "   Rep Dialer"
+};
+
 int main(int argc, char *argv[])
 {
     FILE *instream;
@@ -782,6 +833,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             }
             case DLOG_MT_CARRIER_CALL_STATS:
             {
+                carrier_stats_entry_t *pcarr_stats_entry;
                 dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_call_stats_t);
                 printf("\tSeq: %d: DLOG_MT_CARRIER_CALL_STATS.\n", context->tx_seq);
@@ -789,9 +841,27 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         timestamp_to_string(carr_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
-                printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[0].carrier_ref);
-                printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[1].carrier_ref);
-                printf("\t\t\tCarrier 0x%02x\n", carr_stats->carrier_stats[2].carrier_ref);
+                for (int i = 0; i < 3; i++) {
+                    uint32_t k = 0;
+
+                    pcarr_stats_entry = &carr_stats->carrier_stats[i];
+                    printf("\t\t\tCarrier 0x%02x:", pcarr_stats_entry->carrier_ref);
+                    for (int j = 0; j < 29; j++) {
+                        k += pcarr_stats_entry->stats[j];
+                    }
+
+                    if (k == 0) {
+                        printf("\tNo calls.\n");
+                    } else {
+                        for (int j = 0; j < 29; j++) {
+                            if (j % 2 == 0) printf(" |\n\t\t\t\t");
+                            printf("| stats[%15s] =%5d\t\t", stats_to_str_lut[j], pcarr_stats_entry->stats[j]);
+                        }
+                        printf("\n");
+                    }
+                }
+
+                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
@@ -842,24 +912,26 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_summary_call_stats_t *dlog_mt_summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_summary_call_stats_t);
 
-                printf("Summary Call Statistics: From: %s, to: %s:\n",
+                printf("\t\t\tSummary Call Statistics: From: %s, to: %s:\n",
                         timestamp_to_string(dlog_mt_summary_call_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(dlog_mt_summary_call_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
-                printf("\t\t\t\tstats:\t");
                 for (int j = 0; j < 16; j++) {
-                    printf("%d, ", dlog_mt_summary_call_stats->stats[j]);
+                    printf("\t\t\t\t%s: %5d\n", TCALSTE_stats_to_str_lut[j], dlog_mt_summary_call_stats->stats[j]);
                 }
                 printf("\n\t\t\t\tRep Dialer Peg Counts:\t");
 
                 for (int j = 0; j < 10; j++) {
+                    if (j == 5) {
+                        printf("\n\t\t\t\t\t\t\t");
+                    }
                     printf("%d, ", dlog_mt_summary_call_stats->rep_dialer_peg_count[j]);
                 }
 
-                printf("\n\t\t\t\tTotal Call duration: %u\n", //02d:%02d:%02d:%02d\n",
+                printf("\n\t\t\t\tTotal Call duration: %us\n",
                     dlog_mt_summary_call_stats->total_call_duration);
 
-                printf("\t\t\t\tTotal Off-hook duration: %u\n", //02d:%02d:%02d:%02d\n",
+                printf("\t\t\t\tTotal Off-hook duration: %us\n",
                     dlog_mt_summary_call_stats->total_time_off_hook);
 
                 printf("\t\t\t\tFree Feature B Call Count: %d\n", dlog_mt_summary_call_stats->free_featb_call_count);
@@ -946,7 +1018,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         end_of_data = 0;
                     }
                 } else {
-                    printf("CDR ACK buffer len: %d\n", context->cdr_ack_buffer_len);
                     memcpy(pack_payload, context->cdr_ack_buffer, context->cdr_ack_buffer_len);
                     pack_payload += context->cdr_ack_buffer_len;
                     printf("Seq: %d: Sending CDR ACKs in response to DLOG_MT_END_DATA.\n", context->tx_seq);
