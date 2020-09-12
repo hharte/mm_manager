@@ -44,7 +44,7 @@ void dump_hex(uint8_t *data, int len)
 
     printf("\n");
     if (len > 0) {
-        printf("\tData: ");
+        printf("\tData:");
 
         for (i = 0; i < len; i++) {
             if (i % 16 == 0) {
