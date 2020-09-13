@@ -232,6 +232,52 @@ const char *TCALSTE_stats_to_str_lut[16] = {
     "   Rep Dialer"
 };
 
+const char *TPERFST_stats_to_str_lut[43] = {
+    "Call Attempts",
+    "Busy Signal",
+    "Call Cleared No Data",
+    "No Carrier Detect",
+    "CO Access Dial 1",
+    "CO Access Dial 2",
+    "CO Access Dial 3",
+    "CO Access Dial 4",
+    "CO Access Dial 5",
+    "CO Access Dial 6",
+    "CO Access Dial 7",
+    "Dial to Carrier 1",
+    "Dial to Carrier 2",
+    "Dial to Carrier 3",
+    "Dial to Carrier 4",
+    "Dial to Carrier 5",
+    "Dial to Carrier 6",
+    "Dial to Carrier 7",
+    "Carrier to 1st Packet 1",
+    "Carrier to 1st Packet 2",
+    "Carrier to 1st Packet 3",
+    "Carrier to 1st Packet 4",
+    "Carrier to 1st Packet 5",
+    "Carrier to 1st Packet 6",
+    "Carrier to 1st Packet 7",
+    "User Wait to Expect Info 1",
+    "User Wait to Expect Info 2",
+    "User Wait to Expect Info 3",
+    "User Wait to Expect Info 4",
+    "User Wait to Expect Info 5",
+    "User Wait to Expect Info 6",
+    "User Wait to Expect Info 7",
+    "Total Dialogs Failed",
+    "Packet Received Errors",
+    "Packet Retries Received",
+    "Inactivity Count",
+    "Retry Limit Out of Service",
+    "Card Auth Timeouts",
+    "Rate Request Timeouts",
+    "No Dial Tone",
+    "Spare 1",
+    "Spare 2",
+    "Spare 3"
+};
+
 int main(int argc, char *argv[])
 {
     FILE *instream;
@@ -814,9 +860,15 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
 
+                printf("\tSeq: %d: DLOG_MT_PERF_STATS_MSG.\n", context->tx_seq);
                 printf("\t\tPerformance Statistics Record: From: %s, to: %s:\n",
                         timestamp_to_string(perf_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
+
+                for (int i = 0; i < ((sizeof(perf_stats->stats) / sizeof(uint16_t))); i++) {
+                    if (perf_stats->stats[i] > 0) printf("[%2d] %27s: %5d\n", i, TPERFST_stats_to_str_lut[i], perf_stats->stats[i]);
+                }
+                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CALL_IN: {
@@ -1105,6 +1157,9 @@ int mm_download_tables(mm_context_t *context)
                 break;
             case DLOG_MT_CALL_STAT_PARMS:
                 status = generate_call_stat_parameters(context, &table_buffer, &table_len);
+                break;
+            case DLOG_MT_COMM_STAT_PARMS:
+                status = generate_comm_stat_parameters(context, &table_buffer, &table_len);
                 break;
             default:
                 printf("\t");
@@ -1448,6 +1503,55 @@ int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *
 
     return 0;
 }
+
+int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+{
+    int i;
+    dlog_mt_comm_stat_params_t *pcomm_stat_params;
+    uint8_t *pbuffer;
+
+    *len = sizeof(dlog_mt_comm_stat_params_t) + 1;
+    pbuffer = calloc(1, *len);
+    pbuffer[0] = DLOG_MT_COMM_STAT_PARMS;
+
+    pcomm_stat_params = (dlog_mt_comm_stat_params_t *)&pbuffer[1];
+
+    printf("\nGenerating Comm Stat Parameters table:\n");
+    pcomm_stat_params->co_access_dial_complete = 100;
+    pcomm_stat_params->co_access_dial_complete_int = 100;
+    pcomm_stat_params->dial_complete_carr_detect = 100;
+    pcomm_stat_params->dial_complete_carr_detect_int = 100;
+    pcomm_stat_params->carr_detect_first_pac = 100;
+    pcomm_stat_params->carr_detect_first_pac_int = 100;
+    pcomm_stat_params->user_waiting_expect_info = 600;
+    pcomm_stat_params->user_waiting_expect_info_int = 100;
+    pcomm_stat_params->perfstats_threshold = 1;
+    pcomm_stat_params->perfstats_start_time[0] = 0;         /* HH */
+    pcomm_stat_params->perfstats_start_time[1] = 0;         /* MM */
+    pcomm_stat_params->perfstats_duration = 1;              /* Indicates the number of days over which perf statistics will be accumulated. */
+    pcomm_stat_params->perfstats_timestamp[0][0] = 0;       /* HH */
+    pcomm_stat_params->perfstats_timestamp[0][1] = 0;       /* MM */
+    pcomm_stat_params->perfstats_timestamp[1][0] = 0;       /* HH */
+    pcomm_stat_params->perfstats_timestamp[1][1] = 0;       /* MM */
+    pcomm_stat_params->perfstats_timestamp[2][0] = 0;       /* HH */
+    pcomm_stat_params->perfstats_timestamp[2][1] = 0;       /* MM */
+    pcomm_stat_params->perfstats_timestamp[3][0] = 0;       /* HH */
+    pcomm_stat_params->perfstats_timestamp[3][1] = 0;       /* MM */
+    *buffer = pbuffer;
+
+    printf("\tStart time:     %02d:%02d\n",
+        pcomm_stat_params->perfstats_start_time[0], pcomm_stat_params->perfstats_start_time[1]);
+    printf("\tDuration:       %02dd\n", pcomm_stat_params->perfstats_duration);
+    printf("\tThreshold:      %02d\n", pcomm_stat_params->perfstats_threshold);
+
+    for(i = 0; i < 4; i++) {
+        printf("\tTimestamp[%d]:   %02d:%02d\n", i,
+            pcomm_stat_params->perfstats_timestamp[i][0], pcomm_stat_params->perfstats_timestamp[i][1]);
+    }
+
+    return 0;
+}
+
 
 int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
     char dirname[80];

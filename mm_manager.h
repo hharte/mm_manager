@@ -206,6 +206,23 @@ typedef struct dlog_mt_call_stat_params {
     uint8_t cdr_duration_hours_flags;   /* 0-23, Bit 6: Indicates whether statistics should be recorded for all complete calls except local coin. */
 } dlog_mt_call_stat_params_t;
 
+/* From COMMST (Communications Statistics Parameters) pp. 2-86 */
+typedef struct dlog_mt_comm_stat_params {
+    uint16_t co_access_dial_complete;       /* 100 */
+    uint16_t co_access_dial_complete_int;   /* 50 */
+    uint16_t dial_complete_carr_detect;     /* 100 */
+    uint16_t dial_complete_carr_detect_int; /* 50 */
+    uint16_t pad[2];
+    uint16_t carr_detect_first_pac;         /* 10 */
+    uint16_t carr_detect_first_pac_int;     /* 5 */
+    uint16_t user_waiting_expect_info;      /* 600 */
+    uint16_t user_waiting_expect_info_int;  /* 100 */
+    uint8_t perfstats_threshold;            /* 2 Indicates the number of Perf Statistics records that the terminal will store before automatically calling in to the Millennium Manager to upload them. */
+    uint8_t perfstats_start_time[2];        /* Perf stats start date HH:MM */
+    uint8_t perfstats_duration;             /* Indicates the number of days over which Perf statistics will be accumulated. */
+    uint8_t perfstats_timestamp[4][2];      /* These timestamps, entered in the terminal's local time, are used with the Perf Statistics Start Time to partition the 24-hour recording period into as many as 5 time periods. */
+} dlog_mt_comm_stat_params_t;
+
 typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
@@ -293,7 +310,7 @@ typedef struct cashbox_status_univ {
 typedef struct dlog_mt_perf_stats_record {
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
-    uint8_t pad[85];
+    uint16_t stats[43];
 } dlog_mt_perf_stats_record_t;
 
 /* DLOG_MT_SUMMARY_CALL_STATS - TCALSTE (Terminal Call Statistics Enhanced) pp. 2-393 */
@@ -911,6 +928,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
 int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
+int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
 int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */
