@@ -223,6 +223,44 @@ typedef struct dlog_mt_comm_stat_params {
     uint8_t perfstats_timestamp[4][2];      /* These timestamps, entered in the terminal's local time, are used with the Perf Statistics Start Time to partition the 24-hour recording period into as many as 5 time periods. */
 } dlog_mt_comm_stat_params_t;
 
+/* From USERPRM (User Interface Parameters) pp. 2-670 */
+typedef struct dlog_mt_user_if_params {
+    uint16_t digit_clear_delay;             /* 450 */
+    uint16_t transient_delay;               /* 450 */
+    uint16_t transient_hint_time;           /* 450 */
+    uint16_t visual_to_voice_delay;         /* 450 */
+    uint16_t voice_repitition_delay;        /* 450 */
+    uint16_t no_action_timeout;             /* 3000 (30s) */
+    uint16_t card_validation_timeout;       /* 3000 (30s) */
+    uint16_t dj_second_string_dtmf_timeout; /* 300 (3s) */
+    uint16_t spare_timer_b;                 /* 1100 (11s) */
+    uint16_t cp_input_timeout;              /* 100 (1s) */
+    uint16_t language_timeout;              /* 1000 (10s) */
+    uint16_t cfs_timeout;                   /* 200 (2s) */
+    uint16_t called_party_disconnect;       /* 1200 (12s) */
+    uint8_t  no_voice_prompt_reps;          /* 3 */
+    uint16_t accs_digit_timeout;            /* 450 (4.5s) */
+    uint16_t collect_call_timeout;          /* 400 (4s) */
+    uint16_t bong_tone_timeout;             /* 1600 (16s) */
+    uint16_t accs_no_action_timeout;        /* 450 (4.5s) */
+    uint16_t card_auth_required_timeout;    /* 6000 (60s) */
+    uint16_t rate_request_timeout;          /* 6000 (60s) */
+    uint16_t manual_dial_hold_time;         /* 50 (0.5s) */
+    uint16_t autodialer_hold_time;          /* 300 (3s) */
+    uint16_t coin_first_warning_time;       /* 30 (30s) */
+    uint16_t coin_second_warning_time;      /* 5 (5s) */
+    uint16_t alternate_bong_tone_timeout;   /* 1000 (10s) */
+    uint16_t delay_after_bong_tone;         /* 200 (2s) */
+    uint16_t alternate_delay_after_bong_tone; /* 150 (1.5s) */
+    uint16_t display_scroll_speed;          /* 10 (100ms) */
+    uint16_t spare_timer_c;                 /* 0 */
+    uint16_t aos_bong_tone_timeout;         /* 600 (6s) */
+    uint16_t fgb_aos_second_spill_timeout;  /* 200 (2s) */
+    uint16_t datajack_connect_timeout;      /* 15000 (150s) */
+    uint16_t datajack_pause_threshold;      /* 45 (450ms) */
+    uint16_t datajack_ias_timer;            /* 10 (100ms) */
+} dlog_mt_user_if_params_t;
+
 typedef struct dlog_mt_call_details {
     uint8_t rate_type;
     uint8_t called_num[10];
@@ -929,6 +967,7 @@ int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int
 int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
 int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
 int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
+int generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len);
 int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */

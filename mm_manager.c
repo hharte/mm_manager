@@ -1161,6 +1161,9 @@ int mm_download_tables(mm_context_t *context)
             case DLOG_MT_COMM_STAT_PARMS:
                 status = generate_comm_stat_parameters(context, &table_buffer, &table_len);
                 break;
+            case DLOG_MT_USER_IF_PARMS:
+                status = generate_user_if_parameters(context, &table_buffer, &table_len);
+                break;
             default:
                 printf("\t");
                 status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
@@ -1552,6 +1555,88 @@ int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *
     return 0;
 }
 
+int generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+{
+    int i;
+    dlog_mt_user_if_params_t *puser_if_params;
+    uint8_t *pbuffer;
+
+    *len = sizeof(dlog_mt_user_if_params_t) + 1;
+    pbuffer = calloc(1, *len);
+    pbuffer[0] = DLOG_MT_USER_IF_PARMS;
+
+    puser_if_params = (dlog_mt_user_if_params_t *)&pbuffer[1];
+
+    printf("\nGenerating User Interface Parameters table:\n");
+    puser_if_params->digit_clear_delay = 450;
+    puser_if_params->transient_delay = 450;
+    puser_if_params->transient_hint_time = 450;
+    puser_if_params->visual_to_voice_delay = 450;
+    puser_if_params->voice_repitition_delay = 450;
+    puser_if_params->no_action_timeout = 3000;
+    puser_if_params->card_validation_timeout = 3000;
+    puser_if_params->dj_second_string_dtmf_timeout = 300;
+    puser_if_params->spare_timer_b = 1100;
+    puser_if_params->cp_input_timeout = 100;
+    puser_if_params->language_timeout = 1000;
+    puser_if_params->cfs_timeout = 200;
+    puser_if_params->called_party_disconnect = 1200;
+    puser_if_params->no_voice_prompt_reps = 3;
+    puser_if_params->accs_digit_timeout = 450;
+    puser_if_params->collect_call_timeout = 400;
+    puser_if_params->bong_tone_timeout = 300;
+    puser_if_params->accs_no_action_timeout = 450;
+    puser_if_params->card_auth_required_timeout = 4000;
+    puser_if_params->rate_request_timeout = 6000;
+    puser_if_params->manual_dial_hold_time = 50;
+    puser_if_params->autodialer_hold_time = 300;
+    puser_if_params->coin_first_warning_time = 30;
+    puser_if_params->coin_second_warning_time = 5;
+    puser_if_params->alternate_bong_tone_timeout = 200;
+    puser_if_params->delay_after_bong_tone = 125;
+    puser_if_params->alternate_delay_after_bong_tone = 125;
+    puser_if_params->display_scroll_speed = 0;
+    puser_if_params->aos_bong_tone_timeout = 600;
+    puser_if_params->fgb_aos_second_spill_timeout = 600;
+    puser_if_params->datajack_connect_timeout = 15000;
+    puser_if_params->datajack_pause_threshold = 45;
+    puser_if_params->datajack_ias_timer = 10;
+    *buffer = pbuffer;
+
+    printf("\tDigit clear delay:           %5d\n", puser_if_params->digit_clear_delay);
+    printf("\tTransient Delay:             %5d\n", puser_if_params->transient_delay);
+    printf("\tTransient Hint Time:         %5d\n", puser_if_params->transient_hint_time);
+    printf("\tVisual to Voice Delay:       %5d\n", puser_if_params->visual_to_voice_delay);
+    printf("\tVoice Repetition Delay:      %5d\n", puser_if_params->voice_repitition_delay);
+    printf("\tNo Action Timeout:           %5d\n", puser_if_params->no_action_timeout);
+    printf("\tCard Validation Timeout:     %5d\n", puser_if_params->card_validation_timeout);
+    printf("\tDJ 2nd String DTMF Timeout:  %5d\n", puser_if_params->dj_second_string_dtmf_timeout);
+    printf("\tCP Input Timeout:            %5d\n", puser_if_params->cp_input_timeout);
+    printf("\tLanguage Timeout:            %5d\n", puser_if_params->language_timeout);
+    printf("\tCFS Timeout:                 %5d\n", puser_if_params->cfs_timeout);
+    printf("\tCPD Timeout:                 %5d\n", puser_if_params->called_party_disconnect);
+    printf("\t# Voice Prompt Repititions:     %2d\n", puser_if_params->no_voice_prompt_reps);
+    printf("\tACCS Digit Timeout:          %5d\n", puser_if_params->accs_digit_timeout);
+    printf("\tCollect Call Timeout:        %5d\n", puser_if_params->collect_call_timeout);
+    printf("\tBong Tone Timeout:           %5d\n", puser_if_params->bong_tone_timeout);
+    printf("\tACCS No Action Timeout:      %5d\n", puser_if_params->accs_no_action_timeout);
+    printf("\tCCard Auth Required Timeout: %5d\n", puser_if_params->card_auth_required_timeout);
+    printf("\tRate Request Timeout:        %5d\n", puser_if_params->rate_request_timeout);
+    printf("\tManual Dial Hold Time:       %5d\n", puser_if_params->manual_dial_hold_time);
+    printf("\tAutodialer Hold Time:        %5d\n", puser_if_params->autodialer_hold_time);
+    printf("\tCoin First Warning Time:     %5d\n", puser_if_params->coin_first_warning_time);
+    printf("\tCoin Second Warning Time:    %5d\n", puser_if_params->coin_second_warning_time);
+    printf("\tAlt Bong Tone Timeout:       %5d\n", puser_if_params->alternate_bong_tone_timeout);
+    printf("\tDelay After Bong Tone:       %5d\n", puser_if_params->delay_after_bong_tone);
+    printf("\tAlt Delay After Bong Tone:   %5d\n", puser_if_params->alternate_delay_after_bong_tone);
+    printf("\tDisplay Scroll Speed:        %5d\n", puser_if_params->display_scroll_speed);
+    printf("\tAOS Bong Tone Timeout:       %5d\n", puser_if_params->aos_bong_tone_timeout);
+    printf("\tFGB AOS Second Spill Timeout:%5d\n", puser_if_params->fgb_aos_second_spill_timeout);
+    printf("\tDatajack Connect Timeout:    %5d\n", puser_if_params->datajack_connect_timeout);
+    printf("\tDatajack Pause Threshold:    %5d\n", puser_if_params->datajack_pause_threshold);
+    printf("\tDatajack IAS Timer:          %5d\n", puser_if_params->datajack_ias_timer);
+    return 0;
+}
 
 int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
     char dirname[80];
