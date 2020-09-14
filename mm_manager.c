@@ -738,7 +738,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_ATN_REQ_CDR_UPL: {
                 /* Not sure what the cdr_req_type is, just swallow it. */
                 uint8_t cdr_req_type = *ppayload++;
-                printf("\t\tSeq: %d: DLOG_MT_ATN_REQ_CDR_UPL, cdr_req_type=%02x (0x%02x)\n", context->tx_seq, cdr_req_type, cdr_req_type);
+                printf("\t\tDLOG_MT_ATN_REQ_CDR_UPL, cdr_req_type=%02x (0x%02x)\n", cdr_req_type, cdr_req_type);
 
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
@@ -746,11 +746,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             }
             case DLOG_MT_CASH_BOX_COLLECTION: {
                 dlog_mt_cash_box_collection_t *cash_box_collection = (dlog_mt_cash_box_collection_t *)ppayload;
-                printf("\t\tSeq: %d: DLOG_MT_CASH_BOX_COLLECTION.\n", context->tx_seq);
 
                 ppayload += sizeof(dlog_mt_cash_box_collection_t);
 
-                printf("\t\t\t%s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+                printf("\t\tCashbox Collection: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
                         timestamp_to_string(cash_box_collection->timestamp, timestamp_str, sizeof(timestamp_str)),
                         (float)cash_box_collection->currency_value / 100,
                         cash_box_collection->percent_full,
@@ -860,7 +859,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
 
-                printf("\tSeq: %d: DLOG_MT_PERF_STATS_MSG.\n", context->tx_seq);
                 printf("\t\tPerformance Statistics Record: From: %s, to: %s:\n",
                         timestamp_to_string(perf_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
@@ -871,14 +869,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dont_send_reply = 1;
                 break;
             }
-            case DLOG_MT_CALL_IN: {
-                printf("\tSeq: %d: DLOG_MT_CALL_IN.\n", context->tx_seq);
-                *pack_payload++ = DLOG_MT_TRANS_DATA;
-                context->trans_data_in_progress = 1;
-                break;
-            }
+            case DLOG_MT_CALL_IN:
             case DLOG_MT_CALL_BACK: {
-                printf("\tSeq: %d: DLOG_MT_CALL_BACK.\n", context->tx_seq);
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
                 break;
@@ -888,7 +880,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 carrier_stats_entry_t *pcarr_stats_entry;
                 dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_call_stats_t);
-                printf("\tSeq: %d: DLOG_MT_CARRIER_CALL_STATS.\n", context->tx_seq);
                 printf("\t\tCarrier Call Statistics Record: From: %s, to: %s:\n",
                         timestamp_to_string(carr_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
@@ -921,7 +912,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
-                printf("\tSeq: %d: DLOG_MT_CARRIER_STATS_EXP.\n", context->tx_seq);
                 printf("\t\tExpanded Carrier Statistics: From: %s, to: %s:\n",
                         timestamp_to_string(carr_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
@@ -1065,21 +1055,21 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         *pack_payload++ = DLOG_MT_END_DATA;
                         end_of_data = 0;
                     } else {
-                        printf("Seq: %d: Appending DLOG_MT_END_DATA to reply.\n", context->tx_seq);
+                        printf("Appending DLOG_MT_END_DATA to reply.\n");
                         *pack_payload++ = DLOG_MT_END_DATA;
                         end_of_data = 0;
                     }
                 } else {
                     memcpy(pack_payload, context->cdr_ack_buffer, context->cdr_ack_buffer_len);
                     pack_payload += context->cdr_ack_buffer_len;
-                    printf("Seq: %d: Sending CDR ACKs in response to DLOG_MT_END_DATA.\n", context->tx_seq);
+                    printf("Sending CDR ACKs in response to DLOG_MT_END_DATA.\n");
                     end_of_data = 1;
                     context->cdr_ack_buffer_len = 0;
                 }
 
                 break;
             case DLOG_MT_TAB_UPD_ACK:
-                printf("\tSeq: %d: DLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", context->tx_seq, *ppayload);
+                printf("\tDLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", *ppayload);
                 ppayload++;
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
                 break;
