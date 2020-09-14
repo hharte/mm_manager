@@ -1574,7 +1574,7 @@ int generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *le
     puser_if_params->visual_to_voice_delay = 450;
     puser_if_params->voice_repitition_delay = 450;
     puser_if_params->no_action_timeout = 3000;
-    puser_if_params->card_validation_timeout = 3000;
+    puser_if_params->card_validation_timeout = 4500;    /* Change from 30s to 45s */
     puser_if_params->dj_second_string_dtmf_timeout = 300;
     puser_if_params->spare_timer_b = 1100;
     puser_if_params->cp_input_timeout = 100;
