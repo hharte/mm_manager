@@ -1154,6 +1154,11 @@ int mm_download_tables(mm_context_t *context)
             case DLOG_MT_USER_IF_PARMS:
                 status = generate_user_if_parameters(context, &table_buffer, &table_len);
                 break;
+            case DLOG_MT_END_DATA:
+                table_len = 1;
+                table_buffer = calloc(1, table_len);
+                table_buffer[0] = DLOG_MT_END_DATA;
+                break;
             default:
                 printf("\t");
                 status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
