@@ -177,11 +177,43 @@ int wait_for_connect(int fd)
 
 int hangup_modem(int fd)
 {
-    send_at_command(fd, "+++");
-    send_at_command(fd, "ATH0");
+    char buffer[80];   /* Input buffer */
+    char *bufptr;      /* Current char in buffer */
+    int  nbytes;       /* Number of bytes read */
+    int  tries;        /* Number of tries so far */
 
-    return (0);
+    for (tries = 0; tries < 3; tries ++) {
+        tcflush(fd, TCIOFLUSH);
+
+        write(fd, "+", 1);
+        usleep(100000);
+        write(fd, "+", 1);
+        usleep(100000);
+        write(fd, "+", 1);
+        usleep(100000);
+
+        sleep(1);   /* Some modems need time to process the AT command. */
+
+        /* read characters into our string buffer until we get a CR or NL */
+        bufptr = buffer;
+
+        while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0) {
+            bufptr += nbytes;
+            if (bufptr[-1] == '\n' || bufptr[-1] == '\r') {
+                break;
+            }
+        }
+
+        /* null terminate the string and see if we got an OK response */
+        *bufptr = '\0';
+
+        if (strstr(buffer, "OK") != 0) {
+            return(send_at_command(fd, "ATH0"));
+        }
+    }
+    return (-1);
 }
+
 /* Send AT Command to Modem */
 static int send_at_command(int fd, char *command)
 {
