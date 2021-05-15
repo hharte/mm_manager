@@ -1295,6 +1295,10 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
         }
         *bufp++ = c;
         *len = *len + 1;
+        if (*len > size) {
+            fclose(stream);
+            return -1;
+        }
     }
 
     printf("Loaded table ID %d (0x%02x) from %s (%d bytes).\n", table_id, table_id, fname, *len - 1);
