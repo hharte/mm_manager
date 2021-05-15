@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
                     return(-1);
                 } else {
-                    strncpy(mm_context.ncc_number[index], optarg, sizeof(mm_context.ncc_number[0]));
+                    snprintf(mm_context.ncc_number[index], sizeof(mm_context.ncc_number[0]), "%s", optarg);
                     index++;
                 }
                 break;
@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
         printf("Using Primary NCC number: %s\n", mm_context.ncc_number[0]);
 
         if(strnlen(mm_context.ncc_number[1], sizeof(mm_context.ncc_number[0])) == 0) {
-            strncpy(mm_context.ncc_number[1], mm_context.ncc_number[0], sizeof(mm_context.ncc_number[1]));
+            snprintf(mm_context.ncc_number[1], sizeof(mm_context.ncc_number[1]), "%s", mm_context.ncc_number[0]);
         }
 
         printf("Using Secondary NCC number: %s\n", mm_context.ncc_number[1]);
