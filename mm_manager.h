@@ -831,6 +831,8 @@ typedef struct dlog_mt_install_params {
     uint8_t spare[12];                          /* Some used for MTR2.x. */
 } dlog_mt_install_params_t;
 
+#define ACCESS_CODE_LEN                         (7)
+
 #define INSTSV_PREDIAL_STRING_ENABLE            (1 << 0)    /* Predial string enable. */
 #define INSTSV_PREDIAL_STRING_ENABLE_1P         (1 << 1)    /* Predial string enable for 1+ calls. */
 #define INSTSV_PREDIAL_STRING_ENABLE_IXL        (1 << 2)    /* Predial string enable for International calls. */

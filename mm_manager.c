@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
                        return(0);
                        break;
             case 'a':
-                if (strlen(optarg) != 7) {
+                if (strnlen(optarg, 7) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
                     return(-1);
                 }
@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "-n may only be specified twice.\n");
                     return(-1);
                 }
-                if ((strlen(optarg) < 1) || (strlen(optarg) > 15)) {
+                if ((strnlen(optarg, 16) < 1) || (strnlen(optarg, 16) > 15)) {
                     fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
                     return(-1);
                 } else {
@@ -440,10 +440,10 @@ int main(int argc, char *argv[])
     printf("Using access code: %s\n", phone_num_to_string(access_code_str, sizeof(access_code_str), mm_context.instsv.access_code, sizeof(mm_context.instsv.access_code)));
     printf("Manager Inter-packet Tx gap: %dms.\n", mm_context.instsv.rx_packet_gap * 10);
 
-    if(strlen(mm_context.ncc_number[0]) >= 1) {
+    if(strnlen(mm_context.ncc_number[0], sizeof(mm_context.ncc_number[0])) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context.ncc_number[0]);
 
-        if(strlen(mm_context.ncc_number[1]) == 0) {
+        if(strnlen(mm_context.ncc_number[1], sizeof(mm_context.ncc_number[0])) == 0) {
             strncpy(mm_context.ncc_number[1], mm_context.ncc_number[0], sizeof(mm_context.ncc_number[1]));
         }
 
@@ -1308,12 +1308,12 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     FILE *ostream = NULL;
 
     int i;
-    if (strlen(access_code) != 7) {
+    if (strnlen(access_code, 8) != ACCESS_CODE_LEN) {
         printf("Error: Access Code must be 7-digits\n");
     }
 
     // Rewrite table with our Access Code
-    for (i = 0; i < (strlen(access_code)); i++) {
+    for (i = 0; i < ACCESS_CODE_LEN; i++) {
         if (i % 2 == 0) {
             pinstsv_table->access_code[i >> 1]  = (access_code[i] - '0') << 4;
         } else {
@@ -1364,7 +1364,7 @@ int generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int
     string_to_bcd_a(context->ncc_number[0], pncc_term_params->pri_ncc_number, sizeof(pncc_term_params->pri_ncc_number));
 
     // Rewrite table with Secondary NCC phone number, if provided.
-    if (strlen(context->ncc_number[1]) > 0) {
+    if (strnlen(context->ncc_number[1], sizeof(context->ncc_number[1])) > 0) {
         printf("\tSecondary NCC: %s\n", context->ncc_number[1]);
         string_to_bcd_a(context->ncc_number[1], pncc_term_params->sec_ncc_number, sizeof(pncc_term_params->sec_ncc_number));
     }
