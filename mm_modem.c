@@ -227,7 +227,7 @@ static int send_at_command(int fd, char *command)
         snprintf(buffer, sizeof(buffer), "%s\r", command);
 
         /* send an AT command followed by a CR */
-        if (write(fd, buffer, strlen(buffer)) < strlen(buffer)) {
+        if (write(fd, buffer, strnlen(buffer, sizeof(buffer))) < strnlen(buffer, sizeof(buffer))) {
             continue;
         }
 
