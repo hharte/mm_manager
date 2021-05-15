@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <string.h>  /* String function definitions */
 #include <termios.h> /* POSIX terminal control definitions */
+#include <time.h>
 #include <unistd.h>
 
 #include "mm_manager.h"
@@ -188,7 +189,10 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
 
     /* Insert Tx packet delay when using a modem, in 10ms increments. */
     if (context->use_modem == 1) {
-        usleep(context->instsv.rx_packet_gap * 10000);
+        struct timespec tim;
+        tim.tv_sec = 0;
+        tim.tv_nsec = context->instsv.rx_packet_gap * 10000000L;
+        nanosleep(&tim, NULL);
     }
 
     pkt.hdr.start = START_BYTE;

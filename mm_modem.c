@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>  /* String function definitions */
+#include <time.h>
 #include <unistd.h>  /* UNIX standard function definitions */
 #include <fcntl.h>   /* File control definitions */
 #include <errno.h>   /* Error number definitions */
@@ -185,12 +186,10 @@ int hangup_modem(int fd)
     for (tries = 0; tries < 3; tries ++) {
         tcflush(fd, TCIOFLUSH);
 
-        write(fd, "+", 1);
-        usleep(100000);
-        write(fd, "+", 1);
-        usleep(100000);
-        write(fd, "+", 1);
-        usleep(100000);
+        for (int i = 0; i < 3; i++) {
+            write(fd, "+", 1);
+            nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+        }
 
         sleep(1);   /* Some modems need time to process the AT command. */
 
