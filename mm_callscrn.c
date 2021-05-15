@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
         printf("Error reading CALLSCRN table.\n");
         if (pcallscrn_table != NULL) {
             free(pcallscrn_table);
+            fclose(instream);
             return (-2);
         }
     }

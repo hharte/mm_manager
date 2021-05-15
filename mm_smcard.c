@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
         printf("Error reading SMCARD table.\n");
         if (psmcard_table != NULL) {
             free(psmcard_table);
+            fclose(instream);
             return (-2);
         }
     }

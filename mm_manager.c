@@ -1278,6 +1278,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
     fflush(stdout);
     if(*buffer == 0) {
         printf("Erorr: failed to allocate %ld bytes for table %d\n", size, table_id);
+        fclose(stream);
         return -1;
     }
 

@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
     npa_char[0] = fgetc(instream);
     if (npa_char[0] < 0x20 || npa_char[0] > 0x99) {
         printf("Invalid NPA!\n");
+        fclose(instream);
         return -1;
     }
 
