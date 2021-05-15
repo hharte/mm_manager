@@ -1,5 +1,5 @@
 ## Millennium Manager - mm_manager
-
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b)](https://www.codacy.com/gh/hharte/mm_manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hharte/mm_manager&amp;utm_campaign=Badge_Grade)
 
 #### Manager for Nortel Millennium Payphones
 
