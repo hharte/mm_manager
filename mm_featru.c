@@ -143,18 +143,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    featru_table = calloc(1, sizeof(dlog_mt_fconfig_opts_t));
+    if (featru_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_fconfig_opts_t));
+        return(-2);
+    }
+
     instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium FEATRU Table 0x1a (26) Dump\n");
 
-    featru_table = calloc(1, sizeof(dlog_mt_fconfig_opts_t));
-    if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) <= 0) {
+    if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) == 0) {
         printf("Error reading ADMESS table.\n");
-        if (featru_table != NULL) {
-            free(featru_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(featru_table);
+        fclose(instream);
+        return (-2);
     }
 
     fclose(instream);

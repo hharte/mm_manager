@@ -51,18 +51,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    prate_table = calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
+    if (prate_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlg_mt_intl_sbr_table_t));
+        return(-2);
+    }
+
     instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium RATEINT Table 0x97 (151) Dump\n\n");
 
-    prate_table = calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
     if (fread(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, instream) <= 0) {
         printf("Error reading RATEINT table.\n");
-        if (prate_table != NULL) {
-            free(prate_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(prate_table);
+        fclose(instream);
+        return (-2);
     }
 
     /* Display International SBR table common information. */

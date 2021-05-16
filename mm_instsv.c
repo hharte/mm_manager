@@ -40,16 +40,19 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    instsv_table = calloc(1, sizeof(dlog_mt_install_params_t));
+    if (instsv_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_install_params_t));
+        return(-2);
+    }
+
     instream = fopen(argv[1], "rb");
 
-    instsv_table = calloc(1, sizeof(dlog_mt_install_params_t));
     if (fread(instsv_table, sizeof(dlog_mt_install_params_t), 1, instream) <= 0) {
         printf("Error reading INSTSV table.\n");
-        if (instsv_table != NULL) {
-            free(instsv_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(instsv_table);
+        fclose(instream);
+        return (-2);
     }
 
     fclose(instream);

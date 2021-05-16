@@ -62,18 +62,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    pcard_table = calloc(1, sizeof(dlog_mt_card_table_t));
+    if (pcard_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_card_table_t));
+        return(-2);
+    }
+
     instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium Credit Card Table 0x86 (134) Dump\n");
 
-    pcard_table = calloc(1, sizeof(dlog_mt_card_table_t));
-    if (fread(pcard_table, sizeof(dlog_mt_card_table_t), 1, instream) <= 0) {
+    if (fread(pcard_table, sizeof(dlog_mt_card_table_t), 1, instream) == 0) {
         printf("Error reading CCARD table.\n");
-        if (pcard_table != NULL) {
-            free(pcard_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(pcard_table);
+        fclose(instream);
+        return (-2);
     }
 
     printf("\n+-------------------------------------------------------+---------------+------+------+------+\n" \

@@ -89,18 +89,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    pcoinvl_table = calloc(1, sizeof(dlog_mt_coin_val_table_t));
+    if (pcoinvl_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_coin_val_table_t));
+        return(-2);
+    }
+
     instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium COINVL Table (Table 50) Dump\n");
 
-    pcoinvl_table = calloc(1, sizeof(dlog_mt_coin_val_table_t));
-    if (fread(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, instream) <= 0) {
+    if (fread(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, instream) == 0) {
         printf("Error reading CARRIER table.\n");
-        if (pcoinvl_table != NULL) {
-            free(pcoinvl_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(pcoinvl_table);
+        fclose(instream);
+        return (-2);
     }
 
     fclose(instream);
