@@ -4,7 +4,7 @@
 # (c) 2020, Howard M. Harte
 #
 # This script generates LCD tables for the Nortel Millennium Payphone.
-# It generates the LCD tables by looking up information from 
+# It generates the LCD tables by looking up information from
 # localcallingguide.com to determine the LATA, given an NPA-NXX.
 # This LATA is used and each exchange in the LATA is checked to
 # determine which NPA-NXX are local.  All of these NPA-NXX are stored
@@ -43,14 +43,12 @@
 import argparse
 import array
 import csv
-import os
 import requests
 import sys
-import time 
+import time
 import xmltodict
 
 from os import path
-from collections import OrderedDict
 
 def is_file_older_than_x_days(file, days=1):
     file_time = path.getmtime(file)

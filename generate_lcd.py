@@ -63,7 +63,7 @@ if args.country == 'US':
             df = pandas.read_csv(source_filename, dtype={'NPA-NXX': object}, engine='python')
         else: # Import as TSV
             df = pandas.read_csv(source_filename, dtype={'NPA-NXX': object}, sep=' *\t', engine='python')
-    except OSError as e:
+    except OSError:
         print("Error: Cannot read NPA-NXX data file.")
         print("Please download https://nationalnanpa.com/nanp1/allutlzd.zip and unzip it into the current directory.")
         exit()
@@ -86,7 +86,7 @@ else:
     print("Reading " + args.country + " data from " + source_filename)
     try:
         df = pandas.read_csv(source_filename, sep=',', dtype={'NPA': object, 'CO Code (NXX)': object}, engine='python')
-    except OSError as e:
+    except OSError:
         print("Error: Cannot read NPA-NXX data file.")
         print("Please download http://www.cnac.ca/data/COCodeStatus_ALL.zip and unzip it into the current directory.")
         exit()

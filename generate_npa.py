@@ -62,7 +62,7 @@ if args.datafile: source_filename = args.datafile
 print("Reading data from " + source_filename)
 try:
     df = pandas.read_csv(source_filename, dtype={'NPA_ID': object, 'COUNTRY': object}, skiprows=1, names=npa_cols, engine='python')
-except OSError as e:
+except OSError:
     print("Error: Cannot read NPA data file.")
     print("Please download https://nationalnanpa.com/nanp1/npa_report.csv into the current directory.")
     exit()
