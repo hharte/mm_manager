@@ -54,7 +54,6 @@ int main(int argc, char *argv[])
     int i, j;
 
     dlog_mt_card_table_t *pcard_table;
-    card_entry_t *pcard;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -84,8 +83,7 @@ int main(int argc, char *argv[])
             "+------+-----------------+--------+-----+---------+-----+---------------+------+------+------+");
 
     for (index = 0; index < CCARD_MAX; index++) {
-
-        pcard = &pcard_table->c[index];
+        card_entry_t *pcard = &pcard_table->c[index];
         if (pcard_table->c[index].standard_cd == 0) continue;
 
         printf("\n|  %2d  | %02x%02x%02x - %02x%02x%02x | %s | x%02x |   0x%02x  | x%02x | P x%02x x%02x x%02x | 0x%02x | 0x%02x | 0x%02x | ",

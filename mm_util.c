@@ -40,10 +40,10 @@ void dump_hex(uint8_t *data, int len)
 {
     uint8_t ascii[32];
     uint8_t *pascii = ascii;
-    int i;
 
     printf("\n");
     if (len > 0) {
+        int i;
         printf("\tData:");
 
         for (i = 0; i < len; i++) {
@@ -78,12 +78,12 @@ void dump_hex(uint8_t *data, int len)
 extern char *phone_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len)
 {
     char *pstr = string_buf;
-    int i, j, pn_digit;
+    int i, j;
 
     j = 0;
 
     for (i = 0; i < num_buf_len; i++) {
-        pn_digit = num_buf[i] >> 4;
+        int pn_digit = num_buf[i] >> 4;
         if (pn_digit == 0xe) break;
         *pstr++ = (pn_digit) + '0';
         j++;
