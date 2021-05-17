@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
     char rate_str_initial[10];
     char rate_str_additional[10];
     dlog_mt_rate_table_t* prate_table;
-    rate_table_entry_t* prate;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -53,18 +52,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    instream = fopen(argv[1], "rb");
-
     printf("Nortel Millennium RATE Table 0x49 (73) Dump\n");
 
     prate_table = calloc(1, sizeof(dlog_mt_rate_table_t));
-    if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) <= 0) {
+    if (prate_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_rate_table_t));
+        return(-2);
+    }
+
+    instream = fopen(argv[1], "rb");
+
+    if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) == 0) {
         printf("Error reading RATE table.\n");
-        if (prate_table != NULL) {
-            free(prate_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(prate_table);
+        fclose(instream);
+        return (-2);
     }
 
     /* Dump unknown 39 bytes at the beginning of the RATE table */
@@ -76,8 +78,8 @@ int main(int argc, char *argv[])
            "+------------+-------------------------+----------------+--------------+-------------------+-----------------+");
 
     for (rate_index = 0; rate_index < RATE_TABLE_MAX_ENTRIES; rate_index++) {
+        rate_table_entry_t* prate = &prate_table->r[rate_index];
 
-        prate = &prate_table->r[rate_index];
         if (prate->type ==  0) continue;
 
         if (prate->type == 0 && prate->initial_charge == 0 && prate->additional_charge == 0 && \
