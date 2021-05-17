@@ -30,8 +30,6 @@ char *str_flags[4] = {
 int main(int argc, char *argv[])
 {
     FILE *instream;
-    unsigned char c;
-    unsigned char flags0, flags1;
     int areacode = 200;
 
     if (argc <= 1) {
@@ -44,6 +42,9 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium NPA (Table 0x96) Dump");
     while(1) {
+        unsigned char c;
+        unsigned char flags0, flags1;
+
         c = fgetc(instream);
         if (feof(instream)) break;
 
