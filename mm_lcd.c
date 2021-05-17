@@ -39,11 +39,7 @@ int main(int argc, char *argv[])
     unsigned char c;
     int nxx;
     unsigned char npa_char[2];
-    unsigned char flag_mask = 0;
-    unsigned char flag_shift;
-    unsigned char flags;
     unsigned char check_digit;
-    unsigned char twobit_group;
     int npa;
 
     if (argc <= 1) {
@@ -67,6 +63,7 @@ int main(int argc, char *argv[])
 
     if (check_digit != 0xe) {
         printf("Invalid check digit, expected 0xe!\n");
+        fclose(instream);
         return -1;
     }
 
@@ -75,6 +72,10 @@ int main(int argc, char *argv[])
     npa += ((npa_char[1] & 0xf0) >> 4);
 
     for (nxx = 200; nxx <= 999; nxx++) {
+        unsigned char flag_mask = 0;
+        unsigned char flag_shift;
+        unsigned char flags;
+        unsigned char twobit_group;
 
         if (nxx % 200 == 0) {
             printf("\n+---------------------------------------------------------------------+\n" \
