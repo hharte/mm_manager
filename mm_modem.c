@@ -147,15 +147,15 @@ int init_modem(int fd)
 int wait_for_connect(int fd)
 {
     char buffer[255];   /* Input buffer */
-    char *bufptr;       /* Current char in buffer */
-    int  nbytes;        /* Number of bytes read */
     int  tries = 0;     /* Number of tries so far */
 
     tcflush(fd, TCIOFLUSH);
 
     while(1) {
+        int  nbytes;        /* Number of bytes read */
+
         /* read characters into our string buffer until we get a CR or NL */
-        bufptr = buffer;
+        char *bufptr = buffer;    /* Current char in buffer */
         while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
         {
         bufptr += nbytes;
@@ -179,11 +179,12 @@ int wait_for_connect(int fd)
 int hangup_modem(int fd)
 {
     char buffer[80];   /* Input buffer */
-    char *bufptr;      /* Current char in buffer */
-    int  nbytes;       /* Number of bytes read */
     int  tries;        /* Number of tries so far */
 
     for (tries = 0; tries < 3; tries ++) {
+        char *bufptr;      /* Current char in buffer */
+        int  nbytes;       /* Number of bytes read */
+
         tcflush(fd, TCIOFLUSH);
 
         for (int i = 0; i < 3; i++) {

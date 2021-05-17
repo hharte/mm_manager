@@ -136,12 +136,12 @@ const char pn_lut[16] = { '\0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
 char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len)
 {
     char *pstr = string_buf;
-    int i, j, pn_digit;
+    int i, j;
 
     j = 0;
 
     for (i = 0; i < num_buf_len; i++) {
-        pn_digit = num_buf[i] >> 4;
+        int pn_digit = num_buf[i] >> 4;
 
         *pstr++ = pn_lut[pn_digit];
         j++;
@@ -159,7 +159,7 @@ char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_
 }
 
 /* Call Type (lower 4-bits) of CALLTYP */
-char *call_type_str[16] = {
+const char *call_type_str[16] = {
     "Incoming",
     "Unanswered",
     "Abandoned",
@@ -179,7 +179,7 @@ char *call_type_str[16] = {
 };
 
 /* Payment Type (upper 4-bits) of CALLTYP */
-char *pmt_type_str[16] = {
+const char *pmt_type_str[16] = {
     "Unused0",
     "Unused1",
     "No Charge",

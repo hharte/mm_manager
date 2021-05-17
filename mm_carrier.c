@@ -208,18 +208,22 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium CARRIER Table (Table 135) Dump\n");
 
     pcarrier_table = calloc(1, sizeof(dlog_mt_carrier_table_t));
-    if (fread(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, instream) <= 0) {
+    if (pcarrier_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_carrier_table_t));
+        return(-2);
+    }
+
+    instream = fopen(argv[1], "rb");
+
+    if (fread(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, instream) == 0) {
         printf("Error reading CARRIER table.\n");
-        if (pcarrier_table != NULL) {
-            free(pcarrier_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(pcarrier_table);
+        fclose(instream);
+        return (-2);
     }
 
     fclose(instream);

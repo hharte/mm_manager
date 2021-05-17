@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
     FILE *ostream = NULL;
     int rate_index;
     dlg_mt_intl_sbr_table_t* prate_table;
-    intl_rate_table_entry_t* prate;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium RATEINT Table 0x97 (151) Dump\n\n");
 
-    if (fread(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, instream) <= 0) {
+    if (fread(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, instream) == 0) {
         printf("Error reading RATEINT table.\n");
         free(prate_table);
         fclose(instream);
@@ -87,6 +86,7 @@ int main(int argc, char *argv[])
            "+------------+--------------+------------+");
 
     for (rate_index = 0; rate_index < INTL_RATE_TABLE_MAX_ENTRIES; rate_index++) {
+        intl_rate_table_entry_t* prate;
 
         prate = &prate_table->irate[rate_index];
         if (prate->ccode ==  0) continue;

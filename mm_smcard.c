@@ -38,8 +38,6 @@ int main(int argc, char *argv[])
 {
     FILE *instream;
     int index;
-    int multiplier, max_units;
-    int rebate;
 
     dlog_mt_scard_parm_table_t *psmcard_table;
 
@@ -49,18 +47,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    instream = fopen(argv[1], "rb");
-
     printf("Nortel Millennium Call Smart Card Table (Table 93) Dump\n");
 
     psmcard_table = calloc(1, sizeof(dlog_mt_scard_parm_table_t));
-    if (fread(psmcard_table, sizeof(dlog_mt_scard_parm_table_t), 1, instream) <= 0) {
+    if (psmcard_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_scard_parm_table_t));
+        return(-2);
+    }
+
+    instream = fopen(argv[1], "rb");
+
+    if (fread(psmcard_table, sizeof(dlog_mt_scard_parm_table_t), 1, instream) == 0) {
         printf("Error reading SMCARD table.\n");
-        if (psmcard_table != NULL) {
-            free(psmcard_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(psmcard_table);
+        fclose(instream);
+        return (-2);
     }
 
     printf("\n+--------------------------+\n" \
@@ -85,8 +86,8 @@ int main(int argc, char *argv[])
            "| Idx | Mult | Max Units |\n" \
            "+-----+------+-----------+\n");
     for (index = 0; index < SC_MULT_MAX_UNIT_MAX; index++) {
-        multiplier = mult_lut[(psmcard_table->mult_max_unit[index] & SC_MULT_MASK) >> SC_MULT_SHIFT];
-        max_units = psmcard_table->mult_max_unit[index] & SC_MAX_UNIT_MASK;
+        int multiplier = mult_lut[(psmcard_table->mult_max_unit[index] & SC_MULT_MASK) >> SC_MULT_SHIFT];
+        int max_units = psmcard_table->mult_max_unit[index] & SC_MAX_UNIT_MASK;
 
         printf("|  %2d |  %2d  |     %5d |\n", index, multiplier, max_units);
     }
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
            "| Idx | Rebate Type                   | Rebate |\n" \
            "+-----+-------------------------------+--------+\n");
     for (index = 0; index < SC_REBATE_MAX; index++) {
-        rebate = psmcard_table->rebates[index];
+        int rebate = psmcard_table->rebates[index];
 
         printf("|  %2d | %s |  $%3.2f |\n", index, str_smcard_rebate[index], (float)rebate / 100);
     }

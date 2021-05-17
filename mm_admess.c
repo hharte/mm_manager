@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     char vfd_string[21];
     int i;
 
-    dlog_mt_advert_prompts_t *admess_table;
+    dlog_mt_advert_prompts_t *padmess_table;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -30,18 +30,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    instream = fopen(argv[1], "rb");
-
     printf("Nortel Millennium Advertising Message Table (Table 29) Dump\n");
 
-    admess_table = calloc(1, sizeof(dlog_mt_advert_prompts_t));
-    if (fread(admess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) <= 0) {
+    padmess_table = calloc(1, sizeof(dlog_mt_advert_prompts_t));
+    if (padmess_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_advert_prompts_t));
+        return(-2);
+    }
+
+    instream = fopen(argv[1], "rb");
+
+    if (fread(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) == 0) {
         printf("Error reading ADMESS table.\n");
-        if (admess_table != NULL) {
-            fclose(instream);
-            free(admess_table);
-            return (-2);
-        }
+        fclose(instream);
+        free(padmess_table);
+        return (-2);
     }
 
     fclose(instream);
@@ -52,15 +55,14 @@ int main(int argc, char *argv[])
 
     for (index = 0; index < ADVERT_PROMPTS_MAX; index++) {
 
-        strncpy(vfd_string, (char *)admess_table->entry[index].message_text, 20);
-        vfd_string[20] = '\0';
+        snprintf(vfd_string, sizeof(vfd_string), "%s", (char *)padmess_table->entry[index].message_text);
 
         printf("|  %2d  |    %5d |    0x%02x | %s |  0x%02x |\n",
             index,
-            admess_table->entry[index].display_time,
-            admess_table->entry[index].display_attr,
+            padmess_table->entry[index].display_time,
+            padmess_table->entry[index].display_attr,
             vfd_string,
-            admess_table->entry[index].spare);
+            padmess_table->entry[index].spare);
     }
 
     printf("+----------------------------------------------------------+\n");
@@ -74,12 +76,12 @@ int main(int argc, char *argv[])
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(admess_table, sizeof(dlog_mt_advert_prompts_t), 1, ostream);
+        fwrite(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, ostream);
         fclose(ostream);
     }
 
-    if (admess_table != NULL) {
-        free(admess_table);
+    if (padmess_table != NULL) {
+        free(padmess_table);
     }
 
     return (0);

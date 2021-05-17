@@ -37,18 +37,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    instream = fopen(argv[1], "rb");
-
     printf("Nortel Millennium RDLIST Table (Table 55) Dump\n");
 
     prdlist_table = calloc(1, sizeof(dlog_mt_rdlist_table_t));
-    if (fread(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, instream) <= 0) {
+    if (prdlist_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_rdlist_table_t));
+        return(-2);
+    }
+
+    instream = fopen(argv[1], "rb");
+
+    if (fread(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, instream) == 0) {
         printf("Error reading RDLIST table.\n");
-        if (prdlist_table != NULL) {
-            free(prdlist_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(prdlist_table);
+        fclose(instream);
+        return (-2);
     }
 
     fclose(instream);
@@ -65,14 +68,14 @@ int main(int argc, char *argv[])
             memcpy(display_prompt_string, prdlist_table->rd[rdlist_index].display_prompt, 20);
             display_prompt_string[20] = '\0';
         } else {
-            strncpy(display_prompt_string, "                    ", 20);
+            snprintf(display_prompt_string, sizeof(display_prompt_string), "%s", "                    ");
         }
 
         if (prdlist_table->rd[rdlist_index].display_prompt[20] >= 0x20) {
             memcpy(display_prompt_string2, &(prdlist_table->rd[rdlist_index].display_prompt[20]), 20);
             display_prompt_string2[20] = '\0';
         } else {
-            strncpy(display_prompt_string, "                    ", 20);
+            snprintf(display_prompt_string2, sizeof(display_prompt_string2), "%s", "                    ");
         }
 
         printf("\n| %2d | 0x%02x,0x%02x,0x%02x | %16s | %s | 0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x |",

@@ -288,7 +288,6 @@ int print_mm_packet(int direction, mm_packet_t *pkt)
 {
 
     uint8_t ascii[32];
-    uint8_t *pascii = ascii;
     int i;
     int status = 0;
 
