@@ -76,7 +76,6 @@ int main(int argc, char *argv[])
     int i;
 
     dlog_mt_call_screen_list_t *pcallscrn_table;
-    call_screen_list_entry_t *pcallscreen_entry;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -84,18 +83,21 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    pcallscrn_table = calloc(1, sizeof(dlog_mt_call_screen_list_t));
+    if (pcallscrn_table == NULL) {
+        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_call_screen_list_t));
+        return(-2);
+    }
+
     instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium Call Screening List Table (Table 92) Dump\n");
 
-    pcallscrn_table = calloc(1, sizeof(dlog_mt_call_screen_list_t));
-    if (fread(pcallscrn_table, sizeof(dlog_mt_call_screen_list_t), 1, instream) <= 0) {
+    if (fread(pcallscrn_table, sizeof(dlog_mt_call_screen_list_t), 1, instream) == 0) {
         printf("Error reading CALLSCRN table.\n");
-        if (pcallscrn_table != NULL) {
-            free(pcallscrn_table);
-            fclose(instream);
-            return (-2);
-        }
+        free(pcallscrn_table);
+        fclose(instream);
+        return (-2);
     }
 
     printf("\n+-------------------------------------------------------------------------------------------+\n" \
@@ -103,6 +105,7 @@ int main(int argc, char *argv[])
             "+------------+------+-------+-------+------+--------------------+-------+-------------------+\n");
 
     for (callscrn_index = 0; callscrn_index < CALLSCRN_TABLE_MAX; callscrn_index++) {
+        call_screen_list_entry_t *pcallscreen_entry;
 
         pcallscreen_entry = &pcallscrn_table->entry[callscrn_index];
         if (pcallscreen_entry->phone_number[0] == 0) continue;
