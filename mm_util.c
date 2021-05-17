@@ -64,8 +64,8 @@ void dump_hex(uint8_t *data, int len)
 
         }
         *pascii++ = '\0';
-        if (strlen((char *)ascii) > 0) {
-            for (i = 0; i < 16 - strlen((char *)ascii); i++) {
+        if (strnlen((char *)ascii, sizeof(ascii)) > 0) {
+            for (i = 0; i < 16 - strnlen((char *)ascii, sizeof(ascii)); i++) {
                 printf("    ");
             }
             printf("%s", ascii);
