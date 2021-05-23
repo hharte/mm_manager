@@ -283,7 +283,6 @@ int main(int argc, char *argv[])
     FILE *instream;
     mm_context_t mm_context;
     mm_table_t mm_table;
-    int status;
     char *modem_dev = NULL;
     char *table_dir = NULL;
     int index;
@@ -353,7 +352,7 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'c':
-                if ((mm_context.cdr_stream = fopen(optarg, "a+")) < 0) {
+                if (!(mm_context.cdr_stream = fopen(optarg, "a+"))) {
                     (void)fprintf(stderr,
                         "mm_manager: %s: %s\n", optarg, strerror(errno));
                     exit(1);
@@ -374,7 +373,7 @@ int main(int argc, char *argv[])
                 modem_dev = optarg;
                 break;
             case 'l':
-                if ((mm_context.logstream = fopen(optarg, "w")) < 0) {
+                if (!(mm_context.logstream = fopen(optarg, "w"))) {
                     (void)fprintf(stderr,
                         "mm_manager: %s: %s\n", optarg, strerror(errno));
                     exit(1);
@@ -460,6 +459,8 @@ int main(int argc, char *argv[])
         }
         mm_context.connected = 1;
     } else {
+        int status;
+
         if (baudrate < 1200) {
             printf("Error: baud rate must be 1200 bps or faster.\n");
             return(-1);
@@ -877,7 +878,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             }
             case DLOG_MT_CARRIER_CALL_STATS:
             {
-                carrier_stats_entry_t *pcarr_stats_entry;
                 dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_call_stats_t);
                 printf("\t\tCarrier Call Statistics Record: From: %s, to: %s:\n",
@@ -885,9 +885,9 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
                 for (int i = 0; i < 3; i++) {
+                    carrier_stats_entry_t *pcarr_stats_entry = &carr_stats->carrier_stats[i];
                     uint32_t k = 0;
 
-                    pcarr_stats_entry = &carr_stats->carrier_stats[i];
                     printf("\t\t\tCarrier 0x%02x:", pcarr_stats_entry->carrier_ref);
                     for (int j = 0; j < 29; j++) {
                         k += pcarr_stats_entry->stats[j];
@@ -908,7 +908,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
-                carrier_stats_exp_entry_t *pcarr_stats_entry;
 
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
@@ -917,7 +916,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                         timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
                 for (int carrier = 0; carrier < CARRIER_STATS_EXP_MAX_CARRIERS; carrier++) {
-                    pcarr_stats_entry = &carr_stats->carrier[carrier];
+                    carrier_stats_exp_entry_t *pcarr_stats_entry = &carr_stats->carrier[carrier];
 
                     printf("\t\t\tCarrier Ref: %d (0x%02x): ", pcarr_stats_entry->carrier_ref, pcarr_stats_entry->carrier_ref);
 
@@ -1251,7 +1250,6 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
 {
     FILE *stream;
     char fname[TABLE_PATH_MAX_LEN];
-    uint8_t c;
     long size;
     uint8_t *bufp;
 
@@ -1288,8 +1286,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
     *len = 1;
 
     while (1) {
-
-        c = fgetc(stream);
+        uint8_t c = fgetc(stream);
         if(feof(stream)) {
             break;
         }
