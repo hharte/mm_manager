@@ -131,6 +131,5 @@ if args.debug: print(a)
 # Write LCD table array to file.
 f=open(fname, "wb")
 a.tofile(f)
-f.close
 
 print("Successfully generated the NPA table.")

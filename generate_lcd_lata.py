@@ -189,7 +189,7 @@ for i in lcd_npas:
 
     for index in range(200, 1000): #, row in allnpa.iterrows():
         cur_npanxx = str(i) + "-" + str(index)
-        
+
         if cur_npanxx in npanxx_dict:
             flag = npanxx_dict.get(cur_npanxx)
         else:
@@ -207,7 +207,6 @@ for i in lcd_npas:
     # Write LCD table array to file.
     f=open(fname, "wb")
     a.tofile(f)
-    f.close
 
     # Proceed to next table
     table = table + 1
