@@ -72,8 +72,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             fgets(buf, 80, context->bytestream);
 
             /* Data that came from the Millennium Terminal. */
-            if ((bytep = strstr(buf, "RX: ")) > 0) {
-                if (bytep == NULL) return -1;
+            if ((bytep = strstr(buf, "RX: ")) != NULL) {
                 sscanf(bytep, "RX: %x", &databyte);
             }
         }
