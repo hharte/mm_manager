@@ -768,7 +768,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_TERM_STATUS: {
                 dlog_mt_term_status_t *dlog_mt_term_status = (dlog_mt_term_status_t *)ppayload;
                 uint8_t serial_number[11];
-                uint64_t dlog_mt_term_status_word;
+                unsigned long long dlog_mt_term_status_word;
                 int i;
 
                 ppayload += sizeof(dlog_mt_term_status_t);
@@ -1203,9 +1203,9 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
         if (wait_for_mm_ack(context) != 0) return -1;
         p += chunk_len;
         bytes_remaining -= chunk_len;
-        printf("\tTable %d (0x%02x) %s progress: (%3ld%%) - %4ld / %4d\n",
+        printf("\tTable %d (0x%02x) %s progress: (%3d%%) - %4d / %4d\n",
             table_id, table_id, table_to_string(table_id),
-            ((p - payload) * 100) / len, p - payload, len);
+            (int)((p - payload) * 100) / len, (int)(p - payload), len);
     }
 
     return 0;
