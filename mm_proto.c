@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -27,6 +27,25 @@
 #define L2_STATE_GET_CRC0           5
 #define L2_STATE_GET_CRC1           6
 #define L2_STATE_SEARCH_FOR_STOP    7
+
+char *str_disconnect_code[16] = {
+    "OK",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "Error",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+};
 
 /*
  * Receive a packet from Millennium Terminal.
@@ -138,7 +157,8 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     }
 
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
-        printf("%s: Received disconnect flag from terminal.\n", __FUNCTION__);
+        printf("%s: Received disconnect status %s from terminal.\n", __FUNCTION__,
+            str_disconnect_code[pkt->hdr.flags & 0x0F]);
         context->tx_seq = 0;
         if (context->use_modem == 1) {
             printf("%s: Hanging up modem.\n", __FUNCTION__);
