@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         unsigned char c;
         unsigned char flags0, flags1;
 
-        c = fgetc(instream);
+        c = (unsigned char)fgetc(instream);
         if (feof(instream)) break;
 
         if (areacode % 200 == 0) {
@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
             printf("\n| %02dx |", areacode / 10);
         }
 
-        flags0 = (c & 0xf0) >> 4;
-        flags1 = c & 0x0f;
+        flags0 = (c & 0x70) >> 4;
+        flags1 = c & 0x07;
 
         if (argc < 3) {
             printf(" %s | %s |", str_flags[flags0 >> 1], str_flags[flags1 >> 1]);
