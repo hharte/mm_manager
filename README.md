@@ -34,7 +34,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
 
 ## mm_manager Installation and Usage
 
-Simply download the source files and example tables from GitHub.  Then type “make” to compile `mm_manager`, and a few utilities.
+Simply download the source files and example tables from GitHub.  Then type "cmake ." and “make” to compile `mm_manager`, and a few utilities.
 
 
 #### Usage:

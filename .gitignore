@@ -1,3 +1,10 @@
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
+Makefile
+cmake_install.cmake
+.vs/
+out/
 mm_manager
 mm_admess
 mm_areacode
