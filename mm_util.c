@@ -200,7 +200,7 @@ const char *pmt_type_str[16] = {
 
 char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len)
 {
-    int len_call_type, len_pmt_type;
+    size_t len_call_type, len_pmt_type;
 
     len_call_type = strlen(call_type_str[call_type & 0x0f]);
     len_pmt_type = strlen(pmt_type_str[call_type >> 4]);

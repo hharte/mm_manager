@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
     FILE *ostream = NULL;
     int index;
     char vfd_string[21];
-    int i;
 
     dlog_mt_advert_prompts_t *padmess_table;
 

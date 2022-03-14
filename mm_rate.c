@@ -42,9 +42,7 @@ int main(int argc, char *argv[])
 {
     FILE *instream;
     FILE *ostream = NULL;
-    unsigned char c;
     int rate_index;
-    uint8_t unknown_bytes[39];
     char rate_str_initial[10];
     char rate_str_additional[10];
     dlog_mt_rate_table_t* prate_table;

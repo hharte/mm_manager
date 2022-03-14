@@ -14,10 +14,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>  /* String function definitions */
+#ifndef _WIN32
 #include <unistd.h>  /* UNIX standard function definitions */
+#include <libgen.h>
+#endif
 #include <errno.h>   /* Error number definitions */
 #include <time.h>    /* time_t, struct tm, time, gmtime */
-#include <libgen.h>
+
 #include <sys/stat.h>
 
 #include "mm_manager.h"

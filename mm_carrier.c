@@ -14,7 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <arpa/inet.h>
+#ifdef _WIN32
+#include <winsock.h>
+#else
+ #include <arpa/inet.h>
+#endif
+
+
 #include "mm_manager.h"
 
 /* Default Carrier Mapping strings

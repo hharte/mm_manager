@@ -50,8 +50,7 @@ int main(int argc, char *argv[])
     FILE *instream;
     FILE *ostream = NULL;
     int index;
-    char phone_number_str[20];
-    int i, j;
+    int j;
 
     dlog_mt_card_table_t *pcard_table;
 

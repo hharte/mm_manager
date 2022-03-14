@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <arpa/inet.h>
 #include "mm_manager.h"
 
 rdlist_table_entry_t rdlist[10];
@@ -28,7 +27,6 @@ int main(int argc, char *argv[])
     char display_prompt_string[21];
     char display_prompt_string2[21];
 
-    uint8_t i;
     dlog_mt_rdlist_table_t *prdlist_table;
 
     if (argc <= 1) {
