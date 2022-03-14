@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  * The International Set-based rating able is an array of 603 bytes.
  * The first three bytes define the default flags and rate entry for
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium RATEINT Table 0x97 (151) Dump\n\n");
 
-    if (fread(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, instream) == 0) {
+    if (fread(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, instream) != 1) {
         printf("Error reading RATEINT table.\n");
         free(prate_table);
         fclose(instream);

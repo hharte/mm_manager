@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium FEATRU Table 0x1a (26) Dump\n");
 
-    if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) == 0) {
+    if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) != 1) {
         printf("Error reading ADMESS table.\n");
         free(featru_table);
         fclose(instream);
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     printf("                        accs_mode_info: 0x%02x\t", featru_table->accs_mode_info);
     print_bits(featru_table->accs_mode_info, (char **)accs_bits_str);
     printf("\n");
-    printf("                    incoming_call_mode: 0x%02x\t%s\n", featru_table->incoming_call_mode, call_mode_str[featru_table->incoming_call_mode]);
+    printf("                    incoming_call_mode: 0x%02x\t%s\n", featru_table->incoming_call_mode, call_mode_str[(featru_table->incoming_call_mode) & 0x3]);
     printf("          anti_fraud_for_incoming_call: 0x%02x\n", featru_table->anti_fraud_for_incoming_call);
     printf("                        OOS_POTS_flags: 0x%02x\t", featru_table->OOS_POTS_flags);
     print_bits(featru_table->OOS_POTS_flags, (char **)misc_flags_str);

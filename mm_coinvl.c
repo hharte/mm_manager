@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium COINVL Table (Table 50) Dump\n");
 
-    if (fread(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, instream) == 0) {
+    if (fread(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, instream) != 1) {
         printf("Error reading CARRIER table.\n");
         free(pcoinvl_table);
         fclose(instream);

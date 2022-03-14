@@ -4,7 +4,7 @@
  * 
  * www.github.com/hharte/mm_manager
  * 
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  * The LCD Table is an array of 202 bytes.  The first two bytes contain
  * the NPA followed by 'e', for example, NPA 408 would be represented as
@@ -51,14 +51,14 @@ int main(int argc, char *argv[])
     instream = fopen(argv[1], "rb");
 
     printf("Nortel Millennium Double-Compressed LCD Table (Tables 136-138) Dump\n\n");
-    npa_char[0] = fgetc(instream);
+    npa_char[0] = (unsigned char)fgetc(instream);
     if (npa_char[0] < 0x20 || npa_char[0] > 0x99) {
         printf("Invalid NPA!\n");
         fclose(instream);
         return -1;
     }
 
-    npa_char[1] = fgetc(instream);
+    npa_char[1] = (unsigned char)fgetc(instream);
     check_digit = (npa_char[1] & 0x0f);
 
     if (check_digit != 0xe) {
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
         twobit_group = nxx % 4;
         if (twobit_group == 0) {
-            c = fgetc(instream);
+            c = (unsigned char)fgetc(instream);
             if (feof(instream)) break;
         }
 

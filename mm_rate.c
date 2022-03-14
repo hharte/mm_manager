@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  * The RATE Table is an array of 1191 bytes.  The first 39 bytes contain
  * unknown data.
@@ -33,6 +33,9 @@ char *str_rates[] = {
     "      ?0a?        ",
     "      ?0b?        ",
     "      ?0c?        ",
+    "      ?0d?        ",
+    "      ?0e?        ",
+    "      ?0f?        ",
 };
 
 int main(int argc, char *argv[])
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) == 0) {
+    if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) != 1) {
         printf("Error reading RATE table.\n");
         free(prate_table);
         fclose(instream);
@@ -101,7 +104,7 @@ int main(int argc, char *argv[])
         printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
             rate_index, rate_index,
             prate->type,
-            str_rates[prate->type],
+            str_rates[(prate->type) & 0x0F],
             rate_str_initial,
             (float)prate->initial_charge / 100,
             rate_str_additional,

@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
     mm_context.terminal_id[0] = '\0';
     mm_context.trans_data_in_progress = 0;
 
-    printf("mm_manager v0.5 [%s] - (c) 2020, Howard M. Harte\n\n", VERSION);
+    printf("mm_manager v0.5 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
 
     index = 0;
     mm_context.ncc_number[0][0] = '\0';
@@ -403,10 +403,10 @@ int main(int argc, char *argv[])
                 mm_context.minimal_table_set = 1;
                 break;
             case 'd':
-                strcpy(mm_context.default_table_dir, optarg);
+                snprintf(mm_context.default_table_dir, sizeof(mm_context.default_table_dir), "%s", optarg);
                 break;
             case 't':
-                strcpy(mm_context.term_table_dir, optarg);
+                snprintf(mm_context.term_table_dir, sizeof(mm_context.term_table_dir), "%s", optarg);
                 break;
             case '?':
                 if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n' || optopt == 'b')
@@ -422,8 +422,7 @@ int main(int argc, char *argv[])
     }
 
     for (index = optind; index < argc; index++) {
-        printf ("Non-option argument %s\n", argv[index]);
-        return 0;
+        printf ("Superfluous non-option argument '%s' ignored.\n", argv[index]);
     }
 
     printf("Default Table directory: %s\n", mm_context.default_table_dir);
@@ -468,6 +467,11 @@ int main(int argc, char *argv[])
         printf("Baud Rate: %d\n", baudrate);
 
         mm_context.fd = open_port(modem_dev);
+        if (mm_context.fd == -1) {
+            printf("Unable to open modem: %s.", modem_dev);
+            return (-1);
+        }
+
         init_port(mm_context.fd, baudrate);
         status = init_modem(mm_context.fd);
         if (status == 0) {
@@ -783,7 +787,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 dlog_mt_term_status_word  = dlog_mt_term_status->status[0];
                 dlog_mt_term_status_word |= dlog_mt_term_status->status[1] << 8;
                 dlog_mt_term_status_word |= dlog_mt_term_status->status[2] << 16;
-                dlog_mt_term_status_word |= dlog_mt_term_status->status[3] << 24;
+                dlog_mt_term_status_word |= (uint32_t)(dlog_mt_term_status->status[3] << 24);
                 dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[4]) << 32;
 
                 printf("\t\tTerminal serial number %s, Terminal Status Word: 0x%010llx\n",
@@ -1139,31 +1143,33 @@ int mm_download_tables(mm_context_t *context)
 
         switch(table_list[table_index]) {
             case DLOG_MT_CALL_IN_PARMS:
-                status = generate_call_in_parameters(context, &table_buffer, &table_len);
+                generate_call_in_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_NCC_TERM_PARAMS:
-                status = generate_term_access_parameters(context, &table_buffer, &table_len);
+                generate_term_access_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_CALL_STAT_PARMS:
-                status = generate_call_stat_parameters(context, &table_buffer, &table_len);
+                generate_call_stat_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_COMM_STAT_PARMS:
-                status = generate_comm_stat_parameters(context, &table_buffer, &table_len);
+                generate_comm_stat_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_USER_IF_PARMS:
-                status = generate_user_if_parameters(context, &table_buffer, &table_len);
+                generate_user_if_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_END_DATA:
-                table_len = 1;
-                table_buffer = calloc(1, table_len);
-                table_buffer[0] = DLOG_MT_END_DATA;
+                generate_dlog_mt_end_data(context, &table_buffer, &table_len);
                 break;
             default:
                 printf("\t");
                 status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
 
                 /* If table can't be loaded, continue to the next. */
-                if (status != 0) continue;
+                if (status != 0) {
+                    if (table_buffer != NULL) free(table_buffer);
+                    table_buffer = NULL;
+                    continue;
+                }
                 break;
         }
         send_mm_table(context, table_buffer, table_len);
@@ -1173,6 +1179,7 @@ int mm_download_tables(mm_context_t *context)
             wait_for_table_ack(context, table_buffer[0]);
         }
         free(table_buffer);
+        table_buffer = NULL;
     }
 
     return 0;
@@ -1286,7 +1293,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
     *len = 1;
 
     while (1) {
-        uint8_t c = fgetc(stream);
+        uint8_t c = (uint8_t)fgetc(stream);
         if(feof(stream)) {
             break;
         }
@@ -1339,7 +1346,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     return 0;
 }
 
-int generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int *len)
 {
     int i;
     dlog_mt_ncc_term_params_t *pncc_term_params;
@@ -1372,10 +1379,9 @@ int generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int
 
     *buffer = pbuffer;
 
-    return 0;
 }
 
-int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len)
+void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len)
 {
     int i;
     dlog_mt_call_in_params_t* pcall_in_params;
@@ -1447,11 +1453,9 @@ int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* le
     printf("\tCDR Threshold:      %d\n", pcall_in_params->cdr_threshold);
 
     *buffer = pbuffer;
-
-    return 0;
 }
 
-int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
 {
     int i;
     dlog_mt_call_stat_params_t *pcall_stat_params;
@@ -1500,11 +1504,9 @@ int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *
         pcall_stat_params->cdr_start_time[0], pcall_stat_params->cdr_start_time[1]);
     printf("\tCDR Duration:   %dd:%dh\n", pcall_stat_params->cdr_duration_days, pcall_stat_params->cdr_duration_hours_flags & 0x1f);
     printf("\tCDR Flags:      0x%02x\n", pcall_stat_params->cdr_duration_hours_flags & 0xe0);
-
-    return 0;
 }
 
-int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
 {
     int i;
     dlog_mt_comm_stat_params_t *pcomm_stat_params;
@@ -1548,11 +1550,9 @@ int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *
         printf("\tTimestamp[%d]:   %02d:%02d\n", i,
             pcomm_stat_params->perfstats_timestamp[i][0], pcomm_stat_params->perfstats_timestamp[i][1]);
     }
-
-    return 0;
 }
 
-int generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len)
+void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len)
 {
     int i;
     dlog_mt_user_if_params_t *puser_if_params;
@@ -1632,7 +1632,15 @@ int generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *le
     printf("\tDatajack Connect Timeout:    %5d\n", puser_if_params->datajack_connect_timeout);
     printf("\tDatajack Pause Threshold:    %5d\n", puser_if_params->datajack_pause_threshold);
     printf("\tDatajack IAS Timer:          %5d\n", puser_if_params->datajack_ias_timer);
-    return 0;
+}
+
+void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, int *len)
+{
+    uint8_t *pbuffer;
+
+    *len = 1;
+    *buffer = calloc(1, *len);
+    *buffer[0] = DLOG_MT_END_DATA;
 }
 
 int create_terminal_specific_directory(char *table_dir, char *terminal_id) {

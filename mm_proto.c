@@ -62,7 +62,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     uint8_t *pktbufp;
     uint8_t pkt_received = 0;
     char *bytep;
-    unsigned int databyte = 0;
+    uint8_t databyte = 0;
     unsigned int bytecnt = 0;
     int bytes_processed;
     uint8_t l2_state = L2_STATE_SEARCH_FOR_START;
@@ -92,10 +92,11 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
 
             /* Data that came from the Millennium Terminal. */
             if ((bytep = strstr(buf, "RX: ")) != NULL) {
-                sscanf(bytep, "RX: %x", &databyte);
+                uint32_t filebyte;
+                sscanf(bytep, "RX: %x", &filebyte);
+                databyte = filebyte & 0xFF;
             }
         }
-        databyte &= 0xFF;
 
         if(context->logstream != NULL) {
             fprintf(context->logstream, "UART: RX: %02X\n", databyte);
@@ -255,12 +256,12 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
     }
 
     if (context->use_modem == 1) {
-        write(context->fd, &pkt.hdr.start, pkt.hdr.pktlen+1);
+        write(context->fd, &pkt, pkt.hdr.pktlen+1);
         tcdrain(context->fd);
     }
 
     for(int i=0; i < pkt.hdr.pktlen+1; i++) {
-        if (context->logstream != NULL) fprintf(context->logstream, "UART: TX: %02X\n", ((uint8_t *)(&pkt.hdr.start))[i]);
+        if (context->logstream != NULL) fprintf(context->logstream, "UART: TX: %02X\n", ((uint8_t *)(&pkt))[i]);
     }
     if (context->logstream != NULL) fflush(context->logstream);
 

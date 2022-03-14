@@ -965,11 +965,12 @@ int send_mm_table(mm_context_t *context, uint8_t* payload, int len);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
-int generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
-int generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
-int generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
-int generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
-int generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len);
+void generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
+void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
+void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
+void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
+void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len);
+void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, int *len);
 int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */

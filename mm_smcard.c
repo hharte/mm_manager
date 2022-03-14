@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    if (fread(psmcard_table, sizeof(dlog_mt_scard_parm_table_t), 1, instream) == 0) {
+    if (fread(psmcard_table, sizeof(dlog_mt_scard_parm_table_t), 1, instream) != 1) {
         printf("Error reading SMCARD table.\n");
         free(psmcard_table);
         fclose(instream);

@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    if (fread(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, instream) == 0) {
+    if (fread(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, instream) != 1) {
         printf("Error reading RDLIST table.\n");
         free(prdlist_table);
         fclose(instream);

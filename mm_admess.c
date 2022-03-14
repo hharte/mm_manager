@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    if (fread(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) == 0) {
+    if (fread(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) != 1) {
         printf("Error reading ADMESS table.\n");
         fclose(instream);
         free(padmess_table);
@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
             "+------+----------+---------+----------------------+-------+\n");
 
     for (index = 0; index < ADVERT_PROMPTS_MAX; index++) {
-
-        snprintf(vfd_string, sizeof(vfd_string), "%s", (char *)padmess_table->entry[index].message_text);
+        memcpy(vfd_string, (char *)padmess_table->entry[index].message_text, 20);
+        vfd_string[20] = '\0';
 
         printf("|  %2d  |    %5d |    0x%02x | %s |  0x%02x |\n",
             index,

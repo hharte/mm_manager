@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -33,11 +33,11 @@ int open_port(char *modem_dev)
     int fd;
 
     fd = open(modem_dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
-    if (fd == -1) {
-        /* Could not open the port. */
-        printf("open_port: Unable to open %s.", modem_dev);
-    } else {
-        fcntl(fd, F_SETFL, 0);
+    if (fd != -1) {
+        if (fcntl(fd, F_SETFL, 0) != 0) {
+            close(fd);
+            return(-1);
+        }
     }
     return (fd);
 }

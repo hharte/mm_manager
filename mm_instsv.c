@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     instream = fopen(argv[1], "rb");
 
-    if (fread(instsv_table, sizeof(dlog_mt_install_params_t), 1, instream) == 0) {
+    if (fread(instsv_table, sizeof(dlog_mt_install_params_t), 1, instream) != 1) {
         printf("Error reading INSTSV table.\n");
         free(instsv_table);
         fclose(instream);

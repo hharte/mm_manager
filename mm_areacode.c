@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  * Table 0x96 is an array of 400 bytes, where each nibble corresponds
  * to one of the area codes from 200-999.

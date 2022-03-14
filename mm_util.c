@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -424,7 +424,7 @@ char *table_string[] = {
 
 char *table_to_string(uint8_t table)
 {
-    if (table > (sizeof(table_string) / sizeof(char *))) {
+    if (table >= (sizeof(table_string) / sizeof(char *))) {
         table = 0;
     }
 

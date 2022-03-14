@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium Credit Card Table 0x86 (134) Dump\n");
 
-    if (fread(pcard_table, sizeof(dlog_mt_card_table_t), 1, instream) == 0) {
+    if (fread(pcard_table, sizeof(dlog_mt_card_table_t), 1, instream) != 1) {
         printf("Error reading CCARD table.\n");
         free(pcard_table);
         fclose(instream);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
             pcard->pan_end[0],
             pcard->pan_end[1],
             pcard->pan_end[2],
-            standard_cd_str[pcard->standard_cd],
+            standard_cd_str[(pcard->standard_cd) & 0x0F],
             pcard->vfy_flags,
             pcard->carrier_ref,
             pcard->ref_num,

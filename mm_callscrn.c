@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
     printf("Nortel Millennium Call Screening List Table (Table 92) Dump\n");
 
-    if (fread(pcallscrn_table, sizeof(dlog_mt_call_screen_list_t), 1, instream) == 0) {
+    if (fread(pcallscrn_table, sizeof(dlog_mt_call_screen_list_t), 1, instream) != 1) {
         printf("Error reading CALLSCRN table.\n");
         free(pcallscrn_table);
         fclose(instream);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         printf("| %3d (0x%02x) | 0x%02x |%s|  0x%02x | 0x%02x | %18s |  0x%02x | ",
             callscrn_index + 1, callscrn_index + 1,
             pcallscreen_entry->free_call_flags,
-            call_type_strings[pcallscreen_entry->call_type],
+            call_type_strings[(pcallscreen_entry->call_type) & 0x0F],
             pcallscreen_entry->carrier_ref,
             pcallscreen_entry->ident2,
             phone_number_str,
