@@ -14,11 +14,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>  /* String function definitions */
-#include <termios.h> /* POSIX terminal control definitions */
 #include <time.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <termios.h> /* POSIX terminal control definitions */
 #include <unistd.h>
-
+#endif /* _WIN32 */
 #include "mm_manager.h"
+#include "mm_serial.h"
 
 #define L2_STATE_SEARCH_FOR_START   1
 #define L2_STATE_GET_FLAGS          2
@@ -64,7 +68,6 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     char *bytep;
     uint8_t databyte = 0;
     unsigned int bytecnt = 0;
-    int bytes_processed;
     uint8_t l2_state = L2_STATE_SEARCH_FOR_START;
     uint8_t status = PKT_SUCCESS;
     uint8_t timeout = 0;
@@ -73,7 +76,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
 
     while(pkt_received == 0) {
         if (context->use_modem == 1) {
-            while(read(context->fd, &databyte, 1) == 0) {
+            while(read_serial(context->fd, &databyte, 1) == 0) {
                 putchar('.');
                 fflush(stdout);
                 timeout++;
@@ -137,7 +140,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             case L2_STATE_GET_CRC1:
                 l2_state = L2_STATE_SEARCH_FOR_STOP;
                 pkt->trailer.crc |= databyte << 8;
-                pkt->calculated_crc = crc16(0, &pkt->hdr.start, pkt->payload_len + 3);
+                pkt->calculated_crc = crc16(0, &pkt->hdr.start, (size_t)pkt->payload_len + 3);
                 if (pkt->trailer.crc != pkt->calculated_crc) {
                     printf("%s: CRC Error!\n", __FUNCTION__);
                     status |= PKT_ERROR_CRC;
@@ -175,7 +178,9 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             fflush(stdout);
             status |= PKT_ERROR_EOF;
             fclose(context->bytestream);
-            fclose(context->cdr_stream);
+            if (context->cdr_stream != NULL) {
+                fclose(context->cdr_stream);
+            }
             exit(0);
         }
     }
@@ -209,10 +214,14 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
 
     /* Insert Tx packet delay when using a modem, in 10ms increments. */
     if (context->use_modem == 1) {
+#ifdef _WIN32
+        Sleep(context->instsv.rx_packet_gap * 10);
+#else
         struct timespec tim;
         tim.tv_sec = 0;
         tim.tv_nsec = context->instsv.rx_packet_gap * 10000000L;
         nanosleep(&tim, NULL);
+#endif /* _WIN32 */
     }
 
     pkt.hdr.start = START_BYTE;
@@ -256,8 +265,8 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
     }
 
     if (context->use_modem == 1) {
-        write(context->fd, &pkt, pkt.hdr.pktlen+1);
-        tcdrain(context->fd);
+        write_serial(context->fd, &pkt, (size_t)pkt.hdr.pktlen+1);
+        drain_serial(context->fd);
     }
 
     for(int i=0; i < pkt.hdr.pktlen+1; i++) {
@@ -307,8 +316,6 @@ int wait_for_mm_ack(mm_context_t *context)
 int print_mm_packet(int direction, mm_packet_t *pkt)
 {
 
-    uint8_t ascii[32];
-    int i;
     int status = 0;
 
     /* Decode flags: bit 3 = Req/Ack, 2=Retry, 1:0=Sequence. */

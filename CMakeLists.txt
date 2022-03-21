@@ -15,22 +15,46 @@ endif()
 string(STRIP "${GIT_REV}" GIT_REV)
 add_definitions(-DVERSION=\"${GIT_REV}\")
 
-# Built executables.
-if(NOT MSVC)
-add_executable (mm_manager "mm_manager.c" "mm_proto.c" "mm_util.c" "mm_modem.c" "mm_manager.h")
+ADD_LIBRARY(mm_util STATIC "mm_util.c")
+
+if(MSVC)
+ADD_LIBRARY(mm_serial STATIC "mm_serial_win32.c" "mm_serial.h" "third-party/getopt.c" "third-party/getopt.h")
+else()
+ADD_LIBRARY(mm_serial STATIC "mm_serial_posix.c" "mm_serial.h")
 endif()
+
+# Built executables.
+set(MANAGER_SRC
+    "mm_manager.c"
+    "mm_proto.c"
+    "mm_modem.c"
+    "mm_manager.h"
+    "mm_serial.h"
+)
+
+add_executable (mm_manager ${MANAGER_SRC})
+TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util)
 add_executable (mm_admess "mm_admess.c" "mm_manager.h")
 add_executable (mm_areacode "mm_admess.c" "mm_manager.h")
-add_executable (mm_callscrn "mm_callscrn.c" "mm_util.c" "mm_manager.h")
-add_executable (mm_card "mm_card.c" "mm_util.c" "mm_manager.h" "mm_card.h")
-add_executable (mm_carrier "mm_carrier.c" "mm_util.c" "mm_manager.h")
-add_executable (mm_coinvl "mm_coinvl.c" "mm_util.c" "mm_manager.h")
-add_executable (mm_featru "mm_featru.c" "mm_util.c" "mm_manager.h")
-add_executable (mm_instsv "mm_instsv.c" "mm_util.c" "mm_manager.h")
+add_executable (mm_callscrn "mm_callscrn.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_callscrn mm_util)
+add_executable (mm_card "mm_card.c" "mm_manager.h" "mm_card.h")
+TARGET_LINK_LIBRARIES(mm_card mm_util)
+add_executable (mm_carrier "mm_carrier.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_carrier mm_util)
+add_executable (mm_coinvl "mm_coinvl.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_coinvl mm_util)
+add_executable (mm_featru "mm_featru.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_featru mm_util)
+add_executable (mm_instsv "mm_instsv.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_instsv mm_util)
 add_executable (mm_lcd "mm_lcd.c" "mm_manager.h")
-add_executable (mm_rate "mm_rate.c" "mm_util.c" "mm_manager.h")
-add_executable (mm_rateint "mm_rateint.c" "mm_util.c" "mm_manager.h")
-add_executable (mm_rdlist "mm_rdlist.c" "mm_util.c" "mm_manager.h")
+add_executable (mm_rate "mm_rate.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_rate mm_util)
+add_executable (mm_rateint "mm_rateint.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_rateint mm_util)
+add_executable (mm_rdlist "mm_rdlist.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_rdlist mm_util)
 add_executable (mm_smcard "mm_smcard.c" "mm_manager.h")
 
 if(MSVC)

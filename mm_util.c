@@ -38,7 +38,7 @@ unsigned crc16(unsigned crc, uint8_t *buf, size_t len)
 
 void dump_hex(uint8_t *data, int len)
 {
-    uint8_t ascii[32];
+    uint8_t ascii[32] = { 0 };
     uint8_t *pascii = ascii;
 
     printf("\n");

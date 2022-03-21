@@ -1,87 +1,115 @@
-## Millennium Manager - mm_manager
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b)](https://www.codacy.com/gh/hharte/mm_manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hharte/mm_manager&amp;utm_campaign=Badge_Grade)
-[![Coverity](https://scan.coverity.com/projects/20341/badge.svg)](https://scan.coverity.com/projects/hharte-mm_manager)
-
-#### Manager for Nortel Millennium Payphones
+# Millennium Manager - mm_manager
 
 
-## Overview
+### Manager for Nortel Millennium Payphones
+
+[![Codacy Badge]([https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b](https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b))](https://www.codacy.com/gh/hharte/mm_manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hharte/mm_manager&amp;utm_campaign=Badge_Grade)
+
+[![Coverity]([https://scan.coverity.com/projects/20341](https://scan.coverity.com/projects/24658/badge.svg)
+
+[/badge.svg](https://scan.coverity.com/projects/24658/badge.svg))](https://scan.coverity.com/projects/hharte-mm_manager)
+
+
+# Overview
 
 The Nortel Millennium payphones utilize a Manager to facilitate installation, reporting, and call cost rating.  This Millennium payphone calls into the Manager using a 1200-baud phone modem.
 
 
-## Compatibility
+# Compatibility
 
-`mm_manager` runs on Linux and MacOS X.
+`mm_manager` runs on Windows, Linux, and MacOS X.  
 
-
+ 
 
 The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.3 Control PCP (Surface-mount, 2.20 firmware.)  It may work with other versions, please let me know.
 
 
-## Items Needed
+# Items Needed
 
 
 
 1. Nortel Millennium Multi-Pay Terminal running firmware v1.20 or v2.20.  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to stock v1.20 or v2.20 firmware.
 2. 24VDC @500mA Power Supply for Millennium Terminal
 3. Two phone lines (one for `mm_manager`, one for Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 1- to 15-digit number.
-4. 1200-baud or faster modem that supports [Bell 212A](https://en.wikipedia.org/wiki/Bell_212A) modulation.  I like the [Lenovo 56K USB](https://www.ebay.com/i/264145034802) modems, but any 56K modem with Conexant chipset should work.
+4. 1200-baud or faster modem that supports [Bell 212A](https://en.wikipedia.org/wiki/Bell_212A) modulation.  I like the [Lenovo 56K USB](https://www.ebay.com/sch/i.html?&_nkw=lenovo+56k+usb+modem) modems, but any 56K modem with Conexant chipset should work.
 5. T-Key such as the [Jonard JIC-719A](https://jonard.com/jic-719a-t-key-tool?v=248) to open the payphone.  I don’t recommend the flat, stamped T-keys as they are prone to bending.
 6. Keys for your terminal’s upper and lower locks, if locks are present.
 7. `mm_manager` software and a Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be left on 24x7 so the terminal can call in when needed.
 
 
-## mm_manager Installation and Usage
+# mm_manager Installation and Usage
 
-Simply download the source files and example tables from GitHub.  Then type "cmake ." and “make” to compile `mm_manager`, and a few utilities.
+Simply download the source files and example tables from GitHub.
 
 
-#### Usage:
+## Linux and MacOS
+
+From the shell, type:
 
 
 ```
-usage: mm_manager [-vhm] [-b <baudrate] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>]
-	-v verbose 	multiple v's increase verbosity.
-	-f <filename> 	modem device or file
-	-h 			this help.
-	-l <logfile> 	log bytes transmitted to and received from
-            the terminal. Useful for debugging.
-	-m 			use serial modem (specify device with -f)
--b <baudrate>	Modem baud rate, in bps.  Defaults to 19200.
-	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify
-            primary and optionally secondary NCC number.
+cmake .
+make
+```
+
+
+to compile `mm_manager`, and a few utilities.
+
+
+## Windows
+
+Compile `mm_manager` with Microsoft Visual Studio 2019 or later with CMake, using “Open Folder.”
+
+
+### Usage:
+
+
+```
+usage: mm_manager [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]
+	-v verbose (multiple v's increase verbosity.)
+	-d default_table_dir - default table directory.
+	-f <filename> modem device or file
+	-h this help.
+	-c <cdrfile.csv> - Write Call Detail Records to a CSV file.
+	-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
+	-m use serial modem (specify device with -f)
+	-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
+	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
+	-s small - Download only minimum required tables to terminal.
+	-t term_table_dir - terminal-specific table directory.
 ```
 
 
 
-## Millennium Terminal Hardware Installation
+# Millennium Terminal Hardware Installation
 
 
-#### Phone Line
+### Phone Line
 
 The Nortel Millennium payphones require a standard POTS line, with answer supervision in the form of polarity reversal to indicate that the far end has answered the call.  This is required for the Millennium to know when to collect or refund coins.  Most SIP ATAs and Cisco Voice Routers can be configured for polarity reversal.  If your phone line does not support polarity reversal, an answer supervision detection module is available from Nortel.
 
 If you are using VoIP, make sure to use the u-law PCM codec, disable silence suppression, disable comfort noise generation, and disable echo cancellation.  This is required to condition the line for modem operation.  You may also need to increase the jitter buffer size, and use a fixed jitter buffer, rather than adaptive.
 
 
-#### Power Supply
+### Power Supply
 
-The Nortel Millennium terminal requires 24VDC to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.
+The Nortel Millennium terminal requires 24VDC to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.  
 
 
-#### Other Terminal Installation Notes
+### Other Terminal Installation Notes
 
 The Millennium Terminal is an advanced payphone that contains a multitude of sensors to determine if the phone is installed and operating properly.  This includes sensors to make sure that a coin box is installed, and also a sensor to ensure the coin vault door is in place.  If your Millennium does not have a coin box, please obtain one.  The coin boxes are standard Western Electric / Northern Electric Single Slot, readily available.  In a pinch, the coin box sensor switch can be taped in the closed position.  The same goes for the coin vault door.  The coin vault door must be in place and locked.  If your phone is missing the coin vault lock, as is quite common for these phones purchased on the second-hand market, please obtain the correct lock, or tape the switch closed.
 
-If these sensors are not happy, the phone will alarm, and will go “Out of Service.”
+If these sensors are not happy, the phone will alarm, and will go “Out of Service.” 
 
 
-## Millennium Terminal Provisioning
+# Millennium Terminal Provisioning
 
 Provisioning the Millennium Terminal is accomplished through the craft access menu on the terminal itself.  For this, you will need the terminal’s access code, and a PIN.  The default Access Code is 2727378 (CRASERV).
 
 With the upper housing of the phone locked, take the handset off the cradle and replace it.  Then key in 2727378 (CRASERV.)  You will be prompted for a PIN, use anything above 50000, like 55555.  Unlock the upper housing with a T-Key when prompted.  You do not need to open the upper housing.
+
+Generate NPA and LCD tables (see below,) unless you want to use the default tables included with mm_manager.
 
 Start `mm_manager`:
 
@@ -107,10 +135,10 @@ Key in this Terminal’s 10-digit serial number (1234567890 is fine.)
 
 Key in the Manager’s phone number (I use 1-800-555-1234, which I intercept in the Asterisk dialplan and send to the modem connected to the computer running `mm_manager`.)
 
+ 
 
 
-
-## Configuration Tables
+# Configuration Tables
 
 Communication with the Nortel Millennium involves sending and receiving tables.  Tables are numbered 1 through 155, and contain configuration information sent to the terminal or query / status information received from the terminal.  Tables are of fixed size, depending on the type of table.
 
@@ -281,7 +309,7 @@ TCOLLCT
    </td>
    <td>CARRIER
 <p>
-9 + (33 x 33) + 10
+9 + (33 x 33) + 10 
    </td>
   </tr>
   <tr>
@@ -383,7 +411,7 @@ Qty 400: 20-line VFD strings
    </td>
    <td>English: V1.3 Only
 <p>
-Qty 400: 20-line VFD strings
+Qty 400: 20-line VFD strings 
 <p>
 0x71B5A offset in U2 ROM.
    </td>
@@ -397,7 +425,7 @@ Qty 400: 20-line VFD strings
    </td>
    <td>1191
    </td>
-   <td>RATE
+   <td>RATE 
    </td>
   </tr>
   <tr>
@@ -551,11 +579,11 @@ Qty 400: 20-line VFD strings
    </td>
    <td>Advertising Prompts
 <p>
-seq, text, duration(2), effects
+seq, text, duration(2), effects 
    </td>
    <td>480
    </td>
-   <td>ADMESS
+   <td>ADMESS 
 <p>
 Text info about rates for local and anywhere in the US Calls. 20 entries.
    </td>
@@ -581,7 +609,7 @@ Text info about rates for local and anywhere in the US Calls. 20 entries.
    </td>
    <td>47
    </td>
-   <td>TERM Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.
+   <td>TERM Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.  
    </td>
   </tr>
   <tr>
@@ -611,10 +639,10 @@ Text info about rates for local and anywhere in the US Calls. 20 entries.
 </table>
 
 
+ 
 
 
-
-### Generating NPA and LCD tables
+## Generating NPA and LCD tables
 
 Python3 scripts are included to generate NPA and LCD tables automatically, using spreadsheets available from the [North American Numbering Plan Administrator](https://nationalnanpa.com/).  For Canada, spreadsheets are available from the [Canadian Numbering Administrator](http://www.cnac.ca/).  These scripts require the Python3 Pandas library to be installed.
 
@@ -626,15 +654,17 @@ To generate an NPA table that classifies US and Canadian numbers as domestic:
 ```
 
 
-To generate LCD tables for rate centers in San Jose, California, USA:
+The `generate_lcd_lata.py` script is used to generate LCD tables for a given NPA-NXX in the United States.  LCD tables generated using this script will properly classify Local, Intra-LATA and Inter-LATA calls.  This script does not work in Canada as all of Canada is a single LATA.
+
+For example, to generate LCD tables for San Jose, California, USA for a terminal with phone number of (408) 535-XXXX :
 
 
 ```
-./generate_lcd.py --state CA --npa 408 --ratecenters "SNJS NORTH" "SNJS WEST" "SNJS SOUTH" CAMPBELL SARATOGA SUNNYVALE "LOS GATOS"
+./generate_lcd_lata.py --npa=408 --nxx=535
 ```
 
 
-To generate LCD tables for Ottawa, Canada:
+To generate LCD tables for Ottawa, Canada, use `generate_lcd.py`:
 
 
 ```
@@ -643,7 +673,7 @@ To generate LCD tables for Ottawa, Canada:
 
 
 
-## Low-Level Protocol
+# Low-Level Protocol
 
 The low-level protocol sent over the modem is a stream of bytes framed within START and END bytes.
 
@@ -658,7 +688,7 @@ The low-level protocol sent over the modem is a stream of bytes framed within ST
    </td>
    <td>DATA
    </td>
-   <td>CRC-16
+   <td>CRC-16 
    </td>
    <td>END
    </td>
@@ -726,14 +756,14 @@ FLAG Bits:
 Separate sequence numbers are counted for each of tx_seq and rx_seq.  ACKs should always be sent with the same sequence as the last received Rx packet.  Tx seq is incremented after every successful packet transmission, and reset when the terminal disconnects.
 
 
-## Debugging
+# Debugging
 
 `mm_manager` can log all bytes sent to or received from a Millennium terminal.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
 
 One useful trick is to parse the transcript with `mm_manager`, and save it to a file.  Then the code can be modified and improved and tested by re-running the transcript through `mm_manager` and comparing it with the previous run using a tool such as `tkdiff`.
 
 
-## Filing Bug Reports
+# Filing Bug Reports
 
 If you find a bug, please provide the following information when you report the bug on GitHub:
 
@@ -746,25 +776,24 @@ If you find a bug, please provide the following information when you report the 
 5. Steps to reproduce the issue.
 
 
-## Known Issues
+# Known Issues
 
 
 
-1. `mm_manager` can run under the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) available on Windows 10.  Note, however, that there may be some issue with modem initialization.  To work around this, connect to your modem using a program like [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) first, to make sure it is working, then quit Putty and run `mm_manager`.
+1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a long time for the modem to detect this condition and go back on-hook.  One way around this is to kill `mm_manager` and restart it, before proceeding with the configuration download.
 2. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
 3. Lots of tables are not well understood.  Please help figure more out if you can.
 
 
-## Further Work Needed (Feel free to help!)
+# Further Work Needed (Feel free to help!)
 
 
 
 1. Improve modem robustness.
-2. Port modem code to Win32 to support Windows XP/Windows 7.
-3. Lots of other things, please file bugs as you find them.
+2. Lots of other things, please file bugs as you find them.
 
 
-## References
+# References
 
 [Nortel Millennium on Wikipedia](https://en.wikipedia.org/wiki/Nortel_payphones#Millennium)
 
@@ -774,10 +803,9 @@ If you find a bug, please provide the following information when you report the 
 
 [Description of Millennium Tables](https://wiki.muc.ccc.de/millennium:dlog:start)
 
-[YouTube Video of Millennium and mm_manager Installation](https://youtu.be/A_g4DSWtDx4)
-
 [millenniium-panel on GitHub](https://github.com/pc-coholic/millennium-panel)
 
 [Millennium Database Design Report MSR 2.1](https://github.com/muccc/millennium/blob/master/documentation/manager/A0xxxxxx_00_02.pdf)
 
 [Millennium Multi-Pay Terminal Installation, Operation, and Maintenance Guide](https://github.com/muccc/millennium/blob/master/documentation/nortel_millennium_text.pdf)
+

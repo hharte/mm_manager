@@ -5,6 +5,7 @@ Makefile
 cmake_install.cmake
 .vs/
 out/
+lib*.a
 mm_manager
 mm_admess
 mm_areacode

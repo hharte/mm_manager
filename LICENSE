@@ -1,6 +1,10 @@
 MIT License
 
-Copyright (c) 2020 Howard M. Harte
+All of the source code except that which is contianed in the third-party
+directory is covered under the MIT License.  Please see source code in
+third-party/ for additional licenses.
+
+Copyright (c) 2020-2022 Howard M. Harte
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
