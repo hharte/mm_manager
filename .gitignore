@@ -5,6 +5,7 @@ Makefile
 cmake_install.cmake
 .vs/
 out/
+install_manifest.txt
 lib*.a
 mm_manager
 mm_admess

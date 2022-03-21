@@ -61,3 +61,8 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
   target_link_libraries(mm_carrier wsock32 ws2_32)
 endif()
+
+# Install
+if (NOT MSVC)
+install(TARGETS mm_manager DESTINATION /usr/local/bin)
+endif()
