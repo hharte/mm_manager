@@ -36,14 +36,14 @@ unsigned crc16(unsigned crc, uint8_t *buf, size_t len)
     return crc;
 }
 
-void dump_hex(uint8_t *data, int len)
+void dump_hex(uint8_t *data, size_t len)
 {
     uint8_t ascii[32] = { 0 };
     uint8_t *pascii = ascii;
 
     printf("\n");
     if (len > 0) {
-        int i;
+        size_t i;
         printf("\tData:");
 
         for (i = 0; i < len; i++) {
@@ -52,7 +52,7 @@ void dump_hex(uint8_t *data, int len)
                     *pascii++ = '\0';
                     printf("%s", ascii);
                 }
-                printf("\n\t%03d: ", i);
+                printf("\n\t%03zu: ", i);
                 pascii = ascii;
             }
             printf("%02x, ", data[i]);
@@ -75,10 +75,10 @@ void dump_hex(uint8_t *data, int len)
 }
 
 /* Convert encoded phone number into string. */
-extern char *phone_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len)
+extern char *phone_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* num_buf, size_t num_buf_len)
 {
     char *pstr = string_buf;
-    int i, j;
+    size_t i, j;
 
     j = 0;
 
@@ -133,10 +133,10 @@ extern uint8_t string_to_bcd_a(char *number_string, uint8_t *buffer, uint8_t buf
 const char pn_lut[16] = { '\0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'B', 'C', 'D', 'E', 'F' };
 
 /* Convert encoded phone number terminated with zero into a string. */
-char *callscrn_num_to_string(char *string_buf, int string_buf_len, uint8_t* num_buf, int num_buf_len)
+char *callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* num_buf, size_t num_buf_len)
 {
     char *pstr = string_buf;
-    int i, j;
+    size_t i, j;
 
     j = 0;
 
@@ -198,7 +198,7 @@ const char *pmt_type_str[16] = {
     "UndefinedF",
 };
 
-char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_len)
+char *call_type_to_string(uint8_t call_type, char *string_buf, size_t string_buf_len)
 {
     size_t len_call_type, len_pmt_type;
 
@@ -217,7 +217,7 @@ char *call_type_to_string(uint8_t call_type, char *string_buf, int string_buf_le
 
 }
 
-char *timestamp_to_string(uint8_t *timestamp, char *string_buf, int string_buf_len)
+char *timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len)
 {
     snprintf(string_buf, string_buf_len, "%04d-%02d-%02d %02d:%02d:%02d",
         timestamp[0] + 1900,
