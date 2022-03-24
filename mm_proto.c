@@ -187,7 +187,9 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
 
     if (context->debuglevel > 3) {
         printf("\nRaw Packet received: ");
-        dump_hex(&pkt->hdr.start, pkt->hdr.pktlen+1);
+        /* Copy the packet trailer (CRC-16, STOP) immediately following the data */
+        memcpy(&pkt->payload[pkt->payload_len], &pkt->trailer, sizeof(pkt->trailer));
+        dump_hex(&pkt->hdr.start, pkt->hdr.pktlen + 1);
     }
 
     return status;

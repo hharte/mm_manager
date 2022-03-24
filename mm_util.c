@@ -41,10 +41,8 @@ void dump_hex(uint8_t *data, size_t len)
     uint8_t ascii[32] = { 0 };
     uint8_t *pascii = ascii;
 
-    printf("\n");
     if (len > 0) {
         size_t i;
-        printf("\tData:");
 
         for (i = 0; i < len; i++) {
             if (i % 16 == 0) {
