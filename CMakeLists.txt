@@ -35,7 +35,7 @@ set(MANAGER_SRC
 add_executable (mm_manager ${MANAGER_SRC})
 TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util)
 add_executable (mm_admess "mm_admess.c" "mm_manager.h")
-add_executable (mm_areacode "mm_admess.c" "mm_manager.h")
+add_executable (mm_areacode "mm_areacode.c" "mm_manager.h")
 add_executable (mm_callscrn "mm_callscrn.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_callscrn mm_util)
 add_executable (mm_card "mm_card.c" "mm_manager.h" "mm_card.h")

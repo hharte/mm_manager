@@ -347,23 +347,28 @@ int main(int argc, char* argv[])
                        return(0);
                        break;
             case 'a':
+            {
+                char instsv_fname[TABLE_PATH_MAX_LEN] = { 0 };
+                snprintf(instsv_fname, sizeof(instsv_fname), "%s/mm_table_1f.bin", mm_context->default_table_dir);
+
                 if (strnlen(optarg, 7) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
                     return(-1);
                 }
 
                 if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
-                    fprintf (stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context->default_table_dir);
+                    fprintf (stderr, "Error reading install parameters from %s.\n", instsv_fname);
                     return -1;
                 }
                 memcpy(&mm_context->instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
                 free(instsv_table_buffer);
 
-                if (rewrite_instserv_parameters(optarg, &mm_context->instsv, "tables/mm_table_1f.bin")) {
+                if (rewrite_instserv_parameters(optarg, &mm_context->instsv, instsv_fname)) {
                     printf("Error updating INSTSV parameters\n");
                     return (-1);
                 }
                 break;
+            }
             case 'c':
                 if (!(mm_context->cdr_stream = fopen(optarg, "a+"))) {
                     (void)fprintf(stderr,
@@ -1335,6 +1340,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     int i;
     if (strnlen(access_code, 8) != ACCESS_CODE_LEN) {
         printf("Error: Access Code must be 7-digits\n");
+        return (-1);
     }
 
     // Rewrite table with our Access Code
@@ -1348,7 +1354,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     pinstsv_table->access_code[3] |= 0x0e;   /* Terminate the Access Code with 0xe */
 
     if(!(ostream = fopen(filename, "wb"))) {
-        printf("Error writing %s\n", filename);
+        printf("Error opening %s\n", filename);
         return -1;
     }
 
