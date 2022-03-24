@@ -18,6 +18,7 @@
 #include <unistd.h>  /* UNIX standard function definitions */
 #include <libgen.h>
 #else
+#include <direct.h>
 #include "third-party/getopt.h"
 #endif
 #include <errno.h>   /* Error number definitions */
@@ -1668,8 +1669,11 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 
     snprintf(dirname, sizeof(dirname), "%s/%s", table_dir, terminal_id);
 
-//    status = mkdir(dirname, 0755);
-
+#ifdef _WIN32
+    status = _mkdir(dirname);
+#else
+    status = mkdir(dirname, 0755);
+#endif
     if(status != 0 && errno != EEXIST) {
         printf("Failed to create directory: %s\n", dirname);
         return (-1);
