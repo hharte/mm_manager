@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -23,13 +23,13 @@
 #include <unistd.h>  /* UNIX standard function definitions */
 #include <termios.h> /* POSIX terminal control definitions */
 #endif /* _WIN32 */
-#include "mm_serial.h"
+#include "./mm_serial.h"
+
 /* Static function declarations */
 static int send_at_command(int fd, char *command);
 
 /* Initialize modem with a series of AT commands */
-int init_modem(int fd)
-{
+int init_modem(int fd) {
     int status;
 
     printf("Reset modem.\n");
@@ -45,15 +45,15 @@ int init_modem(int fd)
     }
 
     printf("Set modulation to Bell 212A.\n");
-//    status = send_at_command(fd, "AT&N2");	// 3-Com Business Modem 56K USB (use 1200 baud)
-//    status = send_at_command(fd, "ATB1");	// USR 5686 Modem
-    status = send_at_command(fd, "AT+MS=B212");	// Lenovo 56K USB Modem
+//    status = send_at_command(fd, "AT&N2");        // 3-Com Business Modem 56K USB (use 1200 baud)
+//    status = send_at_command(fd, "ATB1");         // USR 5686 Modem
+    status = send_at_command(fd, "AT+MS=B212");     // Lenovo 56K USB Modem
     if (status != 0) {
         return -1;
     }
 
     printf("Set carrier wait timeout to 3 seconds.\n");
-    status = send_at_command(fd, "ATS7=3"); 	/* Wait 3 seconds for carrier. */
+    status = send_at_command(fd, "ATS7=3");     /* Wait 3 seconds for carrier. */
     if (status != 0) {
         return -1;
     }
@@ -65,8 +65,7 @@ int init_modem(int fd)
 }
 
 /* Wait for modem to connect */
-int wait_for_modem_response(int fd, const char *match_str, int max_tries)
-{
+int wait_for_modem_response(int fd, const char *match_str, int max_tries) {
     char buffer[255] = { 0 };   /* Input buffer */
     uint8_t bufindex = 0;
     int  tries = 0;     /* Number of tries so far */
@@ -79,8 +78,7 @@ int wait_for_modem_response(int fd, const char *match_str, int max_tries)
         buffer[0] = '\0';
 
         /* read characters into our string buffer until we get a CR or NL */
-        while ((nbytes = read_serial(fd, &buffer[bufindex], 1)) > 0)
-        {
+        while ((nbytes = read_serial(fd, &buffer[bufindex], 1)) > 0) {
             bufindex += (uint8_t)nbytes;
             buffer[bufindex] = '\0';
             if (buffer[bufindex - 1] == '\n' || buffer[bufindex - 1] == '\r' || (bufindex >= (sizeof(buffer) - 1)))
@@ -92,14 +90,12 @@ int wait_for_modem_response(int fd, const char *match_str, int max_tries)
             return (0);
         }
         tries++;
-
     } while (tries < max_tries);
 
     return (-1);
 }
 
-int hangup_modem(int fd)
-{
+int hangup_modem(int fd) {
     int  tries;             /* Number of tries so far */
 
     for (tries = 0; tries < 3; tries ++) {
@@ -127,8 +123,7 @@ int hangup_modem(int fd)
 }
 
 /* Send AT Command to Modem */
-static int send_at_command(int fd, char *command)
-{
+static int send_at_command(int fd, char *command) {
     char buffer[80];    /* Input buffer */
     int  tries;         /* Number of tries so far */
 

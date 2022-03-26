@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -26,8 +26,12 @@
 
 #include <sys/stat.h>
 
-#include "mm_manager.h"
-#include "mm_serial.h"
+#include "./mm_manager.h"
+#include "./mm_serial.h"
+
+#ifndef VERSION
+#define VERSION "Unknown"
+#endif /* VERSION */
 
 #define JAN12020 1577865600
 
@@ -173,7 +177,7 @@ const char *alarm_type_str[] = {
 /* 33 */    "Coin Hardware Jam",
 /* 34 */    "Central Office Line Check Failure",
 /* 35 */    "Dialog Failure",
-/* 36 */    "Cash Box Electronic Lock Failure", // What is this?
+/* 36 */    "Cash Box Electronic Lock Failure",     // What is this?
 /* 37 */    "Dialog Failure with Collection System",
 /* 38 */    "Code Server Connection Failure",
 /* 39 */    "Code Server Aborted",
@@ -289,8 +293,7 @@ const char *TPERFST_stats_to_str_lut[43] = {
 const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:q";
 
 #if _WIN32
-char *basename(char *path)
-{
+char *basename(char *path) {
     char fname[20] = { 0 };
 
     _splitpath(path, NULL, NULL, fname, NULL);
@@ -298,54 +301,42 @@ char *basename(char *path)
     snprintf(path, sizeof(fname), "%s", fname);
     return (path);
 }
+
+errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest) {
+    return(localtime_s(tmDest, sourceTime));
+}
 #endif /* _WIN32 */
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     mm_context_t *mm_context;
     mm_table_t mm_table;
     char *modem_dev = NULL;
     char *table_dir = NULL;
-    int index;
+    int ncc_index = 0;
     int c;
     uint8_t *instsv_table_buffer;
-    int table_len;
+    size_t table_len = 0;
     int baudrate = 19200;
     char access_code_str[8];
     int quiet = 0;
 
     time_t rawtime;
-    struct tm *ptm;
+    struct tm ptm = { 0 };
 
     opterr = 0;
 
     mm_context = calloc(1, sizeof(mm_context_t));
     if (mm_context == NULL) {
         printf("Error: failed to allocate %d bytes.\n", (int)sizeof(mm_context_t));
-        return (-1);
+        return (-ENOMEM);
     }
 
-    mm_context->logstream = NULL;
-    mm_context->cdr_stream = NULL;
-    mm_context->use_modem = 0;
-    mm_context->tx_seq = 0;
-    mm_context->debuglevel = 0;
-    mm_context->connected = 0;
-    mm_context->terminal_id[0] = '\0';
-    mm_context->trans_data_in_progress = 0;
-
-    index = 0;
-    mm_context->ncc_number[0][0] = '\0';
-    mm_context->ncc_number[1][0] = '\0';
-
-    strcpy(mm_context->default_table_dir, "tables/default");
-    strcpy(mm_context->term_table_dir, "tables");
-    mm_context->minimal_table_set = 0;
+    snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "tables/default");
+    snprintf(mm_context->term_table_dir, sizeof(mm_context->term_table_dir), "tables");
 
     /* Parse command line to get -q (quiet) option. */
-    while ((c = getopt (argc, argv, cmdline_options)) != -1) {
-        switch (c)
-        {
+    while ((c = getopt(argc, argv, cmdline_options)) != -1) {
+        switch (c) {
             case 'q':
                 quiet = 1;
                 break;
@@ -360,9 +351,8 @@ int main(int argc, char* argv[])
 
     /* Parse command line again to get the rest of the options. */
     optind = 1;
-    while ((c = getopt (argc, argv, cmdline_options)) != -1) {
-        switch (c)
-        {
+    while ((c = getopt(argc, argv, cmdline_options)) != -1) {
+        switch (c) {
             case 'h':
                 printf("usage: %s [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n", basename(argv[0]));
                 printf("\t-v verbose (multiple v's increase verbosity.)\n" \
@@ -385,19 +375,19 @@ int main(int argc, char* argv[])
 
                 if (strnlen(optarg, 7) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
-                    return(-1);
+                    return(-EINVAL);
                 }
 
                 if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
-                    fprintf (stderr, "Error reading install parameters from %s.\n", instsv_fname);
-                    return -1;
+                    fprintf(stderr, "Error reading install parameters from %s.\n", instsv_fname);
+                    return(-ENOENT);
                 }
                 memcpy(&mm_context->instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
                 free(instsv_table_buffer);
 
                 if (rewrite_instserv_parameters(optarg, &mm_context->instsv, instsv_fname)) {
                     printf("Error updating INSTSV parameters\n");
-                    return (-1);
+                    return (-EPERM);
                 }
                 break;
             }
@@ -407,7 +397,7 @@ int main(int argc, char* argv[])
                         "mm_manager: %s: %s\n", optarg, strerror(errno));
 
                     if (mm_context != NULL) free(mm_context);
-                    exit(1);
+                    exit(-ENOENT);
                 }
                 fseek(mm_context->cdr_stream, 0, SEEK_END);
                 if (ftell(mm_context->cdr_stream) == 0) {
@@ -429,7 +419,7 @@ int main(int argc, char* argv[])
                     (void)fprintf(stderr,
                         "mm_manager: %s: %s\n", optarg, strerror(errno));
                     if (mm_context != NULL) free(mm_context);
-                    exit(1);
+                    return(-ENOENT);
                 }
                 break;
             case 'm':
@@ -439,16 +429,16 @@ int main(int argc, char* argv[])
                 baudrate = atoi(optarg);
                 break;
             case 'n':
-                if(index > 1) {
+                if (ncc_index > 1) {
                     fprintf(stderr, "-n may only be specified twice.\n");
-                    return(-1);
+                    return(-EINVAL);
                 }
                 if ((strnlen(optarg, 16) < 1) || (strnlen(optarg, 16) > 15)) {
                     fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
-                    return(-1);
+                    return(-EINVAL);
                 } else {
-                    snprintf(mm_context->ncc_number[index], sizeof(mm_context->ncc_number[0]), "%s", optarg);
-                    index++;
+                    snprintf(mm_context->ncc_number[ncc_index], sizeof(mm_context->ncc_number[0]), "%s", optarg);
+                    ncc_index++;
                 }
                 break;
             case 's':
@@ -465,27 +455,26 @@ int main(int argc, char* argv[])
                 break;
             case '?':
                 if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n' || optopt == 'b')
-                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 else
-                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-                return 1;
-                break;
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                return(-EINVAL);
             default:
-                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-                return(-1);
+                fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                return(-EINVAL);
         }
     }
 
-    for (index = optind; index < argc; index++) {
-        printf ("Superfluous non-option argument '%s' ignored.\n", argv[index]);
+    for (c = optind; c < argc; c++) {
+        printf("Superfluous non-option argument '%s' ignored.\n", argv[c]);
     }
 
     printf("Default Table directory: %s\n", mm_context->default_table_dir);
     printf("Terminal-specific Table directory: %s/<terminal_id>\n", mm_context->term_table_dir);
 
     if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
-        fprintf (stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context->default_table_dir);
-        return -1;
+        fprintf(stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context->default_table_dir);
+        return(-ENOENT);
     }
     memcpy(&mm_context->instsv, instsv_table_buffer+1, sizeof(dlog_mt_install_params_t));
     free(instsv_table_buffer);
@@ -493,30 +482,30 @@ int main(int argc, char* argv[])
     printf("Using access code: %s\n", phone_num_to_string(access_code_str, sizeof(access_code_str), mm_context->instsv.access_code, sizeof(mm_context->instsv.access_code)));
     printf("Manager Inter-packet Tx gap: %dms.\n", mm_context->instsv.rx_packet_gap * 10);
 
-    if(strnlen(mm_context->ncc_number[0], sizeof(mm_context->ncc_number[0])) >= 1) {
+    if (strnlen(mm_context->ncc_number[0], sizeof(mm_context->ncc_number[0])) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context->ncc_number[0]);
 
-        if(strnlen(mm_context->ncc_number[1], sizeof(mm_context->ncc_number[0])) == 0) {
+        if (strnlen(mm_context->ncc_number[1], sizeof(mm_context->ncc_number[0])) == 0) {
             snprintf(mm_context->ncc_number[1], sizeof(mm_context->ncc_number[1]), "%s", mm_context->ncc_number[0]);
         }
 
         printf("Using Secondary NCC number: %s\n", mm_context->ncc_number[1]);
     } else if (mm_context->use_modem == 1) {
         fprintf(stderr, "Error: -n <NCC Number> must be specified.\n");
-        return(-1);
+        return(-EINVAL);
     }
 
     if (mm_context->use_modem == 0) {
         if (modem_dev == NULL) {
             (void)fprintf(stderr, "mm_manager: -f <filename> must be specified.\n");
             if (mm_context != NULL) free(mm_context);
-            exit(1);
+            return(-EINVAL);
         }
 
-        if(!(mm_context->bytestream = fopen(modem_dev, "r"))) {
+        if (!(mm_context->bytestream = fopen(modem_dev, "r"))) {
             printf("Error opening input stream: %s\n", modem_dev);
             if (mm_context != NULL) free(mm_context);
-            exit(-1);
+            return(-EPERM);
         }
         mm_context->connected = 1;
     } else {
@@ -524,14 +513,14 @@ int main(int argc, char* argv[])
 
         if (baudrate < 1200) {
             printf("Error: baud rate must be 1200 bps or faster.\n");
-            return(-1);
+            return(-EINVAL);
         }
         printf("Baud Rate: %d\n", baudrate);
 
         mm_context->fd = open_serial(modem_dev);
         if (mm_context->fd == -1) {
             printf("Unable to open modem: %s.", modem_dev);
-            return (-1);
+            return (-ENODEV);
         }
 
         init_serial(mm_context->fd, baudrate);
@@ -541,23 +530,22 @@ int main(int argc, char* argv[])
         } else {
             printf("Error initializing modem.\n");
             close_serial(mm_context->fd);
-            return (-1);
+            return (-EIO);
         }
     }
 
     mm_context->cdr_ack_buffer_len = 0;
 
-    while(1) {
-        if(mm_context->use_modem == 1) {
+    while (1) {
+        if (mm_context->use_modem == 1) {
             printf("Waiting for call from terminal...\n");
-            if(wait_for_modem_response(mm_context->fd, "CONNECT", 1000) == 0) {
-
+            if (wait_for_modem_response(mm_context->fd, "CONNECT", 1000) == 0) {
                 mm_context->tx_seq = 0;
-                time ( &rawtime );
-                ptm = localtime ( &rawtime );
+                time(&rawtime);
+                localtime_r(&rawtime, &ptm);
 
                 printf("%04d-%02d-%02d %2d:%02d:%02d: Connected!\n\n",
-                    ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+                    ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
 
                 mm_context->connected = 1;
                 mm_context->cdr_ack_buffer_len = 0;
@@ -575,21 +563,19 @@ int main(int argc, char* argv[])
             rawtime = JAN12020;
         }
 
-        ptm = localtime ( &rawtime );
+        localtime_r(&rawtime, &ptm);
 
         printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Disconnected.\n\n",
-            ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
-
+            ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
     }
 
     return 0;
 }
 
-static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint8_t length)
-{
+static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint8_t length) {
     if ((size_t)context->cdr_ack_buffer_len + length > sizeof(context->cdr_ack_buffer)) {
         printf("ERROR: %s: cdr_ack_buffer_len exceeded.\n", __FUNCTION__);
-        return (-1);
+        return (-EOVERFLOW);
     }
 
     memcpy(&context->cdr_ack_buffer[context->cdr_ack_buffer_len], buffer, length);
@@ -598,8 +584,7 @@ static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint
     return(0);
 }
 
-int receive_mm_table(mm_context_t *context, mm_table_t *table)
-{
+int receive_mm_table(mm_context_t *context, mm_table_t *table) {
     mm_packet_t *pkt = &table->pkt;
     uint8_t ack_payload[PKT_TABLE_DATA_LEN_MAX] = { 0 };
     uint8_t *pack_payload = ack_payload;
@@ -624,7 +609,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
     ppayload = pkt->payload;
 
-    if(pkt->payload_len < PKT_TABLE_ID_OFFSET) {
+    if (pkt->payload_len < PKT_TABLE_ID_OFFSET) {
         table->table_id = 0;
         print_mm_packet(RX, pkt);
         printf("Error: Received an ACK without expecting it!\n");
@@ -642,14 +627,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
     send_mm_ack(context, 0);
 
     while (ppayload < pkt->payload + pkt->payload_len) {
-
         table->table_id = *ppayload++;
         if (context->debuglevel > 1) printf("\n\tTerminal ID %s: Processing Table ID %d (0x%02x) %s\n", context->terminal_id, table->table_id, table->table_id, table_to_string(table->table_id));
 
-        switch(table->table_id) {
+        switch (table->table_id) {
             case DLOG_MT_TIME_SYNC_REQ: {
                 time_t rawtime;
-                struct tm *ptm;
+                struct tm ptm = { 0 };
                 uint8_t *timestamp;
 
                 *pack_payload++ = DLOG_MT_TIME_SYNC;
@@ -664,15 +648,15 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                     rawtime = JAN12020;
                 }
 
-                ptm = localtime(&rawtime);
+                localtime_r(&rawtime, &ptm);
 
-                *pack_payload++ = (ptm->tm_year & 0xff);     /* Fill current years since 1900 */
-                *pack_payload++ = (ptm->tm_mon+1 & 0xff);    /* Fill current month (1-12) */
-                *pack_payload++ = (ptm->tm_mday & 0xff);     /* Fill current day (0-31) */
-                *pack_payload++ = (ptm->tm_hour & 0xff);     /* Fill current hour (0-23) */
-                *pack_payload++ = (ptm->tm_min & 0xff);      /* Fill current minute (0-59) */
-                *pack_payload++ = (ptm->tm_sec & 0xff);      /* Fill current second (0-59) */
-                *pack_payload++ = (ptm->tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
+                *pack_payload++ = (ptm.tm_year & 0xff);     /* Fill current years since 1900 */
+                *pack_payload++ = (ptm.tm_mon+1 & 0xff);    /* Fill current month (1-12) */
+                *pack_payload++ = (ptm.tm_mday & 0xff);     /* Fill current day (0-31) */
+                *pack_payload++ = (ptm.tm_hour & 0xff);     /* Fill current hour (0-23) */
+                *pack_payload++ = (ptm.tm_min & 0xff);      /* Fill current minute (0-59) */
+                *pack_payload++ = (ptm.tm_sec & 0xff);      /* Fill current second (0-59) */
+                *pack_payload++ = (ptm.tm_wday + 1);        /* Day of week, 1=Sunday ... 7=Saturday */
 
                 printf("\t\tCurrent day/time: %04d-%02d-%02d / %2d:%02d:%02d\n", timestamp[0]+1900,
                                                                             timestamp[1],
@@ -832,7 +816,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
             case DLOG_MT_TERM_STATUS: {
                 dlog_mt_term_status_t *dlog_mt_term_status = (dlog_mt_term_status_t *)ppayload;
                 uint8_t serial_number[11] = { 0 };
-                unsigned long long dlog_mt_term_status_word;
+                uint64_t dlog_mt_term_status_word;
                 int i;
 
                 ppayload += sizeof(dlog_mt_term_status_t);
@@ -972,7 +956,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
-
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
                 printf("\t\tExpanded Carrier Statistics: From: %s, to: %s:\n",
@@ -1145,7 +1128,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 
     /* Send cash box status if requested by terminal */
     if (cashbox_pending == 1) {
-        int table_len;
+        size_t table_len = 0;
         uint8_t *table_buffer;
 
         printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n\t", context->tx_seq);
@@ -1182,12 +1165,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table)
 }
 
 
-int mm_download_tables(mm_context_t *context)
-{
+int mm_download_tables(mm_context_t *context) {
     uint8_t table_data = DLOG_MT_TABLE_UPD;
     int table_index;
     int status;
-    int table_len;
+    size_t table_len;
     uint8_t *table_buffer;
     uint8_t *table_list = table_list_rev1_3;
 
@@ -1200,8 +1182,7 @@ int mm_download_tables(mm_context_t *context)
     send_mm_table(context, &table_data, 1);
 
     for (table_index = 0; table_list[table_index] > 0; table_index++) {
-
-        switch(table_list[table_index]) {
+        switch (table_list[table_index]) {
             case DLOG_MT_CALL_IN_PARMS:
                 generate_call_in_parameters(context, &table_buffer, &table_len);
                 break;
@@ -1246,8 +1227,7 @@ int mm_download_tables(mm_context_t *context)
 }
 
 
-int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
-{
+int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
     int bytes_remaining;
     int chunk_len;
     uint8_t *p = payload;
@@ -1268,17 +1248,16 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, int len)
         if (wait_for_mm_ack(context) != 0) return -1;
         p += chunk_len;
         bytes_remaining -= chunk_len;
-        printf("\tTable %d (0x%02x) %s progress: (%3d%%) - %4d / %4d\n",
+        printf("\tTable %d (0x%02x) %s progress: (%3d%%) - %4d / %4zu\n",
             table_id, table_id, table_to_string(table_id),
-            (int)((p - payload) * 100) / len, (int)(p - payload), len);
+            (uint16_t)(((p - payload) * 100) / len), (uint16_t)(p - payload), len);
     }
 
     return 0;
 }
 
 
-int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
-{
+int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
     mm_packet_t packet = { 0 };
     mm_packet_t *pkt = &packet;
     int status;
@@ -1293,8 +1272,8 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
             if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->terminal_id);
             if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
-            if((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
-               (pkt->payload[PKT_TABLE_DATA_OFFSET] == table_id)) {
+            if ((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
+                (pkt->payload[PKT_TABLE_DATA_OFFSET] == table_id)) {
                 if (context->debuglevel > 0) printf("Seq: %d: Received ACK for table %d (0x%02x)\n", context->rx_seq, table_id, table_id);
                 send_mm_ack(context, 0);
             } else {
@@ -1311,11 +1290,10 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id)
 }
 
 
-int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int *len)
-{
+int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len) {
     FILE *stream;
     char fname[TABLE_PATH_MAX_LEN];
-    long size;
+    uint32_t size;
     uint8_t *bufp;
 
     if (context->terminal_id[0] != '\0') {
@@ -1324,9 +1302,9 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
         snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
     }
 
-    if(!(stream = fopen(fname, "rb"))) {
+    if (!(stream = fopen(fname, "rb"))) {
         snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
-        if(!(stream = fopen(fname, "rb"))) {
+        if (!(stream = fopen(fname, "rb"))) {
             printf("Could not load table %d from %s.\n", table_id, fname);
             return -1;
         }
@@ -1336,13 +1314,13 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
     size = ftell(stream);
     fseek(stream, 0, SEEK_SET);
 
-    size ++;    // Make room for table ID.
+    size++;    // Make room for table ID.
     *buffer = calloc(size, sizeof(uint8_t));
     fflush(stdout);
-    if(*buffer == 0) {
-        printf("Erorr: failed to allocate %ld bytes for table %d\n", size, table_id);
+    if (*buffer == 0) {
+        printf("Erorr: failed to allocate %u bytes for table %d\n", size, table_id);
         fclose(stream);
-        return -1;
+        return -ENOMEM;
     }
 
     bufp = *buffer;
@@ -1352,25 +1330,25 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int
 
     while (1) {
         uint8_t c = (uint8_t)fgetc(stream);
-        if(feof(stream)) {
+        if (feof(stream)) {
             break;
         }
         *bufp++ = c;
         *len = *len + 1;
         if (*len > size) {
             fclose(stream);
+            free(*buffer);
             return -1;
         }
     }
 
-    printf("Loaded table ID %d (0x%02x) from %s (%d bytes).\n", table_id, table_id, fname, *len - 1);
+    printf("Loaded table ID %d (0x%02x) from %s (%zu bytes).\n", table_id, table_id, fname, *len - 1);
     fclose(stream);
 
     return 0;
 }
 
-int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename)
-{
+int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename) {
     FILE *ostream = NULL;
 
     int i;
@@ -1389,9 +1367,9 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     }
     pinstsv_table->access_code[3] |= 0x0e;   /* Terminate the Access Code with 0xe */
 
-    if(!(ostream = fopen(filename, "wb"))) {
+    if (!(ostream = fopen(filename, "wb"))) {
         printf("Error opening %s\n", filename);
-        return -1;
+        return -ENOENT;
     }
 
     /* If output file was specified, write it. */
@@ -1405,15 +1383,18 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     return 0;
 }
 
-void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, int *len)
-{
+void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     int i;
     dlog_mt_ncc_term_params_t *pncc_term_params;
     uint8_t *pbuffer;
 
     *len = sizeof(dlog_mt_ncc_term_params_t) + 1;
     pbuffer = calloc(1, *len);
-    if (pbuffer == NULL) return;
+    if (pbuffer == NULL) {
+        printf("Error allocating memory\n");
+        exit(-ENOMEM);
+    }
+
     pbuffer[0] = DLOG_MT_NCC_TERM_PARAMS;
 
     pncc_term_params = (dlog_mt_ncc_term_params_t *)&pbuffer[1];
@@ -1438,20 +1419,22 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, in
     }
 
     *buffer = pbuffer;
-
 }
 
-void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len)
-{
+void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, size_t* len) {
     dlog_mt_call_in_params_t* pcall_in_params;
     uint8_t* pbuffer;
     time_t rawtime;
-    struct tm* ptm;
+    struct tm ptm = { 0 };
     uint8_t call_in_hour;
 
     *len = sizeof(dlog_mt_call_in_params_t) + 1;
     pbuffer = calloc(1, *len);
-    if (pbuffer == NULL) return;
+    if (pbuffer == NULL) {
+        printf("Error allocating memory\n");
+        exit(-ENOMEM);
+    }
+
     pbuffer[0] = DLOG_MT_CALL_IN_PARMS;
 
     pcall_in_params = (dlog_mt_call_in_params_t*)&pbuffer[1];
@@ -1463,12 +1446,11 @@ void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* l
         * a static time, so that results can be automatically checked.
         */
         time(&rawtime);
-    }
-    else {
+    } else {
         rawtime = JAN12020;
     }
 
-    ptm = localtime(&rawtime);
+    localtime_r(&rawtime, &ptm);
 
     /* Interestingly, the terminal will call in starting at the call-in time, and continue
      * calling in at intervals specified, up until midnight.  After that, the terminal will
@@ -1476,26 +1458,26 @@ void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* l
      * a day, set the call-in hour to a time in the AM, so the subsequent call 12 hours later
      * will be in the PM of the same day.
      */
-    call_in_hour = (ptm->tm_hour & 0xff);
+    call_in_hour = (ptm.tm_hour & 0xff);
     if (call_in_hour >= 12) { /* If after noon, set back to the AM. */
         call_in_hour -= 12;
     }
 
-    pcall_in_params->call_in_start_date[0] = (ptm->tm_year & 0xff);     /* Call-in start YY */
-    pcall_in_params->call_in_start_date[1] = (ptm->tm_mon + 1 & 0xff);  /* Call in start MM */
-    pcall_in_params->call_in_start_date[2] = (ptm->tm_mday & 0xff);     /* Call in start DD */
+    pcall_in_params->call_in_start_date[0] = (ptm.tm_year & 0xff);     /* Call-in start YY */
+    pcall_in_params->call_in_start_date[1] = (ptm.tm_mon + 1 & 0xff);  /* Call in start MM */
+    pcall_in_params->call_in_start_date[2] = (ptm.tm_mday & 0xff);     /* Call in start DD */
     pcall_in_params->call_in_start_time[0] = call_in_hour;              /* Call-in start HH */
-    pcall_in_params->call_in_start_time[1] = (ptm->tm_min & 0xff);      /* Call-in start MM */
-    pcall_in_params->call_in_start_time[2] = (ptm->tm_sec & 0xff);      /* Call-in start SS */
+    pcall_in_params->call_in_start_time[1] = (ptm.tm_min & 0xff);      /* Call-in start MM */
+    pcall_in_params->call_in_start_time[2] = (ptm.tm_sec & 0xff);      /* Call-in start SS */
     pcall_in_params->call_in_interval[0]   = 0;                         /* Call-in inteval DD */
     pcall_in_params->call_in_interval[1]   = 12;                        /* Call-in inteval HH */
     pcall_in_params->call_in_interval[2]   = 0;                         /* Call-in inteval MM */
     pcall_in_params->call_back_retry_time[0] = 59;                      /* Call-back retry time MM */
     pcall_in_params->call_back_retry_time[1] = 0;                       /* Call-back retry time SS */
     pcall_in_params->cdr_threshold = 4;                                 /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
-    pcall_in_params->unknown_timestamp[0] = (ptm->tm_year+1 & 0xff);    /* Unknown timestamp YY (2020) */
-    pcall_in_params->unknown_timestamp[1] = (ptm->tm_mon + 1 & 0xff);   /* Unknown timestamp MM */
-    pcall_in_params->unknown_timestamp[2] = (ptm->tm_mday & 0xff);      /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[0] = (ptm.tm_year+1 & 0xff);    /* Unknown timestamp YY (2020) */
+    pcall_in_params->unknown_timestamp[1] = (ptm.tm_mon + 1 & 0xff);   /* Unknown timestamp MM */
+    pcall_in_params->unknown_timestamp[2] = (ptm.tm_mday & 0xff);      /* Unknown timestamp */
     pcall_in_params->unknown_timestamp[3] = 2;                          /* Unknown timestamp */
     pcall_in_params->unknown_timestamp[4] = 0;                          /* Unknown timestamp */
     pcall_in_params->unknown_timestamp[5] = 0;                          /* Unknown timestamp */
@@ -1503,9 +1485,9 @@ void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* l
     pcall_in_params->unknown[1] = 14;
 
     printf("\tCall-in start date: %04d-%02d-%02d\n",
-        ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday);
+        ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday);
     printf("\tCall-in start time: %02d:%02d:%02d\n",
-        ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+        ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
     printf("\tCall-in interval:   %02dD:%02dH:%02dM\n",
         pcall_in_params->call_in_interval[0], pcall_in_params->call_in_interval[1], pcall_in_params->call_in_interval[2]);
     printf("\tCall-back retry:    %02dm:%02ds\n",
@@ -1515,15 +1497,18 @@ void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* l
     *buffer = pbuffer;
 }
 
-void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
-{
+void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     int i;
     dlog_mt_call_stat_params_t *pcall_stat_params;
     uint8_t *pbuffer;
 
     *len = sizeof(dlog_mt_call_stat_params_t) + 1;
     pbuffer = calloc(1, *len);
-    if (pbuffer == NULL) return;
+    if (pbuffer == NULL) {
+        printf("Error allocating memory\n");
+        exit(-ENOMEM);
+    }
+
     pbuffer[0] = DLOG_MT_CALL_STAT_PARMS;
 
     pcall_stat_params = (dlog_mt_call_stat_params_t *)&pbuffer[1];
@@ -1554,7 +1539,7 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int 
     printf("\tDuration:       %02dd\n", pcall_stat_params->callstats_duration);
     printf("\tThreshold:      %02d\n", pcall_stat_params->callstats_threshold);
 
-    for(i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++) {
         printf("\tTimestamp[%d]:   %02d:%02d\n", i,
             pcall_stat_params->timestamp[i][0], pcall_stat_params->timestamp[i][1]);
     }
@@ -1567,15 +1552,18 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int 
     printf("\tCDR Flags:      0x%02x\n", pcall_stat_params->cdr_duration_hours_flags & 0xe0);
 }
 
-void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len)
-{
+void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     int i;
     dlog_mt_comm_stat_params_t *pcomm_stat_params;
     uint8_t *pbuffer;
 
     *len = sizeof(dlog_mt_comm_stat_params_t) + 1;
     pbuffer = calloc(1, *len);
-    if (pbuffer == NULL) return;
+    if (pbuffer == NULL) {
+        printf("Error allocating memory\n");
+        exit(-ENOMEM);
+    }
+
     pbuffer[0] = DLOG_MT_COMM_STAT_PARMS;
 
     pcomm_stat_params = (dlog_mt_comm_stat_params_t *)&pbuffer[1];
@@ -1608,20 +1596,23 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int 
     printf("\tDuration:       %02dd\n", pcomm_stat_params->perfstats_duration);
     printf("\tThreshold:      %02d\n", pcomm_stat_params->perfstats_threshold);
 
-    for(i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++) {
         printf("\tTimestamp[%d]:   %02d:%02d\n", i,
             pcomm_stat_params->perfstats_timestamp[i][0], pcomm_stat_params->perfstats_timestamp[i][1]);
     }
 }
 
-void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len)
-{
+void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     dlog_mt_user_if_params_t *puser_if_params;
     uint8_t *pbuffer;
 
     *len = sizeof(dlog_mt_user_if_params_t) + 1;
     pbuffer = calloc(1, *len);
-    if (pbuffer == NULL) return;
+    if (pbuffer == NULL) {
+        printf("Error allocating memory\n");
+        exit(-ENOMEM);
+    }
+
     pbuffer[0] = DLOG_MT_USER_IF_PARMS;
 
     puser_if_params = (dlog_mt_user_if_params_t *)&pbuffer[1];
@@ -1696,11 +1687,14 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *l
     printf("\tDatajack IAS Timer:          %5d\n", puser_if_params->datajack_ias_timer);
 }
 
-void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, int *len)
-{
+void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len) {
     *len = 1;
     *buffer = calloc(1, *len);
-    if (*buffer == NULL) return;
+    if (buffer == NULL) {
+        printf("Error allocating memory\n");
+        exit(-ENOMEM);
+    }
+
     *buffer[0] = DLOG_MT_END_DATA;
 }
 
@@ -1716,9 +1710,9 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 #else
     status = mkdir(dirname, 0755);
 #endif
-    if(status != 0 && errno != EEXIST) {
+    if (status != 0 && errno != EEXIST) {
         printf("Failed to create directory: %s\n", dirname);
-        return (-1);
+        return (-ENOENT);
     }
 
     printf("Created directory: %s\n", dirname);
@@ -1736,9 +1730,9 @@ int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_u
     /* Make sure the terminal-specific directory exists, create if needed. */
     create_terminal_specific_directory(context->term_table_dir, context->terminal_id);
 
-    if(!(ostream = fopen(filename, "wb"))) {
+    if (!(ostream = fopen(filename, "wb"))) {
         printf("Error writing %s\n", filename);
-        return -1;
+        return -ENOENT;
     }
     if (ostream != NULL) {
         fwrite(cashbox_status, sizeof(cashbox_status_univ_t), 1, ostream);

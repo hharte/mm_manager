@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -21,8 +21,8 @@
 #include <termios.h> /* POSIX terminal control definitions */
 #include <unistd.h>
 #endif /* _WIN32 */
-#include "mm_manager.h"
-#include "mm_serial.h"
+#include "./mm_manager.h"
+#include "./mm_serial.h"
 
 #define L2_STATE_SEARCH_FOR_START   1
 #define L2_STATE_GET_FLAGS          2
@@ -32,7 +32,7 @@
 #define L2_STATE_GET_CRC1           6
 #define L2_STATE_SEARCH_FOR_STOP    7
 
-char *str_disconnect_code[16] = {
+const char *str_disconnect_code[16] = {
     "OK",
     "1",
     "2",
@@ -59,11 +59,9 @@ char *str_disconnect_code[16] = {
  * |START | FLAGS | LENGTH | DATA .... | CRC-16 | END |
  * +------+-------+--------+-----------+--------+-----+
  */
-int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
-{
+int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     char buf[100] = { 0 };  // buffer to hold line of data from UART protocol analyzer */
     uint8_t pktbuf[1024] = { 0 };
-    uint8_t *pktbufp;
     uint8_t pkt_received = 0;
     char *bytep;
     uint8_t databyte = 0;
@@ -72,11 +70,9 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
     uint8_t status = PKT_SUCCESS;
     uint8_t timeout = 0;
 
-    pktbufp = pktbuf;
-
-    while(pkt_received == 0) {
+    while (pkt_received == 0) {
         if (context->use_modem == 1) {
-            while(read_serial(context->fd, &databyte, 1) == 0) {
+            while (read_serial(context->fd, &databyte, 1) == 0) {
                 putchar('.');
                 fflush(stdout);
                 timeout++;
@@ -89,8 +85,15 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             timeout = 0;
         } else {
             if (feof(context->bytestream)) {
-                break;
+                printf("%s: Terminating due to EOF.\n", __FUNCTION__);
+                fflush(stdout);
+                fclose(context->bytestream);
+                if (context->cdr_stream != NULL) {
+                    fclose(context->cdr_stream);
+                }
+                exit(0);
             }
+
             fgets(buf, 80, context->bytestream);
 
             /* Data that came from the Millennium Terminal. */
@@ -101,7 +104,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
             }
         }
 
-        if(context->logstream != NULL) {
+        if (context->logstream != NULL) {
             fprintf(context->logstream, "UART: RX: %02X\n", databyte);
             fflush(context->logstream);
         }
@@ -120,7 +123,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
                 break;
             case L2_STATE_GET_LENGTH:
                 pkt->hdr.pktlen = databyte;
-                if(pkt->hdr.pktlen > 5) {
+                if (pkt->hdr.pktlen > 5) {
                     l2_state = L2_STATE_ACCUMULATE_DATA;
                 } else {
                     l2_state = L2_STATE_GET_CRC0;
@@ -172,19 +175,6 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
         status |= PKT_ERROR_DISCONNECT;
     }
 
-    if (context->use_modem == 0) {
-        if(feof(context->bytestream)) {
-            printf("%s: Terminating due to EOF.\n", __FUNCTION__);
-            fflush(stdout);
-            status |= PKT_ERROR_EOF;
-            fclose(context->bytestream);
-            if (context->cdr_stream != NULL) {
-                fclose(context->cdr_stream);
-            }
-            exit(0);
-        }
-    }
-
     if (context->debuglevel > 3) {
         printf("\nRaw Packet received: ");
         /* Copy the packet trailer (CRC-16, STOP) immediately following the data */
@@ -202,8 +192,7 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt)
  * If payload is not NULL, and length is > 0, then the terminal's phone number
  * will be prepended to the payload and sent.
  */
-int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t flags)
-{
+int send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t flags) {
     mm_packet_t pkt;
 
     if (context->debuglevel > 3) {
@@ -237,7 +226,7 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
             pkt.payload[i]  = (context->terminal_id[i * 2    ] - '0') << 4;
             pkt.payload[i] |= (context->terminal_id[i * 2 + 1] - '0');
         }
-        if(len > 0) {
+        if (len > 0) {
             memcpy(&pkt.payload[PKT_TABLE_ID_OFFSET], payload, len);
         }
     } else {
@@ -271,7 +260,7 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
         drain_serial(context->fd);
     }
 
-    for(int i=0; i < pkt.hdr.pktlen+1; i++) {
+    for (int i = 0; i < pkt.hdr.pktlen+1; i++) {
         if (context->logstream != NULL) fprintf(context->logstream, "UART: TX: %02X\n", ((uint8_t *)(&pkt))[i]);
     }
     if (context->logstream != NULL) fflush(context->logstream);
@@ -284,17 +273,15 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t fla
     return 0;
 }
 
-int send_mm_ack(mm_context_t *context, uint8_t flags)
-{
+int send_mm_ack(mm_context_t *context, uint8_t flags) {
     return (send_mm_packet(context, NULL, 0, flags));
 }
 
-int wait_for_mm_ack(mm_context_t *context)
-{
+int wait_for_mm_ack(mm_context_t *context) {
     mm_packet_t pkt;
     int status;
 
-    if((status = receive_mm_packet(context, &pkt)) == 0) {
+    if ((status = receive_mm_packet(context, &pkt)) == 0) {
         if (context->debuglevel > 2) print_mm_packet(RX, &pkt);
         if (pkt.payload_len == 0) {
             if (pkt.hdr.flags & FLAG_ACK) {
@@ -315,9 +302,7 @@ int wait_for_mm_ack(mm_context_t *context)
     return 0;
 }
 
-int print_mm_packet(int direction, mm_packet_t *pkt)
-{
-
+int print_mm_packet(int direction, mm_packet_t *pkt) {
     int status = 0;
 
     /* Decode flags: bit 3 = Req/Ack, 2=Retry, 1:0=Sequence. */
@@ -331,11 +316,11 @@ int print_mm_packet(int direction, mm_packet_t *pkt)
         (pkt->hdr.flags & FLAG_SEQUENCE),
         pkt->hdr.pktlen, pkt->payload_len, pkt->trailer.crc);
 
-    if(pkt->trailer.crc != pkt->calculated_crc) {
+    if (pkt->trailer.crc != pkt->calculated_crc) {
         printf("\t*** CRC Error, calculated: %04x ***\n", pkt->calculated_crc);
         status = -1;
     }
-    if(pkt->trailer.end != STOP_BYTE) {
+    if (pkt->trailer.end != STOP_BYTE) {
         printf("\t*** Framing Error, expected STOP=0x03, got STOP=%02x ***\n", pkt->trailer.end);
         status = -1;
     }

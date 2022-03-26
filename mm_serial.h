@@ -3,8 +3,11 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  */
+
+#ifndef MM_SERIAL_H_
+#define MM_SERIAL_H_
 
 #if defined(_MSC_VER)
 #include <BaseTsd.h>
@@ -18,3 +21,5 @@ ssize_t read_serial(int fd, void* buf, size_t count);
 ssize_t write_serial(int fd, const void* buf, size_t count);
 int drain_serial(int fd);
 int flush_serial(int fd);
+
+#endif  /* MM_SERIAL_H_ */

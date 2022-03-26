@@ -7,8 +7,10 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * Copyright (c) 2020, Howard M. Harte
  */
+#ifndef MM_MANAGER_H_
+#define MM_MANAGER_H_
 
 #define RX 2
 #define TX 3
@@ -436,7 +438,7 @@ typedef struct intl_rate_table_entry {
 
 typedef struct dlg_mt_intl_sbr_table {
     uint8_t flags;
-    uint8_t default_rate_index; // 28 + default_rate_index is the entry in the RATE table.
+    uint8_t default_rate_index;     // 28 + default_rate_index is the entry in the RATE table.
     uint8_t spare;
     intl_rate_table_entry_t irate[INTL_RATE_TABLE_MAX_ENTRIES];
 } dlg_mt_intl_sbr_table_t;
@@ -815,8 +817,9 @@ typedef struct dlog_mt_fconfig_opts {
 #define FC_DJ_FLAGS_BIT_6                       (1 << 6)    /* Reserved */
 #define FC_DJ_FLAGS_BIT_7                       (1 << 7)    /* Reserved */
 
-/* Installation and Servicing Table (INSTSV) pp. 2.236 */
-/* also: https://wiki.millennium.management/dlog:dlog_mt_install_parms */
+/* Installation and Servicing Table (INSTSV) pp. 2.236
+ * also: https://wiki.millennium.management/dlog:dlog_mt_install_parms
+ */
 typedef struct dlog_mt_install_params {
     uint8_t access_code[4];                     /* This value will be compared to a password entered by the maintenance person, to verify access to the terminal. */
     uint8_t key_card_number[5];                 /* This is the telephone number to be dialed by the terminal when it is being tested by the installer or maintenance person. It is usually the number of a maintenance phone for the Telco. */
@@ -971,21 +974,21 @@ typedef struct mm_context {
 /* MM Table Operations */
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
-int send_mm_table(mm_context_t *context, uint8_t* payload, int len);
+int send_mm_table(mm_context_t *context, uint8_t* payload, size_t len);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
-int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, int *len);
+int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
-void generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, int* len);
-void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, int* len);
-void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
-void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, int *len);
-void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, int *len);
-void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, int *len);
+void generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
+void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
+void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
+void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
+void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
+void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len);
 int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 
 /* MM Protocol */
 extern int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
-extern int send_mm_packet(mm_context_t *context, uint8_t *payload, int len, uint8_t flags);
+extern int send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t flags);
 extern int send_mm_ack(mm_context_t *context, uint8_t flags);
 extern int wait_for_mm_ack(mm_context_t *context);
 extern int print_mm_packet(int direction, mm_packet_t *pkt);
@@ -1004,6 +1007,8 @@ extern char *callscrn_num_to_string(char *string_buf, size_t string_buf_len, uin
 extern char *call_type_to_string(uint8_t call_type, char *string_buf, size_t string_buf_len);
 extern char *timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len);
 extern void print_bits(uint8_t bits, char *str_array[]);
-extern char *table_to_string(uint8_t table);
+extern const char *table_to_string(uint8_t table);
 
 #pragma pack(pop)
+
+#endif  // MM_MANAGER_H_
