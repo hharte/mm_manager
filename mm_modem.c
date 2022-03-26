@@ -65,15 +65,15 @@ int init_modem(int fd)
 }
 
 /* Wait for modem to connect */
-int wait_for_connect(int fd)
+int wait_for_modem_response(int fd, const char *match_str, int max_tries)
 {
     char buffer[255] = { 0 };   /* Input buffer */
     uint8_t bufindex = 0;
     int  tries = 0;     /* Number of tries so far */
 
-    flush_serial(fd);
+    drain_serial(fd);
 
-    while(1) {
+    do {
         ssize_t nbytes;        /* Number of bytes read */
         bufindex = 0;
         buffer[0] = '\0';
@@ -83,33 +83,26 @@ int wait_for_connect(int fd)
         {
             bufindex += (uint8_t)nbytes;
             buffer[bufindex] = '\0';
-            if (buffer[bufindex-1] == '\n' || buffer[bufindex-1] == '\r') // || (bufindex >= (sizeof(buffer) - 1)))
+            if (buffer[bufindex - 1] == '\n' || buffer[bufindex - 1] == '\r' || (bufindex >= (sizeof(buffer) - 1)))
                 break;
         }
 
-        /* See if we got a CONNECT response */
-
-	printf("Buffer: %s\n", buffer);
-        if (strstr(buffer, "CONNECT") != 0) {
+        /* See if we got the expected response */
+        if (strstr(buffer, match_str) != 0) {
             return (0);
         }
-        tries ++;
-        bufindex = 0;
+        tries++;
 
-        if (tries > 1000) break;
-    }
+    } while (tries < max_tries);
+
     return (-1);
 }
 
 int hangup_modem(int fd)
 {
-    char buffer[80] = { 0 };/* Input buffer */
     int  tries;             /* Number of tries so far */
 
     for (tries = 0; tries < 3; tries ++) {
-        char *bufptr;       /* Current char in buffer */
-        ssize_t nbytes;     /* Number of bytes read */
-
         flush_serial(fd);
 
         for (int i = 0; i < 3; i++) {
@@ -126,21 +119,7 @@ int hangup_modem(int fd)
 #else
         sleep(1);   /* Some modems need time to process the AT command. */
 #endif
-
-        /* read characters into our string buffer until we get a CR or NL */
-        bufptr = buffer;
-
-        while ((nbytes = read_serial(fd, bufptr, buffer + (int)sizeof(buffer) - bufptr - 1)) > 0) {
-            bufptr += nbytes;
-            if (bufptr[-1] == '\n' || bufptr[-1] == '\r') {
-                break;
-            }
-        }
-
-        /* null terminate the string and see if we got an OK response */
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        if (strstr(buffer, "OK") != 0) {
+        if (wait_for_modem_response(fd, "OK", 1) == 0) {
             return(send_at_command(fd, "ATH0"));
         }
     }
@@ -151,7 +130,6 @@ int hangup_modem(int fd)
 static int send_at_command(int fd, char *command)
 {
     char buffer[80];    /* Input buffer */
-    ssize_t nbytes;     /* Number of bytes read */
     int  tries;         /* Number of tries so far */
 
     for (tries = 0; tries < 3; tries ++) {
@@ -159,29 +137,20 @@ static int send_at_command(int fd, char *command)
         snprintf(buffer, sizeof(buffer), "%s\r", command);
 
         /* send an AT command followed by a CR */
-        if (write_serial(fd, buffer, strnlen(buffer, sizeof(buffer))) < (signed)strnlen(buffer, sizeof(buffer))) {
+        if (write_serial(fd, buffer, strnlen(buffer, sizeof(buffer))) == 0) {
             continue;
         }
 
+        /* Some modems need time to process the AT command. */
 #ifdef _WIN32
-        Sleep(1000);
+        Sleep(100);
 #else
-        sleep(1);   /* Some modems need time to process the AT command. */
+        nanosleep((const struct timespec[]){{0, 100 * 1000000L}}, NULL);
 #endif /* _WIN32 */
 
-        char* bufptr = &buffer[0];    /* Current char in buffer */
-        while ((nbytes = read_serial(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
-        {
-            bufptr += nbytes;
-            if (bufptr[-1] == '\n' || bufptr[-1] == '\r' || (bufptr - buffer >= (sizeof(buffer) - 1)))
-                break;
+        if (wait_for_modem_response(fd, "OK", 5) == 0) {
+           return(0);
         }
-
-        /* null terminate the string and see if we got a CONNECT response */
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        if (strstr(buffer, "OK") != 0)
-        return (0);
     }
     return (-1);
 }

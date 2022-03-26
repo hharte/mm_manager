@@ -514,7 +514,7 @@ int main(int argc, char* argv[])
     while(1) {
         if(mm_context->use_modem == 1) {
             printf("Waiting for call from terminal...\n");
-            if(wait_for_connect(mm_context->fd) == 0) {
+            if(wait_for_modem_response(mm_context->fd, "CONNECT", 1000) == 0) {
 
                 mm_context->tx_seq = 0;
                 time ( &rawtime );

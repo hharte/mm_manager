@@ -982,12 +982,12 @@ extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
 /* modem functions: */
 extern int init_modem(int fd);
-extern int wait_for_connect(int fd);
+extern int wait_for_modem_response(int fd, const char* match_str, int max_tries);
 extern int hangup_modem(int fd);
 
 /* mm_util */
 extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
-extern void dump_hex(uint8_t *data, size_t len);
+extern void dump_hex(const uint8_t *data, size_t len);
 extern char *phone_num_to_string(char *string_buf, size_t string_len, uint8_t* num_buf, size_t num_buf_len);
 extern uint8_t string_to_bcd_a(char* number_string, uint8_t* buffer, uint8_t buff_len);
 extern char *callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* num_buf, size_t num_buf_len);
