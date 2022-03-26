@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -14,14 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #ifdef _WIN32
 #include <winsock.h>
 #else
- #include <arpa/inet.h>
+#include <arpa/inet.h>
 #endif
-
-
-#include "mm_manager.h"
+#include "./mm_manager.h"
 
 /* Default Carrier Mapping strings
  *
@@ -67,11 +66,11 @@ const char *str_cb2[] = {
 };
 
 #define CB2_VAL (CB2_REM_CARRIER_PREFIX_ZM_LOCAL | \
-                      CB2_REM_CARRIER_PREFIX_INTRALATA | \
-                      CB2_REM_CARRIER_PREFIX_INTERLATA | \
-                      CB2_REM_CARRIER_PREFIX_INTERNATIONAL | \
-                      CB2_REM_CARRIER_PREFIX_DA | \
-                      CB2_REM_CARRIER_PREFIX_1800)
+                CB2_REM_CARRIER_PREFIX_INTRALATA | \
+                CB2_REM_CARRIER_PREFIX_INTERLATA | \
+                CB2_REM_CARRIER_PREFIX_INTERNATIONAL | \
+                CB2_REM_CARRIER_PREFIX_DA | \
+                CB2_REM_CARRIER_PREFIX_1800)
 
 carrier_table_entry_t new_carriers[] = {
 {   /* Carrier 0 */
@@ -194,17 +193,16 @@ carrier_table_entry_t new_carriers[] = {
     .international_accept_flags = 0,
     .call_entry = 0x00,
 }
-
 };
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int carrier_index;
     uint16_t carrier_num;
     char display_prompt_string[21];
     uint8_t i;
+    int ret = 0;
 
     dlog_mt_carrier_table_t *pcarrier_table;
 
@@ -214,27 +212,30 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-
-    printf("Nortel Millennium CARRIER Table (Table 135) Dump\n");
+    printf("Nortel Millennium CARRIER Table (Table 135) Dump\n\n");
 
     pcarrier_table = calloc(1, sizeof(dlog_mt_carrier_table_t));
     if (pcarrier_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_carrier_table_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_carrier_table_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(pcarrier_table);
+        return(-ENOENT);
+    }
 
     if (fread(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, instream) != 1) {
         printf("Error reading CARRIER table.\n");
         free(pcarrier_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
     fclose(instream);
 
-    printf("\nDefault Carriers:\n");
+    printf("Default Carriers:\n");
     for (i = 0; i < DEFAULT_CARRIERS_MAX; i++) {
         printf("\t%d %s = 0x%02x (%3d)\n",
             i,
@@ -247,15 +248,14 @@ int main(int argc, char *argv[])
             "+----+------+--------+-------------+----------------------+------+------+---------+-------+------------+--------------+");
 
     for (carrier_index = 0; carrier_index < CARRIER_TABLE_MAX_CARRIERS; carrier_index++) {
-
         if (pcarrier_table->carrier[carrier_index].display_prompt[0] >= 0x20) {
             memcpy(display_prompt_string, pcarrier_table->carrier[carrier_index].display_prompt, sizeof(pcarrier_table->carrier[carrier_index].display_prompt));
             display_prompt_string[20] = '\0';
         } else {
-            if((pcarrier_table->carrier[carrier_index].carrier_ref == 0) && (pcarrier_table->carrier[carrier_index].call_entry ==0)) {
+            if ((pcarrier_table->carrier[carrier_index].carrier_ref == 0) && (pcarrier_table->carrier[carrier_index].call_entry ==0)) {
                 continue;
             }
-            sprintf(display_prompt_string, "                    ");
+            snprintf(display_prompt_string, sizeof(display_prompt_string) - 1, "                    ");
         }
 
         carrier_num = ntohs(pcarrier_table->carrier[carrier_index].carrier_num);
@@ -280,7 +280,10 @@ int main(int argc, char *argv[])
     printf("\n+------------------------------------------------------------------------------------------------------+\n");
 
     if (argc > 2) {
-        ostream = fopen(argv[2], "wb");
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            return(-ENOENT);
+        }
     }
 
     for (i = 0; i < DEFAULT_CARRIERS_MAX; i++) {
@@ -291,7 +294,10 @@ int main(int argc, char *argv[])
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, ostream);
+        if (fwrite(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
         fclose(ostream);
     }
 
@@ -299,5 +305,5 @@ int main(int argc, char *argv[])
         free(pcarrier_table);
     }
 
-    return (0);
+    return (ret);
 }

@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  * The RATE Table is an array of 1191 bytes.  The first 39 bytes contain
  * unknown data.
@@ -17,9 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
+#include <errno.h>
+#include "./mm_manager.h"
 
-char *str_rates[] = {
+const char *str_rates[] = {
     "mm_intra_lata     ",
     "lms_rate_local    ",
     "fixed_charge_local",
@@ -38,14 +39,14 @@ char *str_rates[] = {
     "      ?0f?        ",
 };
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int rate_index;
     char rate_str_initial[10];
     char rate_str_additional[10];
     dlog_mt_rate_table_t* prate_table;
+    int ret = 0;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -53,21 +54,25 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    printf("Nortel Millennium RATE Table 0x49 (73) Dump\n");
+    printf("Nortel Millennium RATE Table 0x49 (73) Dump\n\n");
 
     prate_table = calloc(1, sizeof(dlog_mt_rate_table_t));
     if (prate_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_rate_table_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_rate_table_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(prate_table);
+        return(-ENOENT);
+    }
 
     if (fread(prate_table, sizeof(dlog_mt_rate_table_t), 1, instream) != 1) {
         printf("Error reading RATE table.\n");
         free(prate_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
     /* Dump unknown 39 bytes at the beginning of the RATE table */
@@ -89,14 +94,14 @@ int main(int argc, char *argv[])
             }
 
         if (prate->initial_period & FLAG_PERIOD_UNLIMITED) {
-            strcpy(rate_str_initial, "Unlimited");
+            snprintf(rate_str_initial, sizeof(rate_str_initial), "Unlimited");
         } else {
-            sprintf(rate_str_initial, "   %5ds", prate->initial_period);
+            snprintf(rate_str_initial, sizeof(rate_str_initial), "   %5ds", prate->initial_period);
         }
         if (prate->additional_period & FLAG_PERIOD_UNLIMITED) {
-            strcpy(rate_str_additional, "Unlimited");
+            snprintf(rate_str_additional, sizeof(rate_str_additional), "Unlimited");
         } else {
-            sprintf(rate_str_additional, "   %5ds", prate->additional_period);
+            snprintf(rate_str_additional, sizeof(rate_str_additional), "   %5ds", prate->additional_period);
         }
 
         printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
@@ -106,24 +111,30 @@ int main(int argc, char *argv[])
             rate_str_initial,
             (float)prate->initial_charge / 100,
             rate_str_additional,
-            (float)prate->additional_charge / 100 );
+            (float)prate->additional_charge / 100);
     }
 
     printf("\n+------------------------------------------------------------------------------------------------------------+\n");
 
     if (argc == 3) {
-        ostream = fopen(argv[2], "wb");
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            return(-ENOENT);
+        }
     }
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(prate_table, sizeof(dlog_mt_rate_table_t), 1, ostream);
+        if (fwrite(prate_table, sizeof(dlog_mt_rate_table_t), 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
         fclose(ostream);
     }
     if (prate_table != NULL) {
         free(prate_table);
     }
 
-    return (0);
+    return (ret);
 }

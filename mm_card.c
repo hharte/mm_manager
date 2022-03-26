@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -12,45 +12,46 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
-#include "mm_card.h"
+#include <errno.h>
+#include "./mm_manager.h"
+#include "./mm_card.h"
 
-char *standard_cd_str[] = {
-    "Undefd", // 0
-    "MOD 10", // 1
-    "ANSI  ", // 2
-    "ABA   ", // 3
-    "CBA   ", // 4
-    "BOC   ", // 5
-    "ANSI59", // 6
-    "CCITT ", // 7
-    "PINOFF", // 8
-    "HELLO ", // 9
-    "SMCARD", // 10
-    "Resv'd", // 11
-    "SCGPM4", // 12 SmartCity GPM416
-    "SCPCOS", // 13
-    "SCMPCO", // 14
-    "PROTON"  // 15
+const char *standard_cd_str[] = {
+    "Undefd",   // 0
+    "MOD 10",   // 1
+    "ANSI  ",   // 2
+    "ABA   ",   // 3
+    "CBA   ",   // 4
+    "BOC   ",   // 5
+    "ANSI59",   // 6
+    "CCITT ",   // 7
+    "PINOFF",   // 8
+    "HELLO ",   // 9
+    "SMCARD",   // 10
+    "Resv'd",   // 11
+    "SCGPM4",   // 12 SmartCity GPM416
+    "SCPCOS",   // 13
+    "SCMPCO",   // 14
+    "PROTON"    // 15
 };
 
-char *str_vfy_flags[] = {
-    "MOD10 IND ", // MOD10_IND
-    "NCCVAL IND", // NCC VALIDATION IND
-    "CALLING CD", // CALLING CARD IND
-    "IMMED AUTH", // IMMEDIATE AUTH IND
-    "SVC CD VAL", // SERVICE CD VALIDATION IND
-    "PROMPT PIN", // PROMPT FOR PIN
-    "TELCO PIN ", // PROMPT FOR TELCO PIN
-    "ACCS ROUTE"  // ROUTING
+const char *str_vfy_flags[] = {
+    "MOD10 IND ",   // MOD10_IND
+    "NCCVAL IND",   // NCC VALIDATION IND
+    "CALLING CD",   // CALLING CARD IND
+    "IMMED AUTH",   // IMMEDIATE AUTH IND
+    "SVC CD VAL",   // SERVICE CD VALIDATION IND
+    "PROMPT PIN",   // PROMPT FOR PIN
+    "TELCO PIN ",   // PROMPT FOR TELCO PIN
+    "ACCS ROUTE"    // ROUTING
 };
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int index;
     int j;
+    int ret = 0;
 
     dlog_mt_card_table_t *pcard_table;
 
@@ -60,24 +61,28 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    printf("Nortel Millennium Credit Card Table 0x86 (134) Dump\n\n");
+
     pcard_table = calloc(1, sizeof(dlog_mt_card_table_t));
     if (pcard_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_card_table_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_card_table_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
-
-    printf("Nortel Millennium Credit Card Table 0x86 (134) Dump\n");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(pcard_table);
+        return(-ENOENT);
+    }
 
     if (fread(pcard_table, sizeof(dlog_mt_card_table_t), 1, instream) != 1) {
         printf("Error reading CCARD table.\n");
         free(pcard_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
-    printf("\n+-------------------------------------------------------+---------------+------+------+------+\n" \
+    printf("+-------------------------------------------------------+---------------+------+------+------+\n" \
             "| Idx  | PAN St - End    | STD CD | Vfy | Carrier | Ref | P exp ini dis | Ctrl | Bank | Lang |\n" \
             "+------+-----------------+--------+-----+---------+-----+---------------+------+------+------+");
 
@@ -85,7 +90,8 @@ int main(int argc, char *argv[])
         card_entry_t *pcard = &pcard_table->c[index];
         if (pcard_table->c[index].standard_cd == 0) continue;
 
-        printf("\n|  %2d  | %02x%02x%02x - %02x%02x%02x | %s | x%02x |   0x%02x  | x%02x | P x%02x x%02x x%02x | 0x%02x | 0x%02x | 0x%02x | ",
+        printf("\n|  %2d  | %02x%02x%02x - %02x%02x%02x | %s | x%02x |   0x%02x  | x%02x | P x%02x x%02x x%02x |"\
+               " 0x%02x | 0x%02x | 0x%02x | ",
             index,
             pcard->pan_start[0],
             pcard->pan_start[1],
@@ -102,12 +108,12 @@ int main(int argc, char *argv[])
             pcard->p_disc_data,
             pcard->control_info,
             pcard->bank_info,
-            pcard->lang_code
-            );
+            pcard->lang_code);
+
         print_bits((pcard->vfy_flags ^ CARD_VF_CALLING_CARD_IND), (char **)str_vfy_flags);
 
         printf("\n|      | Service Codes: ");
-        switch(pcard->standard_cd) {
+        switch (pcard->standard_cd) {
             case ansi:
             case aba:
             case cba:
@@ -150,13 +156,15 @@ int main(int argc, char *argv[])
                 break;
         }
         printf("+------+-----------------+--------+-----+---------+-----+---------------+------+------+------+");
-
     }
 
     printf("\n");
 
     if (argc == 3) {
-        ostream = fopen(argv[2], "wb");
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            return(-ENOENT);
+        }
     }
 
     /* Update CARD table */
@@ -183,12 +191,15 @@ int main(int argc, char *argv[])
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(pcard_table, sizeof(dlog_mt_card_table_t), 1, ostream);
+        if (fwrite(pcard_table, sizeof(dlog_mt_card_table_t), 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
         fclose(ostream);
     }
     if (pcard_table != NULL) {
         free(pcard_table);
     }
 
-    return (0);
+    return (ret);
 }

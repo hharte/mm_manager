@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  * Table 0x96 is an array of 400 bytes, where each nibble corresponds
  * to one of the area codes from 200-999.
@@ -18,7 +18,11 @@
  *
  */
 
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <errno.h>
+#include "./mm_manager.h"
 
 char *str_flags[4] = {
     "---",  /* 0 - Invalid NPA */
@@ -27,10 +31,10 @@ char *str_flags[4] = {
     "For"
 };
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     int areacode = 200;
+    dlog_mt_npa_sbr_table_t *npa_table;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -38,15 +42,34 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    instream = fopen(argv[1], "rb");
+    printf("Nortel Millennium NPA (Table 0x96) Dump\n\n");
 
-    printf("Nortel Millennium NPA (Table 0x96) Dump");
-    while(1) {
-        unsigned char c;
-        unsigned char flags0, flags1;
+    npa_table = calloc(1, sizeof(dlog_mt_npa_sbr_table_t));
+    if (npa_table == NULL) {
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_npa_sbr_table_t));
+        return(-ENOMEM);
+    }
 
-        c = (unsigned char)fgetc(instream);
-        if (feof(instream)) break;
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(npa_table);
+        return(-ENOENT);
+    }
+
+    if (fread(npa_table, sizeof(dlog_mt_npa_sbr_table_t), 1, instream) != 1) {
+        printf("Error reading NPA table.\n");
+        free(npa_table);
+        fclose(instream);
+        return (-EIO);
+    }
+
+    fclose(instream);
+
+    for (int i = 0; i < sizeof(dlog_mt_npa_sbr_table_t); i++) {
+        uint8_t c;
+        uint8_t flags0, flags1;
+
+        c = npa_table->npa[i];
 
         if (areacode % 200 == 0) {
             printf("\n+-----------------------------------------------------------------+\n" \
@@ -70,5 +93,10 @@ int main(int argc, char *argv[])
     }
 
     printf("\n+-----------------------------------------------------------------+\n");
+
+    if (npa_table != NULL) {
+        free(npa_table);
+    }
+
     return 0;
 }

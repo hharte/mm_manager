@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
+#include <errno.h>
+#include "./mm_manager.h"
 
 const char *auth_bits_str[] = {
     "FC_CARD_AUTH_ON_LOCAL_CALLS",
@@ -131,11 +132,11 @@ const char *datajack_flags_str[] = {
     "FC_DJ_FLAGS_BIT_7"
 };
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     dlog_mt_fconfig_opts_t *featru_table;
+    int ret = 0;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -143,21 +144,25 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    printf("Nortel Millennium FEATRU Table 0x1a (26) Dump\n\n");
+
     featru_table = calloc(1, sizeof(dlog_mt_fconfig_opts_t));
     if (featru_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_fconfig_opts_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_fconfig_opts_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
-
-    printf("Nortel Millennium FEATRU Table 0x1a (26) Dump\n");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(featru_table);
+        return(-ENOENT);
+    }
 
     if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) != 1) {
-        printf("Error reading ADMESS table.\n");
+        printf("Error reading FEATRU table.\n");
         free(featru_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
     fclose(instream);
@@ -171,7 +176,8 @@ int main(int argc, char *argv[])
     printf("                        accs_mode_info: 0x%02x\t", featru_table->accs_mode_info);
     print_bits(featru_table->accs_mode_info, (char **)accs_bits_str);
     printf("\n");
-    printf("                    incoming_call_mode: 0x%02x\t%s\n", featru_table->incoming_call_mode, call_mode_str[(featru_table->incoming_call_mode) & 0x3]);
+    printf("                    incoming_call_mode: 0x%02x\t%s\n",
+        featru_table->incoming_call_mode, call_mode_str[(featru_table->incoming_call_mode) & 0x3]);
     printf("          anti_fraud_for_incoming_call: 0x%02x\n", featru_table->anti_fraud_for_incoming_call);
     printf("                        OOS_POTS_flags: 0x%02x\t", featru_table->OOS_POTS_flags);
     print_bits(featru_table->OOS_POTS_flags, (char **)misc_flags_str);
@@ -198,8 +204,10 @@ int main(int argc, char *argv[])
     printf("                call_setup_param_flags: 0x%02x\t", featru_table->call_setup_param_flags);
     print_bits(featru_table->call_setup_param_flags, (char **)call_setup_flags_str);
     printf("\n");
-    printf("                         dtmf_duration: %d (%dms)\n", featru_table->dtmf_duration, featru_table->dtmf_duration * 10);
-    printf("                      interdigit_pause: %d (%dms)\n", featru_table->interdigit_pause, featru_table->interdigit_pause * 10);
+    printf("                         dtmf_duration: %d (%dms)\n",
+        featru_table->dtmf_duration, featru_table->dtmf_duration * 10);
+    printf("                      interdigit_pause: %d (%dms)\n",
+        featru_table->interdigit_pause, featru_table->interdigit_pause * 10);
     printf("              ppu_preauth_credit_limit: %d\n", featru_table->ppu_preauth_credit_limit);
     printf("                 coin_calling_features: 0x%02x\t", featru_table->coin_calling_features);
     print_bits(featru_table->coin_calling_features, (char **)coin_calling_features_str);
@@ -209,7 +217,8 @@ int main(int argc, char *argv[])
     printf("              international_min_digits: %d\n", featru_table->international_min_digits);
     printf("         default_rate_req_payment_type: %d\n", featru_table->default_rate_req_payment_type);
     printf("      next_call_revalidation_frequency: %d\n", featru_table->next_call_revalidation_frequency);
-    printf("               cutoff_on_disc_duration: %d (%dms)\n", featru_table->cutoff_on_disc_duration, featru_table->cutoff_on_disc_duration * 10);
+    printf("               cutoff_on_disc_duration: %d (%dms)\n",
+        featru_table->cutoff_on_disc_duration, featru_table->cutoff_on_disc_duration * 10);
     printf("        cdr_upload_timer_international: %ds\n", featru_table->cdr_upload_timer_international);
     printf("             cdr_upload_timer_domestic: %ds\n", featru_table->cdr_upload_timer_domestic);
     printf("            num_perf_stat_dialog_fails: %d\n", featru_table->num_perf_stat_dialog_fails);
@@ -247,28 +256,38 @@ int main(int argc, char *argv[])
     /* Modify FEATRU table */
     featru_table->card_val_info |= FC_NO_NPA_ADDED_ZP_LOCAL_ACCS;
     featru_table->accs_mode_info = 0;
-    featru_table->anti_fraud_for_incoming_call = 0;                 /* Don't dial a digit when incoming call is answered. */
-    featru_table->OOS_POTS_flags = ( FC_IN_SERVICE_ON_CDR_LIST_FULL | FC_TERM_RATE_DISPLAY_OPTION | FC_INCOMING_CALL_FCA_PRECEDENCE | FC_FCA_ON_CARD | FC_REVERT_TO_PRIMARY_NCC_NUM | FC_RATED_CREDIT_CARD_CDR ); // FC_11_DIGIT_LOCAL_CALLS
-    featru_table->rating_flags = ( FC_ENABLE_NPA_SBR | FC_ENABLE_IXL_SBR | FC_SHOW_INIT_ADDL_RATE | FC_ENABLE_DIAL_AROUND ); // FC_ROUND_UP_CHARGE FC_7_DIGIT_NO_WAIT
+    featru_table->anti_fraud_for_incoming_call = 0;         /* Don't dial a digit when incoming call is answered. */
+    featru_table->OOS_POTS_flags = (FC_IN_SERVICE_ON_CDR_LIST_FULL | FC_TERM_RATE_DISPLAY_OPTION | \
+        FC_INCOMING_CALL_FCA_PRECEDENCE | FC_FCA_ON_CARD | FC_REVERT_TO_PRIMARY_NCC_NUM | \
+        FC_RATED_CREDIT_CARD_CDR);  // FC_11_DIGIT_LOCAL_CALLS
+    featru_table->rating_flags = (FC_ENABLE_NPA_SBR | FC_ENABLE_IXL_SBR | FC_SHOW_INIT_ADDL_RATE | \
+        FC_ENABLE_DIAL_AROUND);  // FC_ROUND_UP_CHARGE FC_7_DIGIT_NO_WAIT
     featru_table->advertising_flags |= FC_REP_DIALER_ADVERTISING;
-    featru_table->advertising_flags &= ~FC_TIME_FORMAT;             /* 24-hour time format. */
+    featru_table->advertising_flags &= ~FC_TIME_FORMAT;     /* 24-hour time format. */
     featru_table->call_setup_param_flags |= FC_DISPLAY_CALLED_NUMBER;
     featru_table->call_setup_param_flags &= ~FC_SUPPRESS_CALLING_PROMPT;
     featru_table->datajack_flags &= ~FC_DATAJACK_ENABLED;
-    featru_table->grace_period_domestic = 5;                        // 5 second grace period.
+    featru_table->grace_period_domestic = 5;                /* 5 second grace period. */
     featru_table->call_screen_list_ixl_aos_entry = 0;
     featru_table->call_screen_list_inter_lata_aos_entry = 0;
     featru_table->call_screen_list_zm_aos_entry = 0;
     featru_table->call_screen_list_zp_aos_entry = 0;
 
     if (argc > 2) {
-        ostream = fopen(argv[2], "wb");
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            free(featru_table);
+            return(-ENOENT);
+        }
     }
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, ostream);
+        if (fwrite(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
         fclose(ostream);
     }
 
@@ -276,5 +295,5 @@ int main(int argc, char *argv[])
         free(featru_table);
     }
 
-    return (0);
+    return (ret);
 }

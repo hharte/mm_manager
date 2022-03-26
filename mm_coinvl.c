@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
-
+#include <errno.h>
+#include "./mm_manager.h"
 
 const char *str_coin_name[] = {
     "CDN Nickel       ",
@@ -75,11 +75,11 @@ typedef struct dlog_mt_coin_val_table {
 
 #pragma pack(pop)
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int coin_index;
+    int ret = 0;
 
     dlog_mt_coin_val_table_t *pcoinvl_table;
 
@@ -89,31 +89,34 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    printf("Nortel Millennium COINVL Table (Table 50) Dump\n\n");
+
     pcoinvl_table = calloc(1, sizeof(dlog_mt_coin_val_table_t));
     if (pcoinvl_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_coin_val_table_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_coin_val_table_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
-
-    printf("Nortel Millennium COINVL Table (Table 50) Dump\n");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(pcoinvl_table);
+        return(-ENOENT);
+    }
 
     if (fread(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, instream) != 1) {
-        printf("Error reading CARRIER table.\n");
+        printf("Error reading COINVL table.\n");
         free(pcoinvl_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
     fclose(instream);
 
-    printf("\n+---------------------------------------------+\n" \
+    printf("+---------------------------------------------+\n" \
             "|  # | Coin Type         | Val | Vol | Params |\n" \
             "+----+-------------------+-----+-----+--------+");
 
     for (coin_index = 0; coin_index < COIN_TYPES_MAX; coin_index++) {
-
         printf("\n| %2d | %s | %3d | %3d |     %2d |",
             coin_index+1,
             str_coin_name[coin_index],
@@ -162,13 +165,20 @@ int main(int argc, char *argv[])
     pcoinvl_table->coin_volume[cdn_dollar2] = 40;
 
     if (argc > 2) {
-        ostream = fopen(argv[2], "wb");
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            free(pcoinvl_table);
+            return(-ENOENT);
+        }
     }
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, ostream);
+        if (fwrite(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
         fclose(ostream);
     }
 
@@ -176,5 +186,5 @@ int main(int argc, char *argv[])
         free(pcoinvl_table);
     }
 
-    return (0);
+    return (ret);
 }

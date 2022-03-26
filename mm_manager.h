@@ -925,6 +925,16 @@ typedef struct dlog_mt_scard_parm_table {
     uint8_t     spare[6];                               /* Spare */
 } dlog_mt_scard_parm_table_t;
 
+#define MAX_NPA     800
+typedef struct dlog_mt_npa_sbr_table {
+    uint8_t     npa[MAX_NPA / 2];                       /* Storage for 800 4-bit NPAs */
+} dlog_mt_npa_sbr_table_t;
+
+typedef struct dlog_mt_npa_nxx_table {
+    uint8_t     npa[2];
+    uint8_t     lcd[MAX_NPA / 4];                       /* Storage for 800 2-bit NPAs */
+} dlog_mt_npa_nxx_table_t;
+
 #define TABLE_PATH_MAX_LEN   283
 
 typedef struct mm_context {

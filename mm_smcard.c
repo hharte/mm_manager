@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
+#include <errno.h>
+#include "./mm_manager.h"
 
 /* Smart Card Rebate Strings */
 const char *str_smcard_rebate[] = {
@@ -34,8 +35,7 @@ const char *str_smcard_rebate[] = {
 
 int mult_lut[4] = {1, 5, 10, 25};
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     int index;
 
@@ -47,26 +47,30 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    printf("Nortel Millennium Call Smart Card Table (Table 93) Dump\n");
+    printf("Nortel Millennium Call Smart Card Table (Table 93) Dump\n\n");
 
     psmcard_table = calloc(1, sizeof(dlog_mt_scard_parm_table_t));
     if (psmcard_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_scard_parm_table_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_scard_parm_table_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(psmcard_table);
+        return(-ENOENT);
+    }
 
     if (fread(psmcard_table, sizeof(dlog_mt_scard_parm_table_t), 1, instream) != 1) {
         printf("Error reading SMCARD table.\n");
         free(psmcard_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
-    printf("\n+--------------------------+\n" \
-            "| Idx | DES Key            |\n" \
-            "+--------------------------+\n");
+    printf("+--------------------------+\n" \
+           "| Idx | DES Key            |\n" \
+           "+--------------------------+\n");
 
     for (index = 0; index < SC_DES_KEY_MAX; index++) {
         printf("|  %2d | 0x%02x%02x%02x%02x%02x%02x%02x%02x |\n",

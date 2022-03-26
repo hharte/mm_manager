@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  */
 
@@ -12,23 +12,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
+#include <errno.h>
+#include "./mm_manager.h"
 
 const char *callscrn_free_flags_str[] = {
-    "FREE", // "FREE_DENY_IND",
-    "ASUP", // "ANSWER_SUPERVISION",
-    "KPEN", // "KEYPAD_ENABLE_IND",
-    "POTS", // "FAIL_TO_POTS_ONLY",
-    "MUTE", // "TRANSMITTER_MUTED",
-    "TOUT", // "TIMEOUT_BEFORE_DIALING",
-    "COIN", // "DENY_CARD_PYMNT_IND", // Coin only, no card
-    "FG-B"  // "FEATURE_GROUP_B_NUMBER"
+    "FREE",     // "FREE_DENY_IND",
+    "ASUP",     // "ANSWER_SUPERVISION",
+    "KPEN",     // "KEYPAD_ENABLE_IND",
+    "POTS",     // "FAIL_TO_POTS_ONLY",
+    "MUTE",     // "TRANSMITTER_MUTED",
+    "TOUT",     // "TIMEOUT_BEFORE_DIALING",
+    "COIN",     // "DENY_CARD_PYMNT_IND", // Coin only, no card
+    "FG-B"      // "FEATURE_GROUP_B_NUMBER"
 };
 
 /* IDENT2 Flags, see pp. 2-193 */
 const char *callscrn_ident2_str[] = {
-    "DENY MDS", // Deny to Message Delivery Service (MDS)
-    "DENY DJ",  // Deny to Datajack
+    "DENY MDS",     // Deny to Message Delivery Service (MDS)
+    "DENY DJ",      // Deny to Datajack
     "ALW RES SVC",  // Allow in restricted service
     "TGT CDR REC",  // Targeted CDR Recording
     "PFX Enb",
@@ -47,7 +48,7 @@ const char *str_call_class[] = {
 };
 
 /* Call Type (lower 4-bits) of CALLTYP */
-char *call_type_strings[16] = {
+const char *call_type_strings[16] = {
     "Incomng",  // Incoming
     "Unans'd",  // Unanswered
     "Abandon",  // Abandoned
@@ -68,8 +69,7 @@ char *call_type_strings[16] = {
 
 uint8_t call_class_lut[] = { 0x01, 0x11, 0x41, 0x81, 0x00 };
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     int callscrn_index;
     char phone_number_str[20];
@@ -83,24 +83,28 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
+    printf("Nortel Millennium Call Screening List Table (Table 92) Dump\n\n");
+
     pcallscrn_table = calloc(1, sizeof(dlog_mt_call_screen_list_t));
     if (pcallscrn_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_call_screen_list_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_call_screen_list_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
-
-    printf("Nortel Millennium Call Screening List Table (Table 92) Dump\n");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(pcallscrn_table);
+        return(-ENOENT);
+    }
 
     if (fread(pcallscrn_table, sizeof(dlog_mt_call_screen_list_t), 1, instream) != 1) {
         printf("Error reading CALLSCRN table.\n");
         free(pcallscrn_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
-    printf("\n+-------------------------------------------------------------------------------------------+\n" \
+    printf("+-------------------------------------------------------------------------------------------+\n" \
             "| Call Entry | FCF  |CALLTYP|Carrier|Flags2| Phone Number       | Class | Class Description |\n" \
             "+------------+------+-------+-------+------+--------------------+-------+-------------------+\n");
 

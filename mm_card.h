@@ -5,9 +5,12 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020, Howard M. Harte
+ * Copyright (c) 2020, Howard M. Harte
  *
  */
+
+#ifndef MM_CARD_H_
+#define MM_CARD_H_
 
 #pragma pack(push)
 #pragma pack(1)         /* Pack data structures for communication with terminal. */
@@ -92,3 +95,5 @@ typedef enum std_card_type {
 #define CARD_VF_ACCS_ROUTING                (1 << 7)    // “0” Route to Millennium Manager, “1” Route to ACCS
 
 #pragma pack(pop)
+
+#endif  // MM_CARD_H_

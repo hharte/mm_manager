@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2022, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -14,18 +14,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "mm_manager.h"
+#include <errno.h>
+#include "./mm_manager.h"
 
 rdlist_table_entry_t rdlist[10];
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int rdlist_index;
     char phone_number[17];
     char display_prompt_string[21];
     char display_prompt_string2[21];
+    int ret = 0;
 
     dlog_mt_rdlist_table_t *prdlist_table;
 
@@ -35,31 +36,34 @@ int main(int argc, char *argv[])
         return (-1);
     }
 
-    printf("Nortel Millennium RDLIST Table (Table 55) Dump\n");
+    printf("Nortel Millennium RDLIST Table (Table 55) Dump\n\n");
 
     prdlist_table = calloc(1, sizeof(dlog_mt_rdlist_table_t));
     if (prdlist_table == NULL) {
-        printf("Failed to allocate %lu bytes.\n", (unsigned long)sizeof(dlog_mt_rdlist_table_t));
-        return(-2);
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_rdlist_table_t));
+        return(-ENOMEM);
     }
 
-    instream = fopen(argv[1], "rb");
+    if ((instream = fopen(argv[1], "rb")) == NULL) {
+        printf("Error opening %s\n", argv[1]);
+        free(prdlist_table);
+        return(-ENOENT);
+    }
 
     if (fread(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, instream) != 1) {
         printf("Error reading RDLIST table.\n");
         free(prdlist_table);
         fclose(instream);
-        return (-2);
+        return (-EIO);
     }
 
     fclose(instream);
 
-    printf("\n+-----------------------------------------------------------------------------------------------+\n" \
+    printf("+-----------------------------------------------------------------------------------------------+\n" \
             "|  # | Pad            | Number           | Display Prompt       |  Pad2                         |\n" \
             "+----+----------------+------------------+----------------------+-------------------------------+");
 
     for (rdlist_index = 0; rdlist_index < RDLIST_MAX; rdlist_index++) {
-
         callscrn_num_to_string(phone_number, sizeof(phone_number), prdlist_table->rd[rdlist_index].phone_number, 8);
 
         if (prdlist_table->rd[rdlist_index].display_prompt[0] >= 0x20) {
@@ -90,19 +94,26 @@ int main(int argc, char *argv[])
             prdlist_table->rd[rdlist_index].pad2[4],
             prdlist_table->rd[rdlist_index].pad2[5]);
 
-        printf("\n|    |                |                  | %s |                               |", display_prompt_string2);
+        printf("\n|    |                |                  | %s |                               |",
+            display_prompt_string2);
     }
 
     printf("\n+-----------------------------------------------------------------------------------------------+\n");
 
     if (argc > 2) {
-        ostream = fopen(argv[2], "wb");
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            return(-ENOENT);
+        }
     }
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
-        fwrite(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, ostream);
+        if (fwrite(prdlist_table, sizeof(dlog_mt_rdlist_table_t), 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
         fclose(ostream);
     }
 
@@ -110,5 +121,5 @@ int main(int argc, char *argv[])
         free(prdlist_table);
     }
 
-    return (0);
+    return (ret);
 }
