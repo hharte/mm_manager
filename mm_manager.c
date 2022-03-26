@@ -286,6 +286,20 @@ const char *TPERFST_stats_to_str_lut[43] = {
     "Spare 3"
 };
 
+const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:q";
+
+#if _WIN32
+char *basename(char *path)
+{
+    char fname[20] = { 0 };
+
+    _splitpath(path, NULL, NULL, fname, NULL);
+
+    snprintf(path, sizeof(fname), "%s", fname);
+    return (path);
+}
+#endif /* _WIN32 */
+
 int main(int argc, char* argv[])
 {
     mm_context_t *mm_context;
@@ -298,6 +312,7 @@ int main(int argc, char* argv[])
     int table_len;
     int baudrate = 19200;
     char access_code_str[8];
+    int quiet = 0;
 
     time_t rawtime;
     struct tm *ptm;
@@ -319,8 +334,6 @@ int main(int argc, char* argv[])
     mm_context->terminal_id[0] = '\0';
     mm_context->trans_data_in_progress = 0;
 
-    printf("mm_manager v0.6 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
-
     index = 0;
     mm_context->ncc_number[0][0] = '\0';
     mm_context->ncc_number[1][0] = '\0';
@@ -329,11 +342,29 @@ int main(int argc, char* argv[])
     strcpy(mm_context->term_table_dir, "tables");
     mm_context->minimal_table_set = 0;
 
-    while ((c = getopt (argc, argv, "rvmb:c:d:l:f:ha:n:st:")) != -1) {
+    /* Parse command line to get -q (quiet) option. */
+    while ((c = getopt (argc, argv, cmdline_options)) != -1) {
+        switch (c)
+        {
+            case 'q':
+                quiet = 1;
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (quiet == 0) {
+        printf("mm_manager v0.6 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
+    }
+
+    /* Parse command line again to get the rest of the options. */
+    optind = 1;
+    while ((c = getopt (argc, argv, cmdline_options)) != -1) {
         switch (c)
         {
             case 'h':
-                printf("usage: %s [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n", argv[0]);
+                printf("usage: %s [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n", basename(argv[0]));
                 printf("\t-v verbose (multiple v's increase verbosity.)\n" \
                        "\t-d default_table_dir - default table directory.\n" \
                        "\t-f <filename> modem device or file\n" \
@@ -430,6 +461,8 @@ int main(int argc, char* argv[])
             case 't':
                 snprintf(mm_context->term_table_dir, sizeof(mm_context->term_table_dir), "%s", optarg);
                 break;
+            case 'q':
+                break;
             case '?':
                 if (optopt == 'f' || optopt == 'l' || optopt == 'a' || optopt == 'n' || optopt == 'b')
                     fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -438,6 +471,7 @@ int main(int argc, char* argv[])
                 return 1;
                 break;
             default:
+                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
                 return(-1);
         }
     }

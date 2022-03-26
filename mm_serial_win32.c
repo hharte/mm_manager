@@ -43,6 +43,23 @@ int init_serial(int fd, int baudrate)
     HANDLE hComm = hHandleTable[fd];
     DCB myDCB;
 
+    switch (baudrate) {
+    case 1200:
+    case 2400:
+    case 4800:
+    case 9600:
+    case 19200:
+    case 38400:
+    case 57600:
+    case 115200:
+    case 230400:
+        break;
+    default:
+        printf("%s: Invalid baud rate: %d, defaulting to 1200.\n",
+            __FUNCTION__, baudrate);
+        break;
+    }
+
     if (GetCommState(hComm, &myDCB)) {
         myDCB.BaudRate = baudrate;
         if (SetCommState(hComm, &myDCB)) {
