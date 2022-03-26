@@ -114,7 +114,6 @@ int main(int argc, char *argv[]) {
         twobit_group = nxx % 4;
         if (twobit_group == 0) {
             c = lcd_table->lcd[(nxx - 200) / 4];
-            if (feof(instream)) break;
         }
 
         flag_mask = 0xc0 >> (twobit_group * 2);

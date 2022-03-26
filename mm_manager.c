@@ -511,6 +511,12 @@ int main(int argc, char* argv[]) {
     } else {
         int status;
 
+        if (modem_dev == NULL) {
+            (void)fprintf(stderr, "mm_manager: -f <modem_dev> must be specified.\n");
+            if (mm_context != NULL) free(mm_context);
+            return(-EINVAL);
+        }
+
         if (baudrate < 1200) {
             printf("Error: baud rate must be 1200 bps or faster.\n");
             return(-EINVAL);
@@ -1690,7 +1696,7 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
 void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len) {
     *len = 1;
     *buffer = calloc(1, *len);
-    if (buffer == NULL) {
+    if (*buffer == NULL) {
         printf("Error allocating memory\n");
         exit(-ENOMEM);
     }
