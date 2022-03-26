@@ -12,6 +12,8 @@
 #ifndef MM_CARD_H_
 #define MM_CARD_H_
 
+#include <stdint.h>
+
 #pragma pack(push)
 #pragma pack(1)         /* Pack data structures for communication with terminal. */
 

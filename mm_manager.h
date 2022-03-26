@@ -12,6 +12,9 @@
 #ifndef MM_MANAGER_H_
 #define MM_MANAGER_H_
 
+#include <stdio.h>
+#include <stdint.h>
+
 #define RX 2
 #define TX 3
 

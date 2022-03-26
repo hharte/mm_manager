@@ -220,7 +220,7 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t 
     if (payload != NULL) {
         /* Flags for regular TX packet use tx_seq. */
         pkt.hdr.flags = (context->tx_seq & FLAG_SEQUENCE);
-        pkt.payload_len = len + PKT_TABLE_ID_OFFSET; /* add room for the phone number. */
+        pkt.payload_len = (uint8_t)len + PKT_TABLE_ID_OFFSET; /* add room for the phone number. */
 
         for (int i=0; i < PKT_TABLE_ID_OFFSET; i++) {
             pkt.payload[i]  = (context->terminal_id[i * 2    ] - '0') << 4;

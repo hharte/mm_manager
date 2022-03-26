@@ -4,6 +4,8 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("mm_manager")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 execute_process(COMMAND git describe --dirty --always --tags
                 OUTPUT_VARIABLE GIT_REV
                 ERROR_QUIET)

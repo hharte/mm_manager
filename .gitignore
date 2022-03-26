@@ -1,8 +1,8 @@
 CMakeCache.txt
 CMakeFiles/
-CMakeSettings.json
 Makefile
 cmake_install.cmake
+compile_commands.json
 .vs/
 out/
 install_manifest.txt
