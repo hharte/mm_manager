@@ -10,34 +10,34 @@
  * Copyright (c) 2020-2022, Howard M. Harte
  */
 
-#include <stdio.h>   /* Standard input/output definitions */
+#include <stdio.h>  /* Standard input/output definitions */
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>  /* String function definitions */
+#include <string.h> /* String function definitions */
 
 #include "./mm_manager.h"
 
-#define POLY 0xa001     /* Polynomial to use for CRC-16 calculation */
+#define POLY 0xa001 /* Polynomial to use for CRC-16 calculation */
 
 /* Calculate CRC-16 checksum using 0xA001 polynomial. */
 unsigned crc16(unsigned crc, uint8_t *buf, size_t len) {
     while (len--) {
         crc ^= *buf++;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+        crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
     }
     return crc;
 }
 
 void dump_hex(const uint8_t *data, size_t len) {
-    uint8_t ascii[32] = { 0 };
-    uint8_t *pascii = ascii;
+    uint8_t  ascii[32] = { 0 };
+    uint8_t *pascii    = ascii;
 
     if (len > 0) {
         size_t i;
@@ -52,6 +52,7 @@ void dump_hex(const uint8_t *data, size_t len) {
                 pascii = ascii;
             }
             printf("%02x, ", data[i]);
+
             if ((data[i] >= 0x20) && (data[i] < 0x7F)) {
                 *pascii++ = data[i];
             } else {
@@ -59,6 +60,7 @@ void dump_hex(const uint8_t *data, size_t len) {
             }
         }
         *pascii++ = '\0';
+
         if (strnlen((char *)ascii, sizeof(ascii)) > 0) {
             for (i = 0; i < 16 - strnlen((char *)ascii, sizeof(ascii)); i++) {
                 printf("    ");
@@ -70,23 +72,27 @@ void dump_hex(const uint8_t *data, size_t len) {
 }
 
 /* Convert encoded phone number into string. */
-extern char *phone_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* num_buf, size_t num_buf_len) {
-    char *pstr = string_buf;
+extern char* phone_num_to_string(char *string_buf, size_t string_buf_len, uint8_t *num_buf, size_t num_buf_len) {
+    char  *pstr = string_buf;
     size_t i, j;
 
     j = 0;
 
     for (i = 0; i < num_buf_len; i++) {
         int pn_digit = num_buf[i] >> 4;
+
         if (pn_digit == 0xe) break;
         *pstr++ = (pn_digit) + '0';
         j++;
+
         if (j >= (string_buf_len - 1)) break;
 
         pn_digit = num_buf[i] & 0x0f;
-         if (pn_digit == 0xe) break;
+
+        if (pn_digit == 0xe) break;
         *pstr++ = (pn_digit) + '0';
         j++;
+
         if (j >= (string_buf_len - 1)) break;
     }
 
@@ -116,15 +122,15 @@ extern uint8_t string_to_bcd_a(char *number_string, uint8_t *buffer, uint8_t buf
         }
     }
 
-    return (i);
+    return i;
 }
 
 /* Lookup table to translate number string into text.  Not sure what B, C, D, E, F are used for. */
 const char pn_lut[16] = { '\0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'B', 'C', 'D', 'E', 'F' };
 
 /* Convert encoded phone number terminated with zero into a string. */
-char *callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* num_buf, size_t num_buf_len) {
-    char *pstr = string_buf;
+char* callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t *num_buf, size_t num_buf_len) {
+    char  *pstr = string_buf;
     size_t i, j;
 
     j = 0;
@@ -138,8 +144,9 @@ char *callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* n
         if (j >= (string_buf_len - 1)) break;
 
         pn_digit = num_buf[i] & 0x0f;
-        *pstr++ = pn_lut[pn_digit];
+        *pstr++  = pn_lut[pn_digit];
         j++;
+
         if (j >= (string_buf_len - 1)) break;
     }
 
@@ -187,37 +194,38 @@ const char *pmt_type_str[16] = {
     "UndefinedF",
 };
 
-char *call_type_to_string(uint8_t call_type, char *string_buf, size_t string_buf_len) {
+char* call_type_to_string(uint8_t call_type, char *string_buf, size_t string_buf_len) {
     size_t len_call_type, len_pmt_type;
 
     len_call_type = strlen(call_type_str[call_type & 0x0f]);
-    len_pmt_type = strlen(pmt_type_str[call_type >> 4]);
+    len_pmt_type  = strlen(pmt_type_str[call_type >> 4]);
 
     if ((len_call_type + len_pmt_type + 1) > string_buf_len) {
         return NULL;
     }
 
     snprintf(string_buf, string_buf_len, "%s %s",
-        call_type_str[call_type & 0x0f],
-        pmt_type_str[call_type >> 4]);
+             call_type_str[call_type & 0x0f],
+             pmt_type_str[call_type >> 4]);
 
     return string_buf;
 }
 
-char *timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len) {
+char* timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len) {
     snprintf(string_buf, string_buf_len, "%04d-%02d-%02d %02d:%02d:%02d",
-        timestamp[0] + 1900,
-        timestamp[1],
-        timestamp[2],
-        timestamp[3],
-        timestamp[4],
-        timestamp[5]);
+             timestamp[0] + 1900,
+             timestamp[1],
+             timestamp[2],
+             timestamp[3],
+             timestamp[4],
+             timestamp[5]);
 
     return string_buf;
 }
 
 void print_bits(uint8_t bits, char *str_array[]) {
     int i = 0;
+
     while (bits) {
         if (bits & 1) {
             printf("%s | ", str_array[i]);
@@ -406,10 +414,10 @@ const char *table_string[] = {
     "0xaf"                          // 0xaf
 };
 
-const char *table_to_string(uint8_t table) {
+const char* table_to_string(uint8_t table) {
     if (table >= (sizeof(table_string) / sizeof(char *))) {
         table = 0;
     }
 
-    return (table_string[table]);
+    return table_string[table];
 }

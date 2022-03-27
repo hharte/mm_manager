@@ -25,42 +25,43 @@
 #include "./mm_manager.h"
 
 char *str_flags[4] = {
-    "---",  /* 0 - Invalid NPA */
-    "   ",  /* 1 - Unassigned */
-    "USA",  /* 2 - Local, Intra-LATA, Inter-LATA, depending on LCD Table */
+    "---", /* 0 - Invalid NPA */
+    "   ", /* 1 - Unassigned */
+    "USA", /* 2 - Local, Intra-LATA, Inter-LATA, depending on LCD Table */
     "For"
 };
 
 int main(int argc, char *argv[]) {
     FILE *instream;
-    int areacode = 200;
+    int   areacode = 200;
     dlog_mt_npa_sbr_table_t *npa_table;
 
     if (argc <= 1) {
         printf("Usage:\n" \
                "\tmm_areacode mm_table_96.bin\n");
-        return (-1);
+        return -1;
     }
 
     printf("Nortel Millennium NPA (Table 0x96) Dump\n\n");
 
     npa_table = calloc(1, sizeof(dlog_mt_npa_sbr_table_t));
+
     if (npa_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_npa_sbr_table_t));
-        return(-ENOMEM);
+        return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
         free(npa_table);
-        return(-ENOENT);
+        return -ENOENT;
     }
 
     if (fread(npa_table, sizeof(dlog_mt_npa_sbr_table_t), 1, instream) != 1) {
         printf("Error reading NPA table.\n");
         free(npa_table);
         fclose(instream);
-        return (-EIO);
+        return -EIO;
     }
 
     fclose(instream);
@@ -73,8 +74,8 @@ int main(int argc, char *argv[]) {
 
         if (areacode % 200 == 0) {
             printf("\n+-----------------------------------------------------------------+\n" \
-                     "| NPA |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |\n" \
-                     "+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+");
+                   "| NPA |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |\n"   \
+                   "+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+");
         }
 
         if (areacode % 10 == 0) {

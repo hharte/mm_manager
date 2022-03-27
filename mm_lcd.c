@@ -31,52 +31,54 @@
 #include "./mm_manager.h"
 
 const char *str_flags[4] = {
-    " L ",  /* 0 - Local */
-    " ? ",  /* 1 - ??? Inter-LATA toll? */
-    "$LD",  /* 2 - Intra-LATA toll */
-    " - "   /* 3 - Invalid NPA/NXX */
+    " L ", /* 0 - Local */
+    " ? ", /* 1 - ??? Inter-LATA toll? */
+    "$LD", /* 2 - Intra-LATA toll */
+    " - "  /* 3 - Invalid NPA/NXX */
 };
 
 int main(int argc, char *argv[]) {
     FILE *instream;
     dlog_mt_npa_nxx_table_t *lcd_table;
     uint8_t c;
-    int nxx;
+    int     nxx;
     uint8_t npa_char[2];
     uint8_t check_digit;
-    int npa;
+    int     npa;
 
     if (argc <= 1) {
         printf("Usage:\n" \
                "\tmm_lcd mm_table_88.bin\n");
-        return (-1);
+        return -1;
     }
 
     printf("Nortel Millennium Double-Compressed LCD Table (Tables 136-138) Dump\n\n");
 
     lcd_table = calloc(1, sizeof(dlog_mt_npa_nxx_table_t));
+
     if (lcd_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_npa_nxx_table_t));
-        return(-ENOMEM);
+        return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
         free(lcd_table);
-        return(-ENOENT);
+        return -ENOENT;
     }
 
     if (fread(lcd_table, sizeof(dlog_mt_npa_nxx_table_t), 1, instream) != 1) {
         printf("Error reading LCD table.\n");
         free(lcd_table);
         fclose(instream);
-        return (-EIO);
+        return -EIO;
     }
 
     fclose(instream);
 
     npa_char[0] = lcd_table->npa[0];
-    if (npa_char[0] < 0x20 || npa_char[0] > 0x99) {
+
+    if ((npa_char[0] < 0x20) || (npa_char[0] > 0x99)) {
         printf("Invalid NPA, must be in the range of 200-999.\n");
         free(lcd_table);
         return -1;
@@ -103,8 +105,8 @@ int main(int argc, char *argv[]) {
 
         if (nxx % 200 == 0) {
             printf("\n+---------------------------------------------------------------------+\n" \
-                     "| NPA-NXX |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |\n" \
-                     "+---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+");
+                   "| NPA-NXX |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |\n"   \
+                   "+---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+");
         }
 
         if (nxx % 10 == 0) {
@@ -112,11 +114,12 @@ int main(int argc, char *argv[]) {
         }
 
         twobit_group = nxx % 4;
+
         if (twobit_group == 0) {
             c = lcd_table->lcd[(nxx - 200) / 4];
         }
 
-        flag_mask = 0xc0 >> (twobit_group * 2);
+        flag_mask  = 0xc0 >> (twobit_group * 2);
         flag_shift = 6 - (twobit_group * 2);
 
         flags = (c & flag_mask) >> flag_shift;

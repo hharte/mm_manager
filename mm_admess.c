@@ -18,55 +18,56 @@
 int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
-    int index;
-    char vfd_string[21];
-    int ret = 0;
+    int   index;
+    char  vfd_string[21];
+    int   ret = 0;
 
     dlog_mt_advert_prompts_t *padmess_table;
 
     if (argc <= 1) {
         printf("Usage:\n" \
                "\tmm_admess mm_table_1d.bin [outputfile.bin]\n");
-        return (-1);
+        return -1;
     }
 
     printf("Nortel Millennium Advertising Message Table (Table 29) Dump\n\n");
 
     padmess_table = calloc(1, sizeof(dlog_mt_advert_prompts_t));
+
     if (padmess_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_advert_prompts_t));
-        return(-ENOMEM);
+        return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
         free(padmess_table);
-        return(-ENOENT);
+        return -ENOENT;
     }
 
     if (fread(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) != 1) {
         printf("Error reading ADMESS table.\n");
         fclose(instream);
         free(padmess_table);
-        return (-EIO);
+        return -EIO;
     }
 
     fclose(instream);
 
     printf("+----------------------------------------------------------+\n" \
-            "| Idx  | Duration | Effects | Display Text         | Spare |\n" \
-            "+------+----------+---------+----------------------+-------+\n");
+           "| Idx  | Duration | Effects | Display Text         | Spare |\n" \
+           "+------+----------+---------+----------------------+-------+\n");
 
     for (index = 0; index < ADVERT_PROMPTS_MAX; index++) {
         memcpy(vfd_string, (char *)padmess_table->entry[index].message_text, sizeof(vfd_string) - 1);
         vfd_string[sizeof(vfd_string) - 1] = '\0';
 
         printf("|  %2d  |    %5d |    0x%02x | %s |  0x%02x |\n",
-            index,
-            padmess_table->entry[index].display_time,
-            padmess_table->entry[index].display_attr,
-            vfd_string,
-            padmess_table->entry[index].spare);
+               index,
+               padmess_table->entry[index].display_time,
+               padmess_table->entry[index].display_attr,
+               vfd_string,
+               padmess_table->entry[index].spare);
     }
 
     printf("+----------------------------------------------------------+\n");
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
     if (argc > 2) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
             printf("Error opening output file %s for write.\n", argv[2]);
-            return(-ENOENT);
+            return -ENOENT;
         }
     }
 
@@ -83,6 +84,7 @@ int main(int argc, char *argv[]) {
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
+
         if (fwrite(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
@@ -94,5 +96,5 @@ int main(int argc, char *argv[]) {
         free(padmess_table);
     }
 
-    return (ret);
+    return ret;
 }
