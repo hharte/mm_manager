@@ -263,8 +263,8 @@ const char *table_string[] = {
     "0x18",                         // 0x18
     "0x19",                         // 0x19
     "DLOG_MT_FCONFIG_OPTS",         // 0x1a
-    "0x1b",                         // 0x1b
-    "0x1c",                         // 0x1c
+    "DLOG_MT_VIS_PROPTS_L1",        // 0x1b
+    "DLOG_MT_VIS_PROPTS_L2",        // 0x1c
     "DLOG_MT_ADVERT_PROMPTS",       // 0x1d
     "DLOG_MT_USER_IF_PARMS",        // 0x1e
     "DLOG_MT_INSTALL_PARAMS",       // 0x1f
@@ -321,8 +321,8 @@ const char *table_string[] = {
     "0x52",                         // 0x52
     "0x53",                         // 0x53
     "0x54",                         // 0x54
-    "DLOG_MT_VIS_PROPTS_L1",        // 0x55
-    "DLOG_MT_VIS_PROPTS_L2",        // 0x56
+    "DLOG_MT_EXP_VIS_PROPTS_L1",    // 0x55
+    "DLOG_MT_EXP_VIS_PROPTS_L2",    // 0x56
     "0x57",                         // 0x57
     "0x58",                         // 0x58
     "0x59",                         // 0x59

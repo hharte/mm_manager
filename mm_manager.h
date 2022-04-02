@@ -66,6 +66,8 @@
 #define DLOG_MT_TIME_SYNC           0x14    // 20: Date/Time Synchronization
 #define DLOG_MT_NCC_TERM_PARAMS     0x15    // 21: Terminal Access Parameters
 #define DLOG_MT_FCONFIG_OPTS        0x1a    // 26: Feature Configuration – Universal
+#define DLOG_MT_VIS_PROMPTS_L1      0x1b    // 27: Visual Prompts Language A
+#define DLOG_MT_VIS_PROMPTS_L2      0x1c    // 28: Visual Prompts Language A
 #define DLOG_MT_ADVERT_PROMPTS      0x1d    // 29: Advertising prompts
 #define DLOG_MT_USER_IF_PARMS       0x1e    // 30: User Interface Parameters
 #define DLOG_MT_INSTALL_PARAMS      0x1f    // 31: Installation/Servicing Parameters
@@ -93,8 +95,8 @@
 #define DLOG_MT_CARRIER_STATS_EXP   0x47    // 71: Expanded Carrier Call Statistics Message
 #define DLOG_MT_SPARE_TABLE         0x48    // 72: Spare Table
 #define DLOG_MT_RATE_TABLE          0x49    // 73: Rate Table
-#define DLOG_MT_VIS_PROPTS_L1       0x55    // 85: Expanded Visual Prompts Language A
-#define DLOG_MT_VIS_PROPTS_L2       0x56    // 86: Expanded Visual Prompts Language B
+#define DLOG_MT_EXP_VIS_PROPTS_L1   0x55    // 85: Expanded Visual Prompts Language A
+#define DLOG_MT_EXP_VIS_PROPTS_L2   0x56    // 86: Expanded Visual Prompts Language B
 #define DLOG_MT_CALL_SCREEN_LIST    0x5c    // 92B: 180 Number Call Screening List
 #define DLOG_MT_SCARD_PARM_TABLE    0x5d    // 93: Smart Card Parameters Table
 #define DLOG_MT_CARD_TABLE          0x86    // 134: Expanded Card Table (32 Entries)

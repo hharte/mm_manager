@@ -59,8 +59,8 @@ uint8_t table_list_rev1_3[] = {
     DLOG_MT_CARD_TABLE,       /* Required */
     DLOG_MT_SCARD_PARM_TABLE, /* Required */
     DLOG_MT_CALL_SCREEN_LIST, /* Required */
-    DLOG_MT_VIS_PROPTS_L2,    /* 1.3 only */
-    DLOG_MT_VIS_PROPTS_L1,    /* 1.3 only */
+    DLOG_MT_EXP_VIS_PROPTS_L2,  /* 1.3 only */
+    DLOG_MT_EXP_VIS_PROPTS_L1,  /* 1.3 only */
     DLOG_MT_RATE_TABLE,       /* Required */
     DLOG_MT_SPARE_TABLE,      /* 1.3 only */
     DLOG_MT_NUM_PLAN_TABLE,   /* Required */
@@ -115,6 +115,8 @@ uint8_t table_list_rev1_0[] = {
     DLOG_MT_INSTALL_PARAMS,  /* Required */
     DLOG_MT_USER_IF_PARMS,
     DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_VIS_PROMPTS_L2,
+    DLOG_MT_VIS_PROMPTS_L1,
     DLOG_MT_FCONFIG_OPTS,    /* Required */
     DLOG_MT_NCC_TERM_PARAMS, /* Required */
     DLOG_MT_END_DATA,

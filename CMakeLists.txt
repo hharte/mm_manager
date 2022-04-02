@@ -83,14 +83,10 @@ set(INSTALL_TARGETS
     "mm_smcard"
 )
 
-if(MSVC)
 install(TARGETS ${INSTALL_TARGETS} DESTINATION /)
 install(DIRECTORY tables/default DESTINATION tables)
 install(FILES LICENSE DESTINATION /)
 install(FILES README.md DESTINATION /)
-else()
-install(TARGETS mm_manager DESTINATION /usr/local/bin)
-endif()
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
