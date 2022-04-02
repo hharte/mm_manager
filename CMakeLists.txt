@@ -65,6 +65,35 @@ if(MSVC)
 endif()
 
 # Install
-if (NOT MSVC)
+
+set(INSTALL_TARGETS
+    "mm_manager"
+    "mm_admess"
+    "mm_areacode"
+    "mm_callscrn"
+    "mm_card"
+    "mm_carrier"
+    "mm_coinvl"
+    "mm_featru"
+    "mm_instsv"
+    "mm_lcd"
+    "mm_rate"
+    "mm_rateint"
+    "mm_rdlist"
+    "mm_smcard"
+)
+
+if(MSVC)
+install(TARGETS ${INSTALL_TARGETS} DESTINATION /)
+install(DIRECTORY tables/default DESTINATION tables)
+install(FILES LICENSE DESTINATION /)
+install(FILES README.md DESTINATION /)
+else()
 install(TARGETS mm_manager DESTINATION /usr/local/bin)
 endif()
+
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_PACKAGE_VERSION ${GIT_REV})
+SET(CPACK_OUTPUT_FILE_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
+include(CPack)
