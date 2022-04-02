@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium CARRIER Table (Table 135) Dump\n\n");
 
-    pcarrier_table = calloc(1, sizeof(dlog_mt_carrier_table_t));
+    pcarrier_table = (dlog_mt_carrier_table_t *)calloc(1, sizeof(dlog_mt_carrier_table_t));
 
     if (pcarrier_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_carrier_table_t));
@@ -293,6 +293,12 @@ int main(int argc, char *argv[]) {
 
     printf("\n+------------------------------------------------------------------------------------------------------+\n");
 
+    printf("Spare: ");
+    for (i = 0; i < sizeof(pcarrier_table->spare); i++) {
+        printf("0x%02x, ", pcarrier_table->spare[i]);
+    }
+    printf("\n");
+
     if (argc > 2) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
             printf("Error opening output file %s for write.\n", argv[2]);
@@ -301,8 +307,9 @@ int main(int argc, char *argv[]) {
     }
 
     for (i = 0; i < DEFAULT_CARRIERS_MAX; i++) {
-        pcarrier_table->defaults[i] = i;
+        pcarrier_table->defaults[i] = 0;
     }
+
     memcpy(pcarrier_table->carrier, new_carriers, sizeof(new_carriers));
 
     /* If output file was specified, write it. */
