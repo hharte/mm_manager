@@ -1328,14 +1328,21 @@ int mm_download_tables(mm_context_t *context) {
                 }
                 break;
         }
-        send_mm_table(context, table_buffer, table_len);
+        status = send_mm_table(context, table_buffer, table_len);
 
-        /* For all tables except END_OF_DATA, expect a table ACK. */
-        if (table_list[table_index] != DLOG_MT_END_DATA) {
-            wait_for_table_ack(context, table_buffer[0]);
+        if (status == 0) {
+            /* For all tables except END_OF_DATA, expect a table ACK. */
+            if (table_list[table_index] != DLOG_MT_END_DATA) {
+                status = wait_for_table_ack(context, table_buffer[0]);
+            }
         }
         free(table_buffer);
         table_buffer = NULL;
+
+        if (status & PKT_ERROR_DISCONNECT) {
+            printf("Download failed!!!\n");
+            return status;
+        }
     }
 
     /* Update table download time. */
@@ -1397,7 +1404,8 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
 
         send_mm_packet(context, p, chunk_len, 0);
 
-        if (wait_for_mm_ack(context) != 0) return -1;
+        status = wait_for_mm_ack(context);
+        if (status != 0) return status;
         p               += chunk_len;
         bytes_remaining -= chunk_len;
         printf("\tTable %d (0x%02x) %s progress: (%3d%%) - %4d / %4zu\n",
