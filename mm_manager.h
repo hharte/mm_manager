@@ -571,7 +571,7 @@ typedef struct call_screen_list_entry {
     uint8_t  carrier_ref;                   /* Reference to the RATE/CARRIER table. A value of 255 means there is no reference. */
     uint8_t  ident2;                        /* IDENT2 Flags, see pp. 2-193 */
     uint8_t  phone_number[9];               /* 0-terminated phone number, one digit per nibble. F=single digit wildcard, B=link to another CALLSCR entry (in decimal.) */
-    uint8_t  class;                         /* This seems to indicate class of number */
+    uint8_t  cs_class;                      /* This seems to indicate class of number */
     uint8_t  spare[3];                      /* Reserved for future use. */
 } call_screen_list_entry_t;
 

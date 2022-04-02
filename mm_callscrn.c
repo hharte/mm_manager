@@ -72,7 +72,7 @@ uint8_t call_class_lut[] = { 0x01, 0x11, 0x41, 0x81, 0x00 };
 int main(int argc, char *argv[]) {
     FILE *instream;
     int   callscrn_index;
-    char  phone_number_str[20];
+    char  phone_number_str[20] = { 0 };
     int   i;
 
     dlog_mt_call_screen_list_t *pcallscrn_table;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Call Screening List Table (Table 92) Dump\n\n");
 
-    pcallscrn_table = calloc(1, sizeof(dlog_mt_call_screen_list_t));
+    pcallscrn_table = (dlog_mt_call_screen_list_t *)calloc(1, sizeof(dlog_mt_call_screen_list_t));
 
     if (pcallscrn_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_call_screen_list_t));
@@ -126,10 +126,10 @@ int main(int argc, char *argv[]) {
                pcallscreen_entry->carrier_ref,
                pcallscreen_entry->ident2,
                phone_number_str,
-               pcallscreen_entry->class);
+               pcallscreen_entry->cs_class);
 
         for (i = 0; i < sizeof(call_class_lut); i++) {
-            if (pcallscreen_entry->class == call_class_lut[i]) {
+            if (pcallscreen_entry->cs_class == call_class_lut[i]) {
                 printf("%s | ", str_call_class[i]);
                 break;
             }

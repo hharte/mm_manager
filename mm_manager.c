@@ -352,7 +352,6 @@ int main(int argc, char *argv[]) {
     mm_context_t *mm_context;
     mm_table_t    mm_table;
     char *modem_dev = NULL;
-    char *table_dir = NULL;
     int   ncc_index = 0;
     int   c;
     uint8_t *instsv_table_buffer;
@@ -372,7 +371,7 @@ int main(int argc, char *argv[]) {
         return -EINVAL;
     }
 
-    mm_context = calloc(1, sizeof(mm_context_t));
+    mm_context = (mm_context_t *)calloc(1, sizeof(mm_context_t));
 
     if (mm_context == NULL) {
         printf("Error: failed to allocate %d bytes.\n", (int)sizeof(mm_context_t));
@@ -510,8 +509,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    for (c = optind; c < argc; c++) {
-        fprintf(stderr, "Error: superfluous non-option argument '%s'.\n", argv[c]);
+    if (optind < argc) {
+        for (c = optind; c < argc; c++) {
+            fprintf(stderr, "Error: superfluous non-option argument '%s'.\n", argv[c]);
+        }
         free(mm_context);
         return -EINVAL;
     }
@@ -1125,7 +1126,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             }
             case DLOG_MT_RATE_REQUEST: {
                 char phone_number[21]                        = { 0 };
-                dlog_mt_rate_response_t rate_response        = { 0 };
+                dlog_mt_rate_response_t rate_response        = { { 0 } };
                 dlog_mt_rate_request_t *dlog_mt_rate_request = (dlog_mt_rate_request_t *)ppayload;
                 ppayload += sizeof(dlog_mt_rate_request_t);
 
@@ -1238,7 +1239,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
         } else {                                    /* No cashbox staus saved for this terminal, use default */
             cashbox_status_univ_t empty_cashbox_status = {
                 .timestamp = { 99, 1, 1, 0, 0, 0 }, /* January 1, 1999 00:00:00 */
-                { 0 }
+                .pad = { 0 },
+                .status = 0,
+                .percent_full = 0,
+                .currency_value = 0,
+                .pad2 = { 0 },
+                .coin_count = { 0 },
+                .spare = { 0 }
             };
 
             *pack_payload++ = DLOG_MT_CASH_BOX_STATUS;
@@ -1300,7 +1307,6 @@ int mm_download_tables(mm_context_t *context) {
                 generate_dlog_mt_end_data(context, &table_buffer, &table_len);
                 break;
             default:
-                status = -1;
                 printf("\t");
                 /* For Craft Force Download, only download tables that are newer. */
                 if (context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL) {
@@ -1340,8 +1346,6 @@ static int update_terminal_download_time(mm_context_t *context) {
     FILE *stream;
     char  fname[TABLE_PATH_MAX_LEN];
     char  date[100];
-    uint32_t size;
-    uint8_t *bufp;
     time_t rawtime;
     struct tm ptm = { 0 };
 
@@ -1372,8 +1376,9 @@ static int update_terminal_download_time(mm_context_t *context) {
     return 0;
 }
 int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
-    int bytes_remaining;
-    int chunk_len;
+    size_t   bytes_remaining;
+    size_t   chunk_len;
+    int      status;
     uint8_t *p = payload;
     uint8_t  table_id;
 
@@ -1402,7 +1407,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
 }
 
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
-    mm_packet_t  packet = { 0 };
+    mm_packet_t  packet = { { 0 } };
     mm_packet_t *pkt    = &packet;
     int status;
 
@@ -1511,7 +1516,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     fseek(stream, 0, SEEK_SET);
 
     size++;  // Make room for table ID.
-    *buffer = calloc(size, sizeof(uint8_t));
+    *buffer = (uint8_t *)calloc(size, sizeof(uint8_t));
     fflush(stdout);
 
     if (*buffer == 0) {
@@ -1589,7 +1594,7 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     uint8_t *pbuffer;
 
     *len    = sizeof(dlog_mt_ncc_term_params_t) + 1;
-    pbuffer = calloc(1, *len);
+    pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
         printf("Error allocating memory\n");
@@ -1630,7 +1635,7 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
     uint8_t   call_in_hour;
 
     *len    = sizeof(dlog_mt_call_in_params_t) + 1;
-    pbuffer = calloc(1, *len);
+    pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
         printf("Error allocating memory\n");
@@ -1706,7 +1711,7 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     uint8_t *pbuffer;
 
     *len    = sizeof(dlog_mt_call_stat_params_t) + 1;
-    pbuffer = calloc(1, *len);
+    pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
         printf("Error allocating memory\n");
@@ -1762,7 +1767,7 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     uint8_t *pbuffer;
 
     *len    = sizeof(dlog_mt_comm_stat_params_t) + 1;
-    pbuffer = calloc(1, *len);
+    pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
         printf("Error allocating memory\n");
@@ -1812,7 +1817,7 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
     uint8_t *pbuffer;
 
     *len    = sizeof(dlog_mt_user_if_params_t) + 1;
-    pbuffer = calloc(1, *len);
+    pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
         printf("Error allocating memory\n");
@@ -1895,7 +1900,7 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
 
 void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len) {
     *len    = 1;
-    *buffer = calloc(1, *len);
+    *buffer = (uint8_t *)calloc(1, *len);
     if (*buffer == NULL) {
         printf("Error allocating memory\n");
         exit(-ENOMEM);
@@ -1970,3 +1975,4 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-t term_table_dir - terminal-specific table directory.\n");
     return;
 }
+
