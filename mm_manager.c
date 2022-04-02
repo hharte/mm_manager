@@ -741,15 +741,13 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 break;
             }
             case DLOG_MT_ATN_REQ_TAB_UPD: {
-                uint8_t terminal_upd_reason;
-
-                terminal_upd_reason = *ppayload++;
-                printf("\t\tTerminal requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n", terminal_upd_reason,
-                       terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
-                       terminal_upd_reason & TTBLREQ_CRAFT_INSTALL  ? "Install, " : "",
-                       terminal_upd_reason & TTBLREQ_LOST_MEMORY    ? "Lost Memory, " : "",
-                       terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
-                       terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
+                context->terminal_upd_reason = *ppayload++;
+                printf("\t\tTerminal requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n", context->terminal_upd_reason,
+                       context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
+                       context->terminal_upd_reason & TTBLREQ_CRAFT_INSTALL  ? "Install, " : "",
+                       context->terminal_upd_reason & TTBLREQ_LOST_MEMORY    ? "Lost Memory, " : "",
+                       context->terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
+                       context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
 
                 cashbox_pending        = 1;
                 table_download_pending = 1;
@@ -1005,8 +1003,14 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 dont_send_reply = 1;
                 break;
             }
-            case DLOG_MT_CALL_IN:
+            case DLOG_MT_CALL_IN: {
+                printf("\t\tCall In\n");
+                *pack_payload++                 = DLOG_MT_TRANS_DATA;
+                context->trans_data_in_progress = 1;
+                break;
+            }
             case DLOG_MT_CALL_BACK: {
+                printf("\t\tCall Back\n");
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
                 break;
@@ -1296,7 +1300,16 @@ int mm_download_tables(mm_context_t *context) {
                 generate_dlog_mt_end_data(context, &table_buffer, &table_len);
                 break;
             default:
+                status = -1;
                 printf("\t");
+                /* For Craft Force Download, only download tables that are newer. */
+                if (context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL) {
+                    if (check_mm_table_is_newer(context, table_list[table_index]) != 0) {
+                        table_buffer = NULL;
+                        continue;
+                    }
+                }
+
                 status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
 
                 /* If table can't be loaded, continue to the next. */
@@ -1317,9 +1330,47 @@ int mm_download_tables(mm_context_t *context) {
         table_buffer = NULL;
     }
 
+    /* Update table download time. */
+    update_terminal_download_time(context);
+
     return 0;
 }
 
+static int update_terminal_download_time(mm_context_t *context) {
+    FILE *stream;
+    char  fname[TABLE_PATH_MAX_LEN];
+    char  date[100];
+    uint32_t size;
+    uint8_t *bufp;
+    time_t rawtime;
+    struct tm ptm = { 0 };
+
+    if (context->terminal_id[0] != '\0') {
+        snprintf(fname, sizeof(fname), "%s/%s/table_update.log", context->term_table_dir, context->terminal_id);
+    } else {
+        return -EINVAL;
+    }
+
+    if (context->use_modem == 1) {
+        time(&rawtime);
+    } else {
+        rawtime = JAN12020;
+    }
+
+    localtime_r(&rawtime, &ptm);
+    strftime(date, 99, "%Y-%m-%d %H:%M:%S", &ptm);
+
+    if (!(stream = fopen(fname, "a+"))) {
+        printf("Could not open '%s'.\n", fname);
+        return -ENOENT;
+    }
+
+    printf("%s: Terminal %s download complete.\n", date, context->terminal_id);
+    fprintf(stream, "%s: Terminal %s download complete.\n", date, context->terminal_id);
+    fclose(stream);
+
+    return 0;
+}
 int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
     int bytes_remaining;
     int chunk_len;
@@ -1387,6 +1438,51 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
                __FUNCTION__, table_id, table_id, status);
     }
     return status;
+}
+
+static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id) {
+    char  fname[TABLE_PATH_MAX_LEN];
+    char  download_time_fname[TABLE_PATH_MAX_LEN];
+    struct stat table_mtime_attr;
+    struct stat last_download_time_attr;
+
+    char  last_download_date[100];
+    char  table_mtime_date[100];
+
+    struct tm ptm = { 0 };
+
+    if (context->terminal_id[0] != '\0') {
+        snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, context->terminal_id, table_id);
+        snprintf(download_time_fname, sizeof(download_time_fname), "%s/%s/table_update.log", context->term_table_dir, context->terminal_id);
+        if (stat(fname, &table_mtime_attr) == -1) {
+            snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
+            if (stat(fname, &table_mtime_attr) == -1) {
+                table_mtime_attr.st_mtime = 0;
+            }
+        }
+
+        if (stat(download_time_fname, &last_download_time_attr) == -1) {
+            last_download_time_attr.st_mtime = 0;
+        }
+    } else {
+        table_mtime_attr.st_mtime = 0;
+        last_download_time_attr.st_mtime = 0;
+    }
+
+    localtime_r(&last_download_time_attr.st_mtime, &ptm);
+    strftime(last_download_date, 99, "%Y-%m-%d %H:%M:%S", &ptm);
+
+    localtime_r(&table_mtime_attr.st_mtime, &ptm);
+    strftime(table_mtime_date, 99, "%Y-%m-%d %H:%M:%S", &ptm);
+
+    if (table_mtime_attr.st_mtime < last_download_time_attr.st_mtime) {
+        printf("Skipping download of table %d: last downloaded: %s, mtime: %s.\n",
+            table_id,
+            last_download_date,
+            table_mtime_date);
+            return -1;
+    }
+    return 0;
 }
 
 int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len) {

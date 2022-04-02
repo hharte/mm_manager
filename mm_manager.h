@@ -968,6 +968,7 @@ typedef struct mm_context {
     uint8_t debuglevel;
     uint8_t connected;
     uint8_t minimal_table_set;
+    uint8_t terminal_upd_reason;
     dlog_mt_install_params_t instsv;
     cashbox_status_univ_t cashbox_status;
 } mm_context_t;
@@ -987,6 +988,8 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
 void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len);
 int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
+static int update_terminal_download_time(mm_context_t *context);
+static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id);
 static void mm_display_help(const char *name, FILE *stream);
 
 /* MM Protocol */
