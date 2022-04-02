@@ -366,6 +366,12 @@ int main(int argc, char *argv[]) {
 
     opterr = 0;
 
+    if (argc < 2) {
+        mm_display_help(basename(argv[0]), stderr);
+        fprintf(stderr, "\nError: at least -f <filename> must be specified.\n");
+        return -EINVAL;
+    }
+
     mm_context = calloc(1, sizeof(mm_context_t));
 
     if (mm_context == NULL) {
@@ -397,20 +403,8 @@ int main(int argc, char *argv[]) {
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
         switch (c) {
             case 'h':
-                printf(
-                    "usage: %s [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
-                    basename(argv[0]));
-                printf("\t-v verbose (multiple v's increase verbosity.)\n"   \
-                       "\t-d default_table_dir - default table directory.\n" \
-                       "\t-f <filename> modem device or file\n"              \
-                       "\t-h this help.\n"
-                       "\t-c <cdrfile.csv> - Write Call Detail Records to a CSV file.\n"                                                \
-                       "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
-                       "\t-m use serial modem (specify device with -f)\n"                                                               \
-                       "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \
-                       "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
-                       "\t-s small - Download only minimum required tables to terminal.\n"                                              \
-                       "\t-t term_table_dir - terminal-specific table directory.\n");
+                mm_display_help(basename(argv[0]), stdout);
+                free(mm_context);
                 return 0;
                 break;
             case 'a':
@@ -420,40 +414,40 @@ int main(int argc, char *argv[]) {
 
                 if (strnlen(optarg, 7) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
+                    free(mm_context);
                     return -EINVAL;
                 }
 
                 if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
                     fprintf(stderr, "Error reading install parameters from %s.\n", instsv_fname);
+                    free(mm_context);
                     return -ENOENT;
                 }
                 memcpy(&mm_context->instsv, instsv_table_buffer + 1, sizeof(dlog_mt_install_params_t));
                 free(instsv_table_buffer);
 
                 if (rewrite_instserv_parameters(optarg, &mm_context->instsv, instsv_fname)) {
-                    printf("Error updating INSTSV parameters\n");
+                    fprintf(stderr, "Error updating INSTSV parameters\n");
+                    free(mm_context);
                     return -EPERM;
                 }
                 break;
             }
             case 'c':
-
                 if (!(mm_context->cdr_stream = fopen(optarg, "a+"))) {
-                    (void)fprintf(stderr,
-                                  "mm_manager: %s: %s\n", optarg, strerror(errno));
-
-                    if (mm_context != NULL) free(mm_context);
-                    exit(-ENOENT);
+                    fprintf(stderr, "mm_manager: Can't access CDR file %s: %s\n", optarg, strerror(errno));
+                    free(mm_context);
+                    return -ENOENT;
                 }
                 fseek(mm_context->cdr_stream, 0, SEEK_END);
 
                 if (ftell(mm_context->cdr_stream) == 0) {
-                    printf("Creating CDR file '%s'\n", optarg);
+                    printf("Created CDR file '%s'\n", optarg);
                     fprintf(mm_context->cdr_stream,
                             "TERMINAL_ID,SEQ,TIMESTAMP,DURATION,TYPE,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE\n");
                     fflush(mm_context->cdr_stream);
                 } else {
-                    printf("Appending to existing CDR file '%s'\n", optarg);
+                    printf("Appending existing CDR file '%s'\n", optarg);
                 }
                 break;
             case 'v':
@@ -463,12 +457,9 @@ int main(int argc, char *argv[]) {
                 modem_dev = optarg;
                 break;
             case 'l':
-
                 if (!(mm_context->logstream = fopen(optarg, "w"))) {
-                    (void)fprintf(stderr,
-                                  "mm_manager: %s: %s\n", optarg, strerror(errno));
-
-                    if (mm_context != NULL) free(mm_context);
+                    fprintf(stderr, "mm_manager: Can't write log file '%s': %s\n", optarg, strerror(errno));
+                    free(mm_context);
                     return -ENOENT;
                 }
                 break;
@@ -482,11 +473,13 @@ int main(int argc, char *argv[]) {
 
                 if (ncc_index > 1) {
                     fprintf(stderr, "-n may only be specified twice.\n");
+                    free(mm_context);
                     return -EINVAL;
                 }
 
                 if ((strnlen(optarg, 16) < 1) || (strnlen(optarg, 16) > 15)) {
                     fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
+                    free(mm_context);
                     return -EINVAL;
                 } else {
                     snprintf(mm_context->ncc_number[ncc_index], sizeof(mm_context->ncc_number[0]), "%s", optarg);
@@ -506,21 +499,21 @@ int main(int argc, char *argv[]) {
             case 'q':
                 break;
             case '?':
-
-                if ((optopt == 'f') || (optopt == 'l') || (optopt == 'a') || (optopt == 'n') || (optopt == 'b')) {
+            default:
+                if ((optopt == 'c') || (optopt == 'f') || (optopt == 'l') || (optopt == 'a') || (optopt == 'n') || (optopt == 'b')) {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 } else {
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 }
-                return -EINVAL;
-            default:
-                fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                free(mm_context);
                 return -EINVAL;
         }
     }
 
     for (c = optind; c < argc; c++) {
-        printf("Superfluous non-option argument '%s' ignored.\n", argv[c]);
+        fprintf(stderr, "Error: superfluous non-option argument '%s'.\n", argv[c]);
+        free(mm_context);
+        return -EINVAL;
     }
 
     printf("Default Table directory: %s\n",                         mm_context->default_table_dir);
@@ -528,6 +521,7 @@ int main(int argc, char *argv[]) {
 
     if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
         fprintf(stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context->default_table_dir);
+        free(mm_context);
         return -ENOENT;
     }
     memcpy(&mm_context->instsv, instsv_table_buffer + 1, sizeof(dlog_mt_install_params_t));
@@ -548,21 +542,20 @@ int main(int argc, char *argv[]) {
         printf("Using Secondary NCC number: %s\n", mm_context->ncc_number[1]);
     } else if (mm_context->use_modem == 1) {
         fprintf(stderr, "Error: -n <NCC Number> must be specified.\n");
+        free(mm_context);
         return -EINVAL;
     }
 
     if (mm_context->use_modem == 0) {
         if (modem_dev == NULL) {
             (void)fprintf(stderr, "mm_manager: -f <filename> must be specified.\n");
-
-            if (mm_context != NULL) free(mm_context);
+            free(mm_context);
             return -EINVAL;
         }
 
         if (!(mm_context->bytestream = fopen(modem_dev, "r"))) {
             printf("Error opening input stream: %s\n", modem_dev);
-
-            if (mm_context != NULL) free(mm_context);
+            free(mm_context);
             return -EPERM;
         }
         mm_context->connected = 1;
@@ -571,12 +564,13 @@ int main(int argc, char *argv[]) {
 
         if (modem_dev == NULL) {
             (void)fprintf(stderr, "mm_manager: -f <modem_dev> must be specified.\n");
-            if (mm_context != NULL) free(mm_context);
+            free(mm_context);
             return(-EINVAL);
         }
 
         if (baudrate < 1200) {
             printf("Error: baud rate must be 1200 bps or faster.\n");
+            free(mm_context);
             return -EINVAL;
         }
         printf("Baud Rate: %d\n", baudrate);
@@ -585,6 +579,7 @@ int main(int argc, char *argv[]) {
 
         if (mm_context->fd == -1) {
             printf("Unable to open modem: %s.", modem_dev);
+            free(mm_context);
             return -ENODEV;
         }
 
@@ -596,6 +591,7 @@ int main(int argc, char *argv[]) {
         } else {
             printf("Error initializing modem.\n");
             close_serial(mm_context->fd);
+            free(mm_context);
             return -EIO;
         }
     }
@@ -636,6 +632,7 @@ int main(int argc, char *argv[]) {
                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
     }
 
+    free(mm_context);
     return 0;
 }
 
@@ -1856,4 +1853,24 @@ int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_u
     }
 
     return status;
+}
+
+static void mm_display_help(const char *name, FILE *stream) {
+    fprintf(stream,
+        "usage: %s [-vhmq] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
+        name);
+    fprintf(stream,
+            "\t-v verbose (multiple v's increase verbosity.)\n"   \
+            "\t-d default_table_dir - default table directory.\n" \
+            "\t-f <filename> modem device or file\n"              \
+            "\t-h this help.\n"                                   \
+            "\t-c <cdrfile.csv> - Write Call Detail Records to a CSV file.\n"                                                \
+            "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
+            "\t-m use serial modem (specify device with -f)\n"                                                               \
+            "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \
+            "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
+            "\t-q quiet - Don't display sign-on banner.\n"                                                                   \
+            "\t-s small - Download only minimum required tables to terminal.\n"                                              \
+            "\t-t term_table_dir - terminal-specific table directory.\n");
+    return;
 }
