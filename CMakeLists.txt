@@ -58,6 +58,8 @@ TARGET_LINK_LIBRARIES(mm_rateint mm_util)
 add_executable (mm_rdlist "mm_rdlist.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_rdlist mm_util)
 add_executable (mm_smcard "mm_smcard.c" "mm_manager.h")
+add_executable (mm_table_cutter "mm_table_cutter.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_table_cutter mm_util)
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
@@ -81,12 +83,14 @@ set(INSTALL_TARGETS
     "mm_rateint"
     "mm_rdlist"
     "mm_smcard"
+    "mm_table_cutter"
 )
 
-install(TARGETS ${INSTALL_TARGETS} DESTINATION /)
+install(TARGETS ${INSTALL_TARGETS} DESTINATION .)
 install(DIRECTORY tables/default DESTINATION tables)
-install(FILES LICENSE DESTINATION /)
-install(FILES README.md DESTINATION /)
+install(FILES LICENSE DESTINATION .)
+install(FILES README.md DESTINATION .)
+install(FILES generate_intl_sbr.py generate_lcd.py generate_lcd_lata.py generate_npa.py DESTINATION .)
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)

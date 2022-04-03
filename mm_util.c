@@ -258,9 +258,9 @@ const char *table_string[] = {
     "DLOG_MT_CALL_BACK_REQ",        // 0x13
     "DLOG_MT_TIME_SYNC",            // 0x14
     "DLOG_MT_NCC_TERM_PARAMS",      // 0x15
-    "0x16",                         // 0x16
-    "0x17",                         // 0x17
-    "0x18",                         // 0x18
+    "DLOG_MT_CARD_TABLE",           // 0x16
+    "DLOG_MT_CARRIER_TABLE",        // 0x17
+    "DLOG_MT_CALLSCRN_UNIVERSAL",   // 0x18
     "0x19",                         // 0x19
     "DLOG_MT_FCONFIG_OPTS",         // 0x1a
     "DLOG_MT_VIS_PROPTS_L1",        // 0x1b
@@ -275,8 +275,8 @@ const char *table_string[] = {
     "DLOG_MT_TIME_SYNC_REQ",        // 0x24
     "DLOG_MT_PERF_STATS_MSG",       // 0x25
     "DLOG_MT_CASH_BOX_STATUS",      // 0x26
-    "0x27",                         // 0x27
-    "0x28",                         // 0x28
+    "DLOG_MT_ATN_CALL_BACK",        // 0x27
+    "DLOG_MT_ATN_REQ_TYPE_40",      // 0x28
     "0x29",                         // 0x29
     "DLOG_MT_ATN_REQ_CDR_UPL",      // 0x2a
     "0x2b",                         // 0x2b
@@ -285,7 +285,7 @@ const char *table_string[] = {
     "0x2e",                         // 0x2e
     "0x2f",                         // 0x2f
     "0x30",                         // 0x30
-    "0x31",                         // 0x31
+    "DLOG_MT_ANS_SUP_PARAMS",       // 0x31
     "DLOG_MT_COIN_VAL_TABLE",       // 0x32
     "DLOG_MT_CASH_BOX_COLLECTION",  // 0x33
     "0x34",                         // 0x34
@@ -297,53 +297,53 @@ const char *table_string[] = {
     "DLOG_MT_LIMSERV_DATA",         // 0x3a
     "0x3b",                         // 0x3b
     "DLOG_MT_SW_VERSION",           // 0x3c
-    "0x3d",                         // 0x3d
+    "DLOG_MT_COIN_CALL_DETAILS",    // 0x3d
     "DLOG_MT_NUM_PLAN_TABLE",       // 0x3e
     "DLOG_MT_RATE_REQUEST",         // 0x3f
     "DLOG_MT_RATE_RESPONSE",        // 0x40
     "DLOG_MT_AUTH_RESP_CODE",       // 0x41
     "0x42",                         // 0x42
     "0x43",                         // 0x43
-    "0x44",                         // 0x44
-    "0x45",                         // 0x45
-    "0x46",                         // 0x46
+    "DLOG_MT_MDS_FCONFIG",          // 0x44
+    "DLOG_MT_MDS_STATS",            // 0x45
+    "DLOG_MT_MONDEX_DEPOSIT_REC",   // 0x46
     "DLOG_MT_CARRIER_STATS_EXP",    // 0x47
     "DLOG_MT_SPARE_TABLE",          // 0x48
     "DLOG_MT_RATE_TABLE",           // 0x49
-    "0x4a",                         // 0x4a
-    "0x4b",                         // 0x4b
-    "0x4c",                         // 0x4c
-    "0x4d",                         // 0x4d
-    "0x4e",                         // 0x4e
-    "0x4f",                         // 0x4f
-    "0x50",                         // 0x50
-    "0x51",                         // 0x51
-    "0x52",                         // 0x52
-    "0x53",                         // 0x53
-    "0x54",                         // 0x54
+    "DLOG_MT_LCD_TABLE_1",          // 0x4a
+    "DLOG_MT_LCD_TABLE_2",          // 0x4b
+    "DLOG_MT_LCD_TABLE_3",          // 0x4c
+    "DLOG_MT_LCD_TABLE_4",          // 0x4d
+    "DLOG_MT_LCD_TABLE_5",          // 0x4e
+    "DLOG_MT_LCD_TABLE_6",          // 0x4f
+    "DLOG_MT_LCD_TABLE_7",          // 0x50
+    "DLOG_MT_LCD_TABLE_8",          // 0x51
+    "DLOG_MT_QUERY_TERM_ERR",       // 0x52
+    "DLOG_MT_TERM_ERR_REP",         // 0x53
+    "DLOG_MT_SERIAL_NUM",           // 0x54
     "DLOG_MT_EXP_VIS_PROPTS_L1",    // 0x55
     "DLOG_MT_EXP_VIS_PROPTS_L2",    // 0x56
     "0x57",                         // 0x57
     "0x58",                         // 0x58
     "0x59",                         // 0x59
-    "0x5a",                         // 0x5a
-    "0x5b",                         // 0x5b
+    "DLOG_MT_LCD_TABLE_9",          // 0x5a
+    "DLOG_MT_LCD_TABLE_10",         // 0x5b
     "DLOG_MT_CALL_SCREEN_LIST",     // 0x5c
     "DLOG_MT_SCARD_PARM_TABLE",     // 0x5d
-    "0x5e",                         // 0x5e
+    "DLOG_MT_CODE_DOWNLOAD",        // 0x5e
     "0x5f",                         // 0x5f
     "0x60",                         // 0x60
     "0x61",                         // 0x61
     "0x62",                         // 0x62
     "0x63",                         // 0x63
     "0x64",                         // 0x64
-    "0x65",                         // 0x65
-    "0x66",                         // 0x66
-    "0x67",                         // 0x67
-    "0x68",                         // 0x68
-    "0x69",                         // 0x69
-    "0x6a",                         // 0x6a
-    "0x6b",                         // 0x6b
+    "DLOG_MT_COMP_LCD_TABLE_1",     // 0x65
+    "DLOG_MT_COMP_LCD_TABLE_2",     // 0x66
+    "DLOG_MT_COMP_LCD_TABLE_3",     // 0x67
+    "DLOG_MT_COMP_LCD_TABLE_4",     // 0x68
+    "DLOG_MT_COMP_LCD_TABLE_5",     // 0x69
+    "DLOG_MT_COMP_LCD_TABLE_6",     // 0x6a
+    "DLOG_MT_COMP_LCD_TABLE_7",     // 0x6b
     "0x6c",                         // 0x6c
     "0x6d",                         // 0x6d
     "0x6e",                         // 0x6e
@@ -370,8 +370,8 @@ const char *table_string[] = {
     "0x83",                         // 0x83
     "0x84",                         // 0x84
     "0x85",                         // 0x85
-    "DLOG_MT_CARD_TABLE",           // 0x86
-    "DLOG_MT_CARRIER_TABLE",        // 0x87
+    "DLOG_MT_CARD_TABLE_EXP",       // 0x86
+    "DLOG_MT_CARRIER_TABLE_EXP",    // 0x87
     "DLOG_MT_NPA_NXX_TABLE_1",      // 0x88
     "DLOG_MT_NPA_NXX_TABLE_2",      // 0x89
     "DLOG_MT_NPA_NXX_TABLE_3",      // 0x8a
@@ -388,10 +388,10 @@ const char *table_string[] = {
     "DLOG_MT_NPA_NXX_TABLE_14",     // 0x95
     "DLOG_MT_NPA_SBR_TABLE",        // 0x96
     "DLOG_MT_INTL_SBR_TABLE",       // 0x97
-    "0x98",                         // 0x98
+    "DLOG_MT_DISCOUNT_TABLE",       // 0x98
     "0x99",                         // 0x99
-    "0x9a",                         // 0x9a
-    "0x9b",                         // 0x9b
+    "DLOG_MT_NPA_NXX_TABLE_15",     // 0x9a
+    "DLOG_MT_NPA_NXX_TABLE_16",     // 0x9b
     "0x9c",                         // 0x9c
     "0x9d",                         // 0x9d
     "0x9e",                         // 0x9e

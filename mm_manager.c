@@ -54,28 +54,28 @@ uint8_t table_list_rev1_3[] = {
     DLOG_MT_NPA_NXX_TABLE_4,
     DLOG_MT_NPA_NXX_TABLE_3,
     DLOG_MT_NPA_NXX_TABLE_2,
-    DLOG_MT_NPA_NXX_TABLE_1,  /* Required */
-    DLOG_MT_CARRIER_TABLE,    /* Required */
-    DLOG_MT_CARD_TABLE,       /* Required */
-    DLOG_MT_SCARD_PARM_TABLE, /* Required */
-    DLOG_MT_CALL_SCREEN_LIST, /* Required */
+    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
+    DLOG_MT_CARD_TABLE_EXP,     /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
+    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
     DLOG_MT_EXP_VIS_PROPTS_L2,  /* 1.3 only */
     DLOG_MT_EXP_VIS_PROPTS_L1,  /* 1.3 only */
-    DLOG_MT_RATE_TABLE,       /* Required */
-    DLOG_MT_SPARE_TABLE,      /* 1.3 only */
-    DLOG_MT_NUM_PLAN_TABLE,   /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_SPARE_TABLE,        /* 1.3 only */
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
     DLOG_MT_LIMSERV_DATA,
     DLOG_MT_REP_DIAL_LIST,
-    DLOG_MT_COIN_VAL_TABLE,   /* Required */
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
     DLOG_MT_CALL_IN_PARMS,
     DLOG_MT_CALL_STAT_PARMS,
     DLOG_MT_MODEM_PARMS,
     DLOG_MT_COMM_STAT_PARMS,
-    DLOG_MT_INSTALL_PARAMS,  /* Required */
+    DLOG_MT_INSTALL_PARAMS,    /* Required */
     DLOG_MT_USER_IF_PARMS,
     DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_FCONFIG_OPTS,    /* Required */
-    DLOG_MT_NCC_TERM_PARAMS, /* Required */
+    DLOG_MT_FCONFIG_OPTS,      /* Required */
+    DLOG_MT_NCC_TERM_PARAMS,   /* Required */
     DLOG_MT_END_DATA,
     0                        /* End of table list */
 };
@@ -98,44 +98,44 @@ uint8_t table_list_rev1_0[] = {
     DLOG_MT_NPA_NXX_TABLE_4,
     DLOG_MT_NPA_NXX_TABLE_3,
     DLOG_MT_NPA_NXX_TABLE_2,
-    DLOG_MT_NPA_NXX_TABLE_1,  /* Required */
-    DLOG_MT_CARRIER_TABLE,    /* Required */
-    DLOG_MT_CARD_TABLE,       /* Required */
-    DLOG_MT_SCARD_PARM_TABLE, /* Required */
-    DLOG_MT_CALL_SCREEN_LIST, /* Required */
-    DLOG_MT_RATE_TABLE,       /* Required */
-    DLOG_MT_NUM_PLAN_TABLE,   /* Required */
+    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
+    DLOG_MT_CARD_TABLE_EXP,     /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
+    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
     DLOG_MT_LIMSERV_DATA,
     DLOG_MT_REP_DIAL_LIST,
-    DLOG_MT_COIN_VAL_TABLE,   /* Required */
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
     DLOG_MT_CALL_IN_PARMS,
     DLOG_MT_CALL_STAT_PARMS,
     DLOG_MT_MODEM_PARMS,
     DLOG_MT_COMM_STAT_PARMS,
-    DLOG_MT_INSTALL_PARAMS,  /* Required */
+    DLOG_MT_INSTALL_PARAMS,    /* Required */
     DLOG_MT_USER_IF_PARMS,
     DLOG_MT_ADVERT_PROMPTS,
     DLOG_MT_VIS_PROMPTS_L2,
     DLOG_MT_VIS_PROMPTS_L1,
-    DLOG_MT_FCONFIG_OPTS,    /* Required */
-    DLOG_MT_NCC_TERM_PARAMS, /* Required */
+    DLOG_MT_FCONFIG_OPTS,      /* Required */
+    DLOG_MT_NCC_TERM_PARAMS,   /* Required */
     DLOG_MT_END_DATA,
-    0                        /* End of table list */
+    0                          /* End of table list */
 };
 
 uint8_t table_list_minimal[] = {
-    DLOG_MT_NPA_NXX_TABLE_1,  /* Required */
-    DLOG_MT_CARRIER_TABLE,    /* Required */
-    DLOG_MT_CARD_TABLE,       /* Required */
-    DLOG_MT_SCARD_PARM_TABLE, /* Required */
-    DLOG_MT_CALL_SCREEN_LIST, /* Required */
-    DLOG_MT_RATE_TABLE,       /* Required */
+    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
+    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
+    DLOG_MT_CARD_TABLE_EXP,     /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
+    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
     DLOG_MT_SPARE_TABLE,
-    DLOG_MT_NUM_PLAN_TABLE,   /* Required */
-    DLOG_MT_COIN_VAL_TABLE,   /* Required */
-    DLOG_MT_INSTALL_PARAMS,   /* Required */
-    DLOG_MT_FCONFIG_OPTS,     /* Required */
-    DLOG_MT_NCC_TERM_PARAMS,  /* Required */
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_END_DATA,
     0                         /* End of table list */
 };

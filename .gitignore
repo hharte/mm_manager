@@ -21,6 +21,7 @@ mm_rate
 mm_rateint
 mm_rdlist
 mm_smcard
+mm_table_cutter
 COCodeStatus_ALL.csv
 COCodeStatus_ALL.zip
 allutlzd.txt

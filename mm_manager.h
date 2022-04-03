@@ -65,6 +65,9 @@
 #define DLOG_MT_CALL_BACK_REQ       0x13    // 19: Call Back Request
 #define DLOG_MT_TIME_SYNC           0x14    // 20: Date/Time Synchronization
 #define DLOG_MT_NCC_TERM_PARAMS     0x15    // 21: Terminal Access Parameters
+#define DLOG_MT_CARD_TABLE          0x16    // 22: Card Table
+#define DLOG_MT_CARRIER_TABLE       0x17    // 23: Carrier Table
+#define DLOG_MT_CALLSCRN_UNIVERSAL  0x18    // 24: Call Screening List Universal
 #define DLOG_MT_FCONFIG_OPTS        0x1a    // 26: Feature Configuration – Universal
 #define DLOG_MT_VIS_PROMPTS_L1      0x1b    // 27: Visual Prompts Language A
 #define DLOG_MT_VIS_PROMPTS_L2      0x1c    // 28: Visual Prompts Language A
@@ -78,8 +81,10 @@
 #define DLOG_MT_TIME_SYNC_REQ       0x24    // 36: Time Synchronization Request
 #define DLOG_MT_PERF_STATS_MSG      0x25    // 37: Performance Statistics Record Message
 #define DLOG_MT_CASH_BOX_STATUS     0x26    // 38: Cash Box Status Message – Universal
+#define DLOG_MT_ATN_CALL_BACK       0x27    // 39: Attention Call Back
 #define DLOG_MT_ATN_REQ_CDR_UPL     0x2a    // 42: Attention Request Call Records Upload
 #define DLOG_MT_ATN_REQ_TAB_UPD     0x2c    // 44: Attention Request Table Update
+#define DLOG_MT_ANS_SUP_PARAMS      0x31    // 49: Answer Supervision Parameters (FUTURE)
 #define DLOG_MT_COIN_VAL_TABLE      0x32    // 50: Coin Validation Table
 #define DLOG_MT_CASH_BOX_COLLECTION 0x33    // 51: Cash Box Collection Message – Universal
 #define DLOG_MT_CALL_DETAILS        0x35    // 53: Call Detail Record Message – Post MSR 1.5
@@ -88,19 +93,44 @@
 #define DLOG_MT_CARRIER_CALL_STATS  0x39    // 57: Carrier Call Statistics Message
 #define DLOG_MT_LIMSERV_DATA        0x3a    // 58: (Limit) Service Level Table
 #define DLOG_MT_SW_VERSION          0x3c    // 60: Terminal Software Version Message
+#define DLOG_MT_COIN_CALL_DETAILS   0x3d    // 61: Coin call detail record
 #define DLOG_MT_NUM_PLAN_TABLE      0x3e    // 62: Numbering Plan Table
 #define DLOG_MT_RATE_REQUEST        0x3f    // 63: Rate Request Message – Universal
 #define DLOG_MT_RATE_RESPONSE       0x40    // 64: Rate Response Message – Universal
 #define DLOG_MT_AUTH_RESP_CODE      0x41    // 65: Authorization Response Message – Post MSR 1.5
+#define DLOG_MT_MDS_FCONFIG         0x44    // 68: Feature Configuration for Message Delivery Service
+#define DLOG_MT_MDS_STATS           0x45    // 69: Message Delivery Service Stats
+#define DLOG_MT_MONDEX_DEPOSIT_REC  0x46    // 70: Mondex Deposit Record Message
 #define DLOG_MT_CARRIER_STATS_EXP   0x47    // 71: Expanded Carrier Call Statistics Message
 #define DLOG_MT_SPARE_TABLE         0x48    // 72: Spare Table
 #define DLOG_MT_RATE_TABLE          0x49    // 73: Rate Table
+#define DLOG_MT_LCD_TABLE_1         0x4a    // 74: NPA/NXX Table 1
+#define DLOG_MT_LCD_TABLE_2         0x4b    // 75: NPA/NXX Table 2
+#define DLOG_MT_LCD_TABLE_3         0x4c    // 76: NPA/NXX Table 3
+#define DLOG_MT_LCD_TABLE_4         0x4d    // 77: NPA/NXX Table 4
+#define DLOG_MT_LCD_TABLE_5         0x4e    // 78: NPA/NXX Table 5
+#define DLOG_MT_LCD_TABLE_6         0x4f    // 79: NPA/NXX Table 6
+#define DLOG_MT_LCD_TABLE_7         0x50    // 80: NPA/NXX Table 7
+#define DLOG_MT_LCD_TABLE_8         0x51    // 81: NPA/NXX Table 8
+#define DLOG_MT_QUERY_TERM_ERR      0x52    // 82: Query Terminal Error Report
+#define DLOG_MT_TERM_ERR_REP        0x53    // 83: Terminal Error Report
+#define DLOG_MT_SERIAL_NUM          0x54    // 84: Serial Number
 #define DLOG_MT_EXP_VIS_PROPTS_L1   0x55    // 85: Expanded Visual Prompts Language A
 #define DLOG_MT_EXP_VIS_PROPTS_L2   0x56    // 86: Expanded Visual Prompts Language B
+#define DLOG_MT_LCD_TABLE_9         0x5a    // 90: NPA/NXX Table 7
+#define DLOG_MT_LCD_TABLE_10        0x5b    // 91: NPA/NXX Table 8
 #define DLOG_MT_CALL_SCREEN_LIST    0x5c    // 92B: 180 Number Call Screening List
 #define DLOG_MT_SCARD_PARM_TABLE    0x5d    // 93: Smart Card Parameters Table
-#define DLOG_MT_CARD_TABLE          0x86    // 134: Expanded Card Table (32 Entries)
-#define DLOG_MT_CARRIER_TABLE       0x87    // 135: Expanded Carrier Table (33 Entries)
+#define DLOG_MT_CODE_DOWNLOAD       0x5e    // 94: Code Download Table
+#define DLOG_MT_COMP_LCD_TABLE_1    0x65    // 101: Compressed LCD table 1
+#define DLOG_MT_COMP_LCD_TABLE_2    0x66    // 102: Compressed LCD table 2
+#define DLOG_MT_COMP_LCD_TABLE_3    0x67    // 103: Compressed LCD table 3
+#define DLOG_MT_COMP_LCD_TABLE_4    0x68    // 104: Compressed LCD table 4
+#define DLOG_MT_COMP_LCD_TABLE_5    0x69    // 105: Compressed LCD table 5
+#define DLOG_MT_COMP_LCD_TABLE_6    0x6a    // 106: Compressed LCD table 6
+#define DLOG_MT_COMP_LCD_TABLE_7    0x6b    // 107: Compressed LCD table 7
+#define DLOG_MT_CARD_TABLE_EXP      0x86    // 134: Expanded Card Table (32 Entries)
+#define DLOG_MT_CARRIER_TABLE_EXP   0x87    // 135: Expanded Carrier Table (33 Entries)
 #define DLOG_MT_NPA_NXX_TABLE_1     0x88    // 136: Double Compressed LCD Table 1
 #define DLOG_MT_NPA_NXX_TABLE_2     0x89    // 137: Double Compressed LCD Table 2
 #define DLOG_MT_NPA_NXX_TABLE_3     0x8a    // 138: Double Compressed LCD Table 3
@@ -119,6 +149,7 @@
 #define DLOG_MT_NPA_NXX_TABLE_16    0xa1    // 155: Double Compressed LCD Table 16
 #define DLOG_MT_NPA_SBR_TABLE       0x96    // 150: Set Based Rating NPA Table
 #define DLOG_MT_INTL_SBR_TABLE      0x97    // 151: Set Based Rating International Table
+#define DLOG_MT_DISCOUNT_TABLE      0x98    // 152: Discount Table
 
 /* TTBLREQ (Terminal Table Request) pp. 2-651 */
 #define TTBLREQ_CRAFT_FORCE_DL      0x01    // Menu Item - Craft I/F Table Download
