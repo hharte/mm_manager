@@ -1607,7 +1607,7 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        printf("Error allocating memory\n");
+        printf("Error allocating %zu bytes of memory\n", *len);
         exit(-ENOMEM);
     }
 
@@ -1616,6 +1616,45 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     pncc_term_params = (dlog_mt_ncc_term_params_t *)&pbuffer[1];
 
     printf("\nGenerating Terminal Access Parameters table:\n" \
+           "\t  Terminal ID: %s\n", context->terminal_id);
+
+    // Rewrite table with our Terminal ID (phone number)
+    for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
+        pncc_term_params->terminal_id[i]  = (context->terminal_id[i * 2] - '0') << 4;
+        pncc_term_params->terminal_id[i] |= (context->terminal_id[i * 2 + 1] - '0');
+    }
+
+    // Rewrite table with Primary NCC phone number
+    printf("\t  Primary NCC: %s\n", context->ncc_number[0]);
+    string_to_bcd_a(context->ncc_number[0], pncc_term_params->pri_ncc_number, sizeof(pncc_term_params->pri_ncc_number));
+
+    // Rewrite table with Secondary NCC phone number, if provided.
+    if (strnlen(context->ncc_number[1], sizeof(context->ncc_number[1])) > 0) {
+        printf("\tSecondary NCC: %s\n", context->ncc_number[1]);
+        string_to_bcd_a(context->ncc_number[1], pncc_term_params->sec_ncc_number, sizeof(pncc_term_params->sec_ncc_number));
+    }
+
+    *buffer = pbuffer;
+}
+
+void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffer, size_t *len) {
+    int i;
+    dlog_mt_ncc_term_params_mtr1_t *pncc_term_params;
+    uint8_t *pbuffer;
+
+    *len    = sizeof(dlog_mt_ncc_term_params_mtr1_t) + 1;
+    pbuffer = (uint8_t*)calloc(1, *len);
+
+    if (pbuffer == NULL) {
+        printf("Error allocating %zu bytes of memory\n", *len);
+        exit(-ENOMEM);
+    }
+
+    pbuffer[0] = DLOG_MT_NCC_TERM_PARAMS;
+
+    pncc_term_params = (dlog_mt_ncc_term_params_mtr1_t *)&pbuffer[1];
+
+    printf("\nGenerating Terminal Access Parameters table (MTR 1.x):\n" \
            "\t  Terminal ID: %s\n", context->terminal_id);
 
     // Rewrite table with our Terminal ID (phone number)

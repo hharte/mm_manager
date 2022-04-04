@@ -220,6 +220,12 @@ typedef struct dlog_mt_ncc_term_params {
     uint8_t unknown[22];
 } dlog_mt_ncc_term_params_t;
 
+typedef struct dlog_mt_ncc_term_params_mtr1 {
+    uint8_t terminal_id[5];
+    uint8_t pri_ncc_number[6];
+    uint8_t sec_ncc_number[6];
+} dlog_mt_ncc_term_params_mtr1_t;
+
 /* From TERM table, pp. 2-517 */
 typedef struct dlog_mt_call_in_params {
     uint8_t call_in_start_date[3];      /* Call-in start date YY:MM:DD */
@@ -974,6 +980,20 @@ typedef struct dlog_mt_npa_nxx_table {
     uint8_t     lcd[MAX_NPA / 4];                       /* Storage for 800 2-bit NPAs */
 } dlog_mt_npa_nxx_table_t;
 
+/* LCD (Local Call Determination) pp 2-248, 818 bytes */
+typedef struct dlog_mt_lcd_table {
+    uint8_t     term_npa_nxx[3];
+    uint8_t     called_npa[2];
+    uint8_t     lcd[MAX_NPA];                           /* Storage for 800 8-bit NPAs */
+    uint8_t     spare[13];
+} dlog_mt_lcd_table_t;
+
+/* Compressed LCD (Local Call Determination), 403 */
+typedef struct dlog_mt_compressed_lcd_table {
+    uint8_t     npa[2];
+    uint8_t     lcd[MAX_NPA / 2];                       /* Storage for 800 4-bit NPAs */
+} dlog_mt_compressed_lcd_table_t;
+
 #define TABLE_PATH_MAX_LEN   283
 
 typedef struct mm_context {
@@ -1015,6 +1035,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
 void generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
+void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
 void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
