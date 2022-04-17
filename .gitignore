@@ -2,6 +2,8 @@ CMakeCache.txt
 CMakeFiles/
 Makefile
 cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
 compile_commands.json
 .vs/
 out/
