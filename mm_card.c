@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Credit Card Table 0x86 (134) Dump\n\n");
 
-    pcard_table = calloc(1, sizeof(dlog_mt_card_table_t));
+    pcard_table = (dlog_mt_card_table_t *)calloc(1, sizeof(dlog_mt_card_table_t));
 
     if (pcard_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_card_table_t));

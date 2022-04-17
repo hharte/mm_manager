@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
     int   index;
 
     dlog_mt_scard_parm_table_t *psmcard_table;
+    uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -49,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Call Smart Card Table (Table 93) Dump\n\n");
 
-    psmcard_table = calloc(1, sizeof(dlog_mt_scard_parm_table_t));
+    psmcard_table = (dlog_mt_scard_parm_table_t *)calloc(1, sizeof(dlog_mt_scard_parm_table_t));
 
     if (psmcard_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_scard_parm_table_t));
@@ -62,12 +63,15 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(psmcard_table, sizeof(dlog_mt_scard_parm_table_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)psmcard_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_scard_parm_table_t) - 1, 1, instream) != 1) {
         printf("Error reading SMCARD table.\n");
         free(psmcard_table);
         fclose(instream);
         return -EIO;
     }
+
+    fclose(instream);
 
     printf("+--------------------------+\n" \
            "| Idx | DES Key            |\n" \

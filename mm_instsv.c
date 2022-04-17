@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     dlog_mt_install_params_t *instsv_table;
+    uint8_t* load_buffer;
     char phone_number_string[21];
     int  ret = 0;
 
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium INSTSV Table 0x1f (31) Dump\n\n");
 
-    instsv_table = calloc(1, sizeof(dlog_mt_install_params_t));
+    instsv_table = (dlog_mt_install_params_t *)calloc(1, sizeof(dlog_mt_install_params_t));
 
     if (instsv_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_install_params_t));
@@ -54,7 +55,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(instsv_table, sizeof(dlog_mt_install_params_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)instsv_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_install_params_t) - 1, 1, instream) != 1) {
         printf("Error reading INSTSV table.\n");
         free(instsv_table);
         fclose(instream);
@@ -101,7 +103,7 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(instsv_table, sizeof(dlog_mt_install_params_t), 1, ostream) != 1) {
+        if (fwrite(load_buffer, sizeof(dlog_mt_install_params_t) - 1, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }

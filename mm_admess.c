@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
     int   ret = 0;
 
     dlog_mt_advert_prompts_t *padmess_table;
+    uint8_t *load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Advertising Message Table (Table 29) Dump\n\n");
 
-    padmess_table = calloc(1, sizeof(dlog_mt_advert_prompts_t));
+    padmess_table = (dlog_mt_advert_prompts_t *)calloc(1, sizeof(dlog_mt_advert_prompts_t));
 
     if (padmess_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_advert_prompts_t));
@@ -45,7 +46,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t *)padmess_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_advert_prompts_t) - 1, 1, instream) != 1) {
         printf("Error reading ADMESS table.\n");
         fclose(instream);
         free(padmess_table);
@@ -85,7 +87,7 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(padmess_table, sizeof(dlog_mt_advert_prompts_t), 1, ostream) != 1) {
+        if (fwrite(load_buffer, sizeof(dlog_mt_advert_prompts_t) - 1, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }

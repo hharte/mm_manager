@@ -141,214 +141,7 @@ uint8_t table_list_minimal[] = {
 };
 
 
-/* Millennium Alarm Strings */
-const char *alarm_type_str[] = {
-    /* 0 */  "Telephony Board Not Responding",  // TSTATUS_HANDSET_DISCONT_IND
-
-    /* 1 */  "TELEPHONY_STATUS_IND",
-
-    /* 2 */  "EPM/SAM Not Responding",
-
-    /* 3 */  "EPM/SAM Locked Out",
-
-    /* 4 */  "EPM/SAM Expired",
-
-    /* 5 */  "EPM/SAM has reached the transaction limit",
-
-    /* 6 */  "Unable to Reach Primary Collection System",
-
-    /* 7 */  "Reserved TELEPHONY_STATUS_BIT_7",
-
-    /* 8 */  "Power Fail",
-
-    /* 9 */  "Display Not Responding",
-
-    /* 10 */  "Voice Synthesis Not Responding",
-
-    /* 11 */  "Unable to Reach Secondary Collection System",
-
-    /* 12 */  "Card Reader Blocked",
-
-    /* 13 */  "Mandatory Table Alarm",
-
-    /* 14 */  "Datajack Port Blocked",
-
-    /* 15 */  "Reserved CTRL_HW_STATUS_BIT_7",
-
-    /* 16 */  "CDR Checksum Error",
-
-    /* 17 */  "Statistics Checksum Error",
-
-    /* 18 */  "Table Checksum Error",
-
-    /* 19 */  "Data Checksum Error",
-
-    /* 20 */  "CDR List Full",
-
-    /* 21 */  "Bad EEPROM",
-
-    /* 22 */  "Control Microprocessor RAM Contents Lost",
-
-    /* 23 */  "Control Microprocessor RAM Defective",
-
-    /* 24 */  "Station Access Cover Opened",
-
-    /* 25 */  "Stuck Button",
-
-    /* 26 */  "Set Removal",  /* Not all terminals have this switch sensor */
-    /* 27 */  "Cash Box Threshold Met",
-
-    /* 28 */  "Coin Box Cover Opened",
-
-    /* 29 */  "Cash Box Removed",
-
-    /* 30 */  "Cash Box Full",
-
-    /* 31 */  "Validator Jam",
-
-    /* 32 */  "Escrow Jam",
-
-    /* 33 */  "Coin Hardware Jam",
-
-    /* 34 */  "Central Office Line Check Failure",
-
-    /* 35 */  "Dialog Failure",
-
-    /* 36 */  "Cash Box Electronic Lock Failure",
-
-    /* 37 */  "Dialog Failure with Collection System",
-
-    /* 38 */  "Code Server Connection Failure",
-
-    /* 39 */  "Code Server Aborted",
-
-    /* ... */
-    /* 99  */  "Un-Alarm",
-
-    /* >39 */  "Unknown Alarm!"
-};
-
-const char *stats_call_type_str_lut[4] = {
-    "Local        ",
-    "Inter-LATA   ",
-    "Intra-LATA   ",
-    "International"
-};
-
-const char *stats_to_str_lut[29] = {
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "InterLATA Coin",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28"
-};
-
-const char *TCALSTE_stats_to_str_lut[16] = {
-    "        Local",
-    "   Intra-LATA",
-    "   Inter-LATA",
-    "International",
-    "     Incoming",
-    "   Unanswered",
-    "    Abandoned",
-    "  Oper Assist",
-    "           0+",
-    "   1-800 Free",
-    "       Denied",
-    "   Dir Assist",
-    "         Free",
-    "    Follow-On",
-    " Fail to POTS",
-    "   Rep Dialer"
-};
-
-const char *TPERFST_stats_to_str_lut[43] = {
-    "Call Attempts",
-    "Busy Signal",
-    "Call Cleared No Data",
-    "No Carrier Detect",
-    "CO Access Dial 1",
-    "CO Access Dial 2",
-    "CO Access Dial 3",
-    "CO Access Dial 4",
-    "CO Access Dial 5",
-    "CO Access Dial 6",
-    "CO Access Dial 7",
-    "Dial to Carrier 1",
-    "Dial to Carrier 2",
-    "Dial to Carrier 3",
-    "Dial to Carrier 4",
-    "Dial to Carrier 5",
-    "Dial to Carrier 6",
-    "Dial to Carrier 7",
-    "Carrier to 1st Packet 1",
-    "Carrier to 1st Packet 2",
-    "Carrier to 1st Packet 3",
-    "Carrier to 1st Packet 4",
-    "Carrier to 1st Packet 5",
-    "Carrier to 1st Packet 6",
-    "Carrier to 1st Packet 7",
-    "User Wait to Expect Info 1",
-    "User Wait to Expect Info 2",
-    "User Wait to Expect Info 3",
-    "User Wait to Expect Info 4",
-    "User Wait to Expect Info 5",
-    "User Wait to Expect Info 6",
-    "User Wait to Expect Info 7",
-    "Total Dialogs Failed",
-    "Packet Received Errors",
-    "Packet Retries Received",
-    "Inactivity Count",
-    "Retry Limit Out of Service",
-    "Card Auth Timeouts",
-    "Rate Request Timeouts",
-    "No Dial Tone",
-    "Spare 1",
-    "Spare 2",
-    "Spare 3"
-};
-
 const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:q";
-
-#if _WIN32
-char* basename(char *path) {
-    char fname[20] = { 0 };
-
-    _splitpath(path, NULL, NULL, fname, NULL);
-
-    snprintf(path, sizeof(fname), "%s", fname);
-    return path;
-}
-
-errno_t localtime_r(time_t const * const sourceTime, struct tm *tmDest) {
-    return localtime_s(tmDest, sourceTime);
-}
-
-#endif /* _WIN32 */
 
 int main(int argc, char *argv[]) {
     mm_context_t *mm_context;
@@ -424,7 +217,7 @@ int main(int argc, char *argv[]) {
                     free(mm_context);
                     return -ENOENT;
                 }
-                memcpy(&mm_context->instsv, instsv_table_buffer + 1, sizeof(dlog_mt_install_params_t));
+                memcpy(&mm_context->instsv, instsv_table_buffer, sizeof(dlog_mt_install_params_t));
                 free(instsv_table_buffer);
 
                 if (rewrite_instserv_parameters(optarg, &mm_context->instsv, instsv_fname)) {
@@ -527,7 +320,7 @@ int main(int argc, char *argv[]) {
         free(mm_context);
         return -ENOENT;
     }
-    memcpy(&mm_context->instsv, instsv_table_buffer + 1, sizeof(dlog_mt_install_params_t));
+    memcpy(&mm_context->instsv, instsv_table_buffer, sizeof(dlog_mt_install_params_t));
     free(instsv_table_buffer);
 
     printf("Using access code: %s\n",
@@ -548,6 +341,14 @@ int main(int argc, char *argv[]) {
         free(mm_context);
         return -EINVAL;
     }
+
+    mm_context->telco_id[0] = 'V';
+    mm_context->telco_id[1] = 'Z';
+    mm_context->region_code[0] = 'U';
+    mm_context->region_code[1] = 'S';
+    mm_context->region_code[2] = '.';
+
+    mm_open_database(mm_context);
 
     if (mm_context->use_modem == 0) {
         if (modem_dev == NULL) {
@@ -695,7 +496,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
     send_mm_ack(context, 0);
 
     while (ppayload < pkt->payload + pkt->payload_len) {
-        table->table_id = *ppayload++;
+        table->table_id = *ppayload;
 
         if (context->debuglevel > 1) {
             printf("\n\tTerminal ID %s: Processing Table ID %d (0x%02x) %s\n",
@@ -709,10 +510,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             case DLOG_MT_TIME_SYNC_REQ: {
                 time_t rawtime;
                 struct tm ptm = { 0 };
-                uint8_t  *timestamp;
+                dlog_mt_time_sync_t* time_sync_response = (dlog_mt_time_sync_t*)pack_payload;
 
-                *pack_payload++ = DLOG_MT_TIME_SYNC;
-                timestamp       = pack_payload;
+                ppayload += sizeof(dlog_mt_time_sync_req_t);
+
+                time_sync_response->id = DLOG_MT_TIME_SYNC;
 
                 if (context->use_modem == 1) {
                     /* When using the modem, fill the current time.  If not using the modem, use
@@ -725,25 +527,28 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
 
                 localtime_r(&rawtime, &ptm);
 
-                *pack_payload++ = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
-                *pack_payload++ = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
-                *pack_payload++ = (ptm.tm_mday & 0xff);    /* Fill current day (0-31) */
-                *pack_payload++ = (ptm.tm_hour & 0xff);    /* Fill current hour (0-23) */
-                *pack_payload++ = (ptm.tm_min & 0xff);     /* Fill current minute (0-59) */
-                *pack_payload++ = (ptm.tm_sec & 0xff);     /* Fill current second (0-59) */
-                *pack_payload++ = (ptm.tm_wday + 1);       /* Day of week, 1=Sunday ... 7=Saturday */
+                time_sync_response->year  = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
+                time_sync_response->month = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
+                time_sync_response->day   = (ptm.tm_mday & 0xff);    /* Fill current day (0-31) */
+                time_sync_response->hour  = (ptm.tm_hour & 0xff);    /* Fill current hour (0-23) */
+                time_sync_response->min   = (ptm.tm_min & 0xff);     /* Fill current minute (0-59) */
+                time_sync_response->sec   = (ptm.tm_sec & 0xff);     /* Fill current second (0-59) */
+                time_sync_response->wday  = (ptm.tm_wday + 1);       /* Day of week, 1=Sunday ... 7=Saturday */
 
-                printf("\t\tCurrent day/time: %04d-%02d-%02d / %2d:%02d:%02d\n", timestamp[0] + 1900,
-                       timestamp[1],
-                       timestamp[2],
-                       timestamp[3],
-                       timestamp[4],
-                       timestamp[5]);
+                printf("\t\tCurrent day/time: %04d-%02d-%02d / %2d:%02d:%02d\n",
+                    time_sync_response->year + 1900,
+                    time_sync_response->month,
+                    time_sync_response->day,
+                    time_sync_response->hour,
+                    time_sync_response->min,
+                    time_sync_response->sec);
 
+                pack_payload += sizeof(dlog_mt_time_sync_t);
                 end_of_data = 1;
                 break;
             }
             case DLOG_MT_ATN_REQ_TAB_UPD: {
+                ppayload++;
                 context->terminal_upd_reason = *ppayload++;
                 printf("\t\tTerminal requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n", context->terminal_upd_reason,
                        context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
@@ -758,38 +563,20 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             }
             case DLOG_MT_ALARM: {
                 dlog_mt_alarm_t *alarm = (dlog_mt_alarm_t *)ppayload;
-                uint8_t alarm_index;
 
                 ppayload += sizeof(dlog_mt_alarm_t);
 
                 *pack_payload++ = DLOG_MT_ALARM_ACK;
                 *pack_payload++ = alarm->alarm_id;
 
-                /* Our Alarm Table only has 41 entries, if alarm is 99 (Un-Alarm) set it to 40,
-                 * if our alarm is > 39 (last valid alarm, except 99) then use alarm 41 to display
-                 * "Unknown Alarm."
-                 */
-                if (alarm->alarm_id == 99) {
-                    alarm_index = 40;
-                } else if (alarm->alarm_id > 39) {
-                    alarm_index = 41;
-                } else {
-                    alarm_index = alarm->alarm_id;
-                }
-
-                printf("\t\tAlarm: %s: Type: %d (0x%02x) - %s\n",
-                       timestamp_to_string(alarm->timestamp, timestamp_str, sizeof(timestamp_str)),
-                       alarm->alarm_id, alarm->alarm_id,
-                       alarm_type_str[alarm_index]);
+                mm_acct_save_TALARM(context, alarm);
                 break;
             }
             case DLOG_MT_MAINT_REQ: {
                 dlog_mt_maint_req_t *maint = (dlog_mt_maint_req_t *)ppayload;;
                 ppayload += sizeof(dlog_mt_maint_req_t);
 
-                printf("\t\tMaintenance Type: %d (0x%03x) Access PIN: %02x%02x%01x\n",
-                       maint->type, maint->type,
-                       maint->access_pin[0], maint->access_pin[1], (maint->access_pin[2] & 0xF0) >> 4);
+                mm_acct_save_TOPCODE(context, maint);
 
                 *pack_payload++ = DLOG_MT_MAINT_ACK;
                 *pack_payload++ = maint->type & 0xFF;
@@ -798,54 +585,11 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             }
             case DLOG_MT_CALL_DETAILS: {
                 dlog_mt_call_details_t *cdr = (dlog_mt_call_details_t *)ppayload;
-                char phone_number_string[21];
-                char card_number_string[21];
-                char call_type_str[38];
                 uint8_t cdr_ack_buf[3] = { 0 };
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                printf(
-                    "\t\tCDR: %s, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
-                    timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
-                    cdr->call_duration[0],
-                    cdr->call_duration[1],
-                    cdr->call_duration[2],
-                    call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
-                    phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num,
-                                        sizeof(cdr->called_num)),
-                    phone_num_to_string(card_number_string,  sizeof(card_number_string),  cdr->card_num,
-                                        sizeof(cdr->card_num)),
-                    (float)cdr->call_cost[0] / 100,
-                    (float)cdr->call_cost[1] / 100,
-                    cdr->carrier_code,
-                    cdr->rate_type,
-                    cdr->seq);
-
-                if (context->cdr_stream != NULL) {
-                    fprintf(context->cdr_stream, "%s,%d,%s,%d,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
-                            context->terminal_id,
-                            cdr->seq,
-                            timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
-                            cdr->call_duration[0] * 3600 +
-                            cdr->call_duration[1] * 60 +
-                            cdr->call_duration[2],
-                            call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
-                            phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num,
-                                                sizeof(cdr->called_num)),
-                            phone_num_to_string(card_number_string,  sizeof(card_number_string),  cdr->card_num,
-                                                sizeof(cdr->card_num)),
-                            (float)cdr->call_cost[1] / 100,
-                            (float)cdr->call_cost[0] / 100,
-                            cdr->carrier_code,
-                            cdr->rate_type);
-                    fflush(context->cdr_stream);
-                }
-
-                if (context->debuglevel > 2) {
-                    printf("\t\t\tDLOG_MT_CALL_DETAILS Pad:");
-                    dump_hex(cdr->pad, sizeof(cdr->pad));
-                }
+                mm_acct_save_TCDR(context, cdr);
 
                 cdr_ack_buf[0] = DLOG_MT_CDR_DETAILS_ACK;
                 cdr_ack_buf[1] = cdr->seq & 0xFF;
@@ -863,6 +607,8 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 break;
             }
             case DLOG_MT_ATN_REQ_CDR_UPL: {
+                ppayload++; /* Skip over table ID. */
+
                 /* Not sure what the cdr_req_type is, just swallow it. */
                 uint8_t cdr_req_type = *ppayload++;
                 printf("\t\tDLOG_MT_ATN_REQ_CDR_UPL, cdr_req_type=%02x (0x%02x)\n", cdr_req_type, cdr_req_type);
@@ -876,144 +622,49 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
 
                 ppayload += sizeof(dlog_mt_cash_box_collection_t);
 
-                printf("\t\tCashbox Collection: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
-                       timestamp_to_string(cash_box_collection->timestamp, timestamp_str, sizeof(timestamp_str)),
-                       (float)cash_box_collection->currency_value / 100,
-                       cash_box_collection->percent_full,
-                       cash_box_collection->coin_count[COIN_COUNT_CA_NICKELS],
-                       cash_box_collection->coin_count[COIN_COUNT_CA_DIMES],
-                       cash_box_collection->coin_count[COIN_COUNT_CA_QUARTERS],
-                       cash_box_collection->coin_count[COIN_COUNT_CA_DOLLARS],
-                       cash_box_collection->coin_count[COIN_COUNT_US_NICKELS],
-                       cash_box_collection->coin_count[COIN_COUNT_US_DIMES],
-                       cash_box_collection->coin_count[COIN_COUNT_US_QUARTERS],
-                       cash_box_collection->coin_count[COIN_COUNT_US_DOLLARS]);
+                mm_acct_save_TCOLLST(context, cash_box_collection);
                 *pack_payload++ = DLOG_MT_END_DATA;
                 break;
             }
             case DLOG_MT_TERM_STATUS: {
                 dlog_mt_term_status_t *dlog_mt_term_status = (dlog_mt_term_status_t *)ppayload;
-                uint8_t  serial_number[11]                 = { 0 };
-                uint64_t dlog_mt_term_status_word;
-                int i;
 
                 ppayload += sizeof(dlog_mt_term_status_t);
 
-                for (i = 0; i < 5; i++) {
-                    serial_number[i * 2]     = ((dlog_mt_term_status->serialnum[i] & 0xf0) >> 4) + '0';
-                    serial_number[i * 2 + 1] = (dlog_mt_term_status->serialnum[i] & 0x0f) + '0';
-                }
-
-                serial_number[10] = '\0';
-
-                dlog_mt_term_status_word  = dlog_mt_term_status->status[0];
-                dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[1]) << 8;
-                dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[2]) << 16;
-                dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[3]) << 24;
-                dlog_mt_term_status_word |= (uint64_t)(dlog_mt_term_status->status[4]) << 32;
-
-                printf("\t\tTerminal serial number %s, Terminal Status Word: 0x%010llx\n",
-                       serial_number, dlog_mt_term_status_word);
-
-                /* Iterate over all the terminal status bits and display a message for any flags set. */
-                for (i = 0; dlog_mt_term_status_word != 0; i++) {
-                    if (dlog_mt_term_status_word & 1) {
-                        printf("\t\t\tTerminal Status: %s\n", alarm_type_str[i]);
-                    }
-                    dlog_mt_term_status_word >>= 1;
-                }
+                mm_acct_save_TSTATUS(context, dlog_mt_term_status);
                 break;
             }
             case DLOG_MT_SW_VERSION: {
                 dlog_mt_sw_version_t *dlog_mt_sw_version = (dlog_mt_sw_version_t *)ppayload;
 
-                char control_rom_edition[sizeof(dlog_mt_sw_version->control_rom_edition) + 1]     = { 0 };
-                char control_version[sizeof(dlog_mt_sw_version->control_version) + 1]             = { 0 };
-                char telephony_rom_edition[sizeof(dlog_mt_sw_version->telephony_rom_edition) + 1] = { 0 };
-                char telephony_version[sizeof(dlog_mt_sw_version->telephony_version) + 1]         = { 0 };
-                memcpy(control_rom_edition,   dlog_mt_sw_version->control_rom_edition,
-                       sizeof(dlog_mt_sw_version->control_rom_edition));
-                memcpy(control_version,       dlog_mt_sw_version->control_version,
-                       sizeof(dlog_mt_sw_version->control_version));
-                memcpy(telephony_rom_edition, dlog_mt_sw_version->telephony_rom_edition,
-                       sizeof(dlog_mt_sw_version->telephony_rom_edition));
-                memcpy(telephony_version,     dlog_mt_sw_version->telephony_version,
-                       sizeof(dlog_mt_sw_version->telephony_version));
-
                 ppayload += sizeof(dlog_mt_sw_version_t);
 
-                if (strcmp(control_version, "V1.0") == 0) {
-                    context->phone_rev = 10;
-                } else if (strcmp(control_version, "V1.1") == 0) {
-                    context->phone_rev = 13;
-                } else if (strcmp(control_version, "V1.3") == 0) {
-                    context->phone_rev = 13;
-                } else {
-                    printf("Error: Unknown control version %s, defaulting to tables for V1.0.\n", control_version);
-                    context->phone_rev = 10;
-                }
-
-                printf("\t\t\t             Terminal Type: %02d (0x%02x)\n",
-                       dlog_mt_sw_version->term_type,
-                       dlog_mt_sw_version->term_type);
-                printf("\t\t\t       Control ROM Edition: %s\n", control_rom_edition);
-                printf("\t\t\t           Control Version: %s\n", control_version);
-                printf("\t\t\t     Telephony ROM Edition: %s\n", telephony_rom_edition);
-                printf("\t\t\t         Telephony Version: %s\n", telephony_version);
-                printf("\t\t\tValidator Hardware Version: %c%c\n",
-                       dlog_mt_sw_version->validator_hw_ver[0],
-                       dlog_mt_sw_version->validator_hw_ver[1]);
-                printf("\t\t\tValidator Software Version: %c%c\n",
-                       dlog_mt_sw_version->validator_sw_ver[0],
-                       dlog_mt_sw_version->validator_sw_ver[1]);
-
+                mm_acct_save_TSWVERS(context, dlog_mt_sw_version);
                 break;
             }
             case DLOG_MT_CASH_BOX_STATUS: {
-                cashbox_status_univ_t *cashbox_status = &context->cashbox_status;
-
-                /* Save cashbox status in our context */
-                memcpy(cashbox_status, ppayload, sizeof(cashbox_status_univ_t));
+                update_terminal_cash_box_staus_table(context, (cashbox_status_univ_t*)ppayload);
+                mm_acct_save_TCASHST(context, (cashbox_status_univ_t*)ppayload);
 
                 ppayload += sizeof(cashbox_status_univ_t);
-
-                update_terminal_cash_box_staus_table(context, &context->cashbox_status);
-                printf("\t\tCashbox status: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
-                       timestamp_to_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
-                       (float)cashbox_status->currency_value / 100,
-                       cashbox_status->percent_full,
-                       cashbox_status->coin_count[COIN_COUNT_CA_NICKELS],
-                       cashbox_status->coin_count[COIN_COUNT_CA_DIMES],
-                       cashbox_status->coin_count[COIN_COUNT_CA_QUARTERS],
-                       cashbox_status->coin_count[COIN_COUNT_CA_DOLLARS],
-                       cashbox_status->coin_count[COIN_COUNT_US_NICKELS],
-                       cashbox_status->coin_count[COIN_COUNT_US_DIMES],
-                       cashbox_status->coin_count[COIN_COUNT_US_QUARTERS],
-                       cashbox_status->coin_count[COIN_COUNT_US_DOLLARS]);
                 break;
             }
             case DLOG_MT_PERF_STATS_MSG: {
                 dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
 
-                printf("\t\tPerformance Statistics Record: From: %s, to: %s:\n",
-                       timestamp_to_string(perf_stats->timestamp,  timestamp_str,  sizeof(timestamp_str)),
-                       timestamp_to_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
-
-                for (int i = 0; i < ((sizeof(perf_stats->stats) / sizeof(uint16_t))); i++) {
-                    if (perf_stats->stats[i] > 0) printf("[%2d] %27s: %5d\n", i, TPERFST_stats_to_str_lut[i], perf_stats->stats[i]);
-                }
+                mm_acct_save_TPERFST(context, perf_stats);
                 dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CALL_IN: {
-                printf("\t\tCall In\n");
+                ppayload += sizeof(dlog_mt_call_in_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
                 break;
             }
             case DLOG_MT_CALL_BACK: {
-                printf("\t\tCall Back\n");
+                ppayload += sizeof(dlog_mt_call_back_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
                 break;
@@ -1022,6 +673,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             {
                 dlog_mt_carrier_call_stats_t *carr_stats = (dlog_mt_carrier_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_call_stats_t);
+                /* TODO: Convert to database. */
                 printf("\t\tCarrier Call Statistics Record: From: %s, to: %s:\n",
                        timestamp_to_string(carr_stats->timestamp,  timestamp_str,  sizeof(timestamp_str)),
                        timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
@@ -1041,7 +693,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                     } else {
                         for (int j = 0; j < 29; j++) {
                             if (j % 2 == 0) printf(" |\n\t\t\t\t");
-                            printf("| stats[%15s] =%5d\t\t", stats_to_str_lut[j], pcarr_stats_entry->stats[j]);
+                            printf("| stats[%15s] =%5d\t\t", stats_to_str(j), pcarr_stats_entry->stats[j]);
                         }
                         printf("\n");
                     }
@@ -1053,6 +705,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             case DLOG_MT_CARRIER_STATS_EXP: {
                 dlog_mt_carrier_stats_exp_t *carr_stats = (dlog_mt_carrier_stats_exp_t *)ppayload;
                 ppayload += sizeof(dlog_mt_carrier_stats_exp_t);
+
                 printf("\t\tExpanded Carrier Statistics: From: %s, to: %s:\n",
                        timestamp_to_string(carr_stats->timestamp,  timestamp_str,  sizeof(timestamp_str)),
                        timestamp_to_string(carr_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
@@ -1071,7 +724,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                     printf("Stats vintage: %d\n", carr_stats->stats_vintage);
 
                     for (int j = 0; j < STATS_EXP_CALL_TYPE_MAX; j++) {
-                        printf("\t\t\t\t%s stats:\t", stats_call_type_str_lut[j]);
+                        printf("\t\t\t\t%s stats:\t", stats_call_type_to_str(j));
 
                         for (int i = 0; i < STATS_EXP_PAYMENT_TYPE_MAX; i++) {
                             printf("%d, ", pcarr_stats_entry->stats[j][i]);
@@ -1089,46 +742,20 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 }
 
                 dont_send_reply = 1;
-
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
-                dlog_mt_summary_call_stats_t *dlog_mt_summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
+                dlog_mt_summary_call_stats_t *summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_summary_call_stats_t);
 
-                printf("\t\t\tSummary Call Statistics: From: %s, to: %s:\n",
-                       timestamp_to_string(dlog_mt_summary_call_stats->timestamp,  timestamp_str,  sizeof(timestamp_str)),
-                       timestamp_to_string(dlog_mt_summary_call_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
-
-                for (int j = 0; j < 16; j++) {
-                    printf("\t\t\t\t%s: %5d\n", TCALSTE_stats_to_str_lut[j], dlog_mt_summary_call_stats->stats[j]);
-                }
-                printf("\n\t\t\t\tRep Dialer Peg Counts:\t");
-
-                for (int j = 0; j < 10; j++) {
-                    if (j == 5) {
-                        printf("\n\t\t\t\t\t\t\t");
-                    }
-                    printf("%d, ", dlog_mt_summary_call_stats->rep_dialer_peg_count[j]);
-                }
-
-                printf("\n\t\t\t\tTotal Call duration: %us\n",
-                       dlog_mt_summary_call_stats->total_call_duration);
-
-                printf("\t\t\t\tTotal Off-hook duration: %us\n",
-                       dlog_mt_summary_call_stats->total_time_off_hook);
-
-                printf("\t\t\t\tFree Feature B Call Count: %d\n",      dlog_mt_summary_call_stats->free_featb_call_count);
-                printf("\t\t\t\tCompleted 1-800 billable Count: %d\n", dlog_mt_summary_call_stats->completed_1800_billable_count);
-                printf("\t\t\t\tDatajack calls attempted: %d\n",       dlog_mt_summary_call_stats->datajack_calls_attempt_count);
-                printf("\t\t\t\tDatajack calls completed: %d\n",       dlog_mt_summary_call_stats->datajack_calls_complete_count);
+                mm_acct_save_TCALLST(context, summary_call_stats);
 
                 dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_RATE_REQUEST: {
                 char phone_number[21]                        = { 0 };
-                dlog_mt_rate_response_t rate_response        = { { 0 } };
+                dlog_mt_rate_response_t rate_response        = { 0 };
                 dlog_mt_rate_request_t *dlog_mt_rate_request = (dlog_mt_rate_request_t *)ppayload;
                 ppayload += sizeof(dlog_mt_rate_request_t);
 
@@ -1156,43 +783,19 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 break;
             }
             case DLOG_MT_FUNF_CARD_AUTH: {
-                char phone_number_string[21] = { 0 };
-                char card_number_string[25]  = { 0 };
-                char call_type_str[38]       = { 0 };
-
-                dlog_mt_auth_resp_code_t  auth_response = { 0 };
+                dlog_mt_auth_resp_code_t  auth_response = { DLOG_MT_AUTH_RESP_CODE, 0 };
                 dlog_mt_funf_card_auth_t *auth_request  = (dlog_mt_funf_card_auth_t *)ppayload;
                 ppayload += sizeof(dlog_mt_funf_card_auth_t);
 
-                phone_num_to_string(phone_number_string, sizeof(phone_number_string), auth_request->phone_number,
-                                    sizeof(auth_request->phone_number));
-                phone_num_to_string(card_number_string,  sizeof(card_number_string),  auth_request->card_number,
-                                    sizeof(auth_request->card_number));
-                call_type_to_string(auth_request->call_type, call_type_str, sizeof(call_type_str));
-
-                printf(
-                    "\t\tCard Auth request: Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
-                    phone_number_string,
-                    auth_request->seq,
-                    card_number_string,
-                    auth_request->exp_mm,
-                    auth_request->exp_yy,
-                    auth_request->init_mm,
-                    auth_request->init_yy,
-                    auth_request->control_flag,
-                    auth_request->carrier_ref,
-                    call_type_str,
-                    auth_request->card_ref_num,
-                    auth_request->unknown,
-                    auth_request->unknown2);
+                mm_acct_save_TAUTH(context, auth_request);
 
                 auth_response.resp_code = 0;
-                *pack_payload++         = DLOG_MT_AUTH_RESP_CODE;
                 memcpy(pack_payload, &auth_response, sizeof(auth_response));
                 pack_payload += sizeof(auth_response);
                 break;
             }
             case DLOG_MT_END_DATA:
+                ppayload += sizeof(dlog_mt_end_data_t);
                 dont_send_reply                 = 0;
                 context->trans_data_in_progress = 0;
 
@@ -1217,11 +820,12 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 break;
             case DLOG_MT_TAB_UPD_ACK:
                 printf("\tDLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", *ppayload);
-                ppayload++;
+                ppayload+=2;
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
                 break;
             default:
                 printf("* * * Unhandled table %d (0x%02x)", table->table_id, table->table_id);
+                ppayload++;
                 send_mm_ack(context, 0);
                 break;
         }
@@ -1229,31 +833,10 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
 
     /* Send cash box status if requested by terminal */
     if (cashbox_pending == 1) {
-        size_t   table_len = 0;
-        uint8_t *table_buffer;
-
         printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n\t", context->tx_seq);
 
-        if (load_mm_table(context, DLOG_MT_CASH_BOX_STATUS, &table_buffer, &table_len) == 0) {
-            memcpy(pack_payload, table_buffer, table_len);
-            free(table_buffer);
-            pack_payload += table_len;
-        } else {                                    /* No cashbox staus saved for this terminal, use default */
-            cashbox_status_univ_t empty_cashbox_status = {
-                .timestamp = { 99, 1, 1, 0, 0, 0 }, /* January 1, 1999 00:00:00 */
-                .pad = { 0 },
-                .status = 0,
-                .percent_full = 0,
-                .currency_value = 0,
-                .pad2 = { 0 },
-                .coin_count = { 0 },
-                .spare = { 0 }
-            };
-
-            *pack_payload++ = DLOG_MT_CASH_BOX_STATUS;
-            memcpy(pack_payload, &empty_cashbox_status, sizeof(cashbox_status_univ_t));
-            pack_payload += sizeof(cashbox_status_univ_t);
-        }
+        mm_acct_load_TCASHST(context, (cashbox_status_univ_t*)pack_payload);
+        pack_payload += sizeof(cashbox_status_univ_t);
     }
 
     if (dont_send_reply == 0) {
@@ -1307,6 +890,11 @@ int mm_download_tables(mm_context_t *context) {
                 break;
             case DLOG_MT_END_DATA:
                 generate_dlog_mt_end_data(context, &table_buffer, &table_len);
+                break;
+            case DLOG_MT_CASH_BOX_STATUS:
+                table_buffer = calloc(1, sizeof(cashbox_status_univ_t));
+                mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);
+                table_len = sizeof(cashbox_status_univ_t);
                 break;
             default:
                 printf("\t");
@@ -1564,6 +1152,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
 
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename) {
     FILE *ostream = NULL;
+    uint8_t* pbuffer = (uint8_t *)pinstsv_table;
 
     int i;
 
@@ -1591,7 +1180,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     if (ostream != NULL) {
         printf("Rewriting %s with access code: %s\n", filename, access_code);
 
-        fwrite(pinstsv_table, sizeof(dlog_mt_install_params_t), 1, ostream);
+        fwrite((&pbuffer[1]), sizeof(dlog_mt_install_params_t) - 1, 1, ostream);
         fclose(ostream);
     }
 
@@ -1601,22 +1190,19 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
 void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     int i;
     dlog_mt_ncc_term_params_t *pncc_term_params;
-    uint8_t *pbuffer;
 
-    *len    = sizeof(dlog_mt_ncc_term_params_t) + 1;
-    pbuffer = (uint8_t*)calloc(1, *len);
+    *len    = sizeof(dlog_mt_ncc_term_params_t);
+    pncc_term_params = (dlog_mt_ncc_term_params_t *)(uint8_t*)calloc(1, *len);
 
-    if (pbuffer == NULL) {
+    if (pncc_term_params == NULL) {
         printf("Error allocating %zu bytes of memory\n", *len);
         exit(-ENOMEM);
     }
 
-    pbuffer[0] = DLOG_MT_NCC_TERM_PARAMS;
-
-    pncc_term_params = (dlog_mt_ncc_term_params_t *)&pbuffer[1];
-
     printf("\nGenerating Terminal Access Parameters table:\n" \
            "\t  Terminal ID: %s\n", context->terminal_id);
+
+    pncc_term_params->id = DLOG_MT_NCC_TERM_PARAMS;
 
     // Rewrite table with our Terminal ID (phone number)
     for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
@@ -1634,7 +1220,7 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
         string_to_bcd_a(context->ncc_number[1], pncc_term_params->sec_ncc_number, sizeof(pncc_term_params->sec_ncc_number));
     }
 
-    *buffer = pbuffer;
+    *buffer = (uint8_t *)pncc_term_params;
 }
 
 void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffer, size_t *len) {
@@ -1642,7 +1228,7 @@ void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffe
     dlog_mt_ncc_term_params_mtr1_t *pncc_term_params;
     uint8_t *pbuffer;
 
-    *len    = sizeof(dlog_mt_ncc_term_params_mtr1_t) + 1;
+    *len    = sizeof(dlog_mt_ncc_term_params_mtr1_t);
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
@@ -1650,13 +1236,12 @@ void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffe
         exit(-ENOMEM);
     }
 
-    pbuffer[0] = DLOG_MT_NCC_TERM_PARAMS;
-
-    pncc_term_params = (dlog_mt_ncc_term_params_mtr1_t *)&pbuffer[1];
+    pncc_term_params = (dlog_mt_ncc_term_params_mtr1_t *)pbuffer;
 
     printf("\nGenerating Terminal Access Parameters table (MTR 1.x):\n" \
            "\t  Terminal ID: %s\n", context->terminal_id);
 
+    pncc_term_params->id = DLOG_MT_NCC_TERM_PARAMS;
     // Rewrite table with our Terminal ID (phone number)
     for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
         pncc_term_params->terminal_id[i]  = (context->terminal_id[i * 2] - '0') << 4;
@@ -1683,7 +1268,7 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
     struct tm ptm = { 0 };
     uint8_t   call_in_hour;
 
-    *len    = sizeof(dlog_mt_call_in_params_t) + 1;
+    *len    = sizeof(dlog_mt_call_in_params_t);
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
@@ -1691,11 +1276,11 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
         exit(-ENOMEM);
     }
 
-    pbuffer[0] = DLOG_MT_CALL_IN_PARMS;
-
-    pcall_in_params = (dlog_mt_call_in_params_t *)&pbuffer[1];
+    pcall_in_params = (dlog_mt_call_in_params_t *)pbuffer;
 
     printf("\nGenerating Call-In table:\n");
+
+    pcall_in_params->id = DLOG_MT_CALL_IN_PARMS;
 
     if (context->use_modem == 1) {
         /* When using the modem, fill the current time.  If not using the modem, use
@@ -1759,7 +1344,7 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     dlog_mt_call_stat_params_t *pcall_stat_params;
     uint8_t *pbuffer;
 
-    *len    = sizeof(dlog_mt_call_stat_params_t) + 1;
+    *len    = sizeof(dlog_mt_call_stat_params_t);
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
@@ -1767,11 +1352,10 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
         exit(-ENOMEM);
     }
 
-    pbuffer[0] = DLOG_MT_CALL_STAT_PARMS;
-
-    pcall_stat_params = (dlog_mt_call_stat_params_t *)&pbuffer[1];
+    pcall_stat_params = (dlog_mt_call_stat_params_t *)pbuffer;
 
     printf("\nGenerating Call Stat Parameters table:\n");
+    pcall_stat_params->id = DLOG_MT_CALL_STAT_PARMS;
     pcall_stat_params->callstats_start_time[0]  = 0; /* HH */
     pcall_stat_params->callstats_start_time[1]  = 0; /* MM */
     pcall_stat_params->callstats_duration       = 1; /* Indicates the number of days over which call statistics will be accumulated. */
@@ -1815,7 +1399,7 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     dlog_mt_comm_stat_params_t *pcomm_stat_params;
     uint8_t *pbuffer;
 
-    *len    = sizeof(dlog_mt_comm_stat_params_t) + 1;
+    *len    = sizeof(dlog_mt_comm_stat_params_t);
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
@@ -1823,11 +1407,10 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
         exit(-ENOMEM);
     }
 
-    pbuffer[0] = DLOG_MT_COMM_STAT_PARMS;
-
-    pcomm_stat_params = (dlog_mt_comm_stat_params_t *)&pbuffer[1];
+    pcomm_stat_params = (dlog_mt_comm_stat_params_t *)pbuffer;
 
     printf("\nGenerating Comm Stat Parameters table:\n");
+    pcomm_stat_params->id = DLOG_MT_COMM_STAT_PARMS;
     pcomm_stat_params->co_access_dial_complete       = 100;
     pcomm_stat_params->co_access_dial_complete_int   = 100;
     pcomm_stat_params->dial_complete_carr_detect     = 100;
@@ -1865,7 +1448,7 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
     dlog_mt_user_if_params_t *puser_if_params;
     uint8_t *pbuffer;
 
-    *len    = sizeof(dlog_mt_user_if_params_t) + 1;
+    *len    = sizeof(dlog_mt_user_if_params_t);
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
@@ -1873,11 +1456,10 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
         exit(-ENOMEM);
     }
 
-    pbuffer[0] = DLOG_MT_USER_IF_PARMS;
-
-    puser_if_params = (dlog_mt_user_if_params_t *)&pbuffer[1];
+    puser_if_params = (dlog_mt_user_if_params_t *)pbuffer;
 
     printf("\nGenerating User Interface Parameters table:\n");
+    puser_if_params->id = DLOG_MT_USER_IF_PARMS;
     puser_if_params->digit_clear_delay               = 450;
     puser_if_params->transient_delay                 = 450;
     puser_if_params->transient_hint_time             = 450;

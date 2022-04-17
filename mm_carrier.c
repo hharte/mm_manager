@@ -215,6 +215,7 @@ int main(int argc, char *argv[]) {
     int ret = 0;
 
     dlog_mt_carrier_table_t *pcarrier_table;
+    uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -237,7 +238,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)pcarrier_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_carrier_table_t) - 1, 1, instream) != 1) {
         printf("Error reading CARRIER table.\n");
         free(pcarrier_table);
         fclose(instream);
@@ -316,7 +318,7 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(pcarrier_table, sizeof(dlog_mt_carrier_table_t), 1, ostream) != 1) {
+        if (fwrite(load_buffer, sizeof(dlog_mt_carrier_table_t) - 1, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }

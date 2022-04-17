@@ -21,6 +21,8 @@ ADD_LIBRARY(mm_util STATIC "mm_util.c")
 
 if(MSVC)
 ADD_LIBRARY(mm_serial STATIC "mm_serial_win32.c" "mm_serial.h" "third-party/getopt.c" "third-party/getopt.h")
+include_directories("third-party")
+ADD_LIBRARY(sqlite3 STATIC "third-party/sqlite3.c" "third-party/sqlite3.h")
 else()
 ADD_LIBRARY(mm_serial STATIC "mm_serial_posix.c" "mm_serial.h")
 endif()
@@ -28,14 +30,18 @@ endif()
 # Built executables.
 set(MANAGER_SRC
     "mm_manager.c"
-    "mm_proto.c"
-    "mm_modem.c"
     "mm_manager.h"
+    "mm_accounting.c"
+    "mm_modem.c"
+    "mm_proto.c"
     "mm_serial.h"
+    "mm_sqlite3.c"
+    "mm_tables.c"
 )
 
 add_executable (mm_manager ${MANAGER_SRC})
-TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util)
+#target_compile_options(mm_manager PUBLIC $<$<CONFIG:DEBUG>:-fprofile-instr-generate -fcoverage-mapping>)
+TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util sqlite3)
 add_executable (mm_admess "mm_admess.c" "mm_manager.h")
 add_executable (mm_areacode "mm_areacode.c" "mm_manager.h")
 add_executable (mm_callscrn "mm_callscrn.c" "mm_manager.h")
@@ -63,7 +69,7 @@ TARGET_LINK_LIBRARIES(mm_table_cutter mm_util)
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
-  target_link_libraries(mm_carrier wsock32 ws2_32)
+  target_link_libraries(mm_carrier wsock32 ws2_32 sqlite3)
 endif()
 
 # Install

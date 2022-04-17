@@ -76,6 +76,7 @@ int main(int argc, char *argv[]) {
     int   i;
 
     dlog_mt_call_screen_list_t *pcallscrn_table;
+    uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
@@ -98,7 +99,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(pcallscrn_table, sizeof(dlog_mt_call_screen_list_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)pcallscrn_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_call_screen_list_t) - 1, 1, instream) != 1) {
         printf("Error reading CALLSCRN table.\n");
         free(pcallscrn_table);
         fclose(instream);

@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     FILE *ostream = NULL;
     int   rate_index;
     dlg_mt_intl_sbr_table_t *prate_table;
+    uint8_t* load_buffer;
     int ret = 0;
 
     if (argc <= 1) {
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium RATEINT Table 0x97 (151) Dump\n\n");
 
-    prate_table = calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
+    prate_table = (dlg_mt_intl_sbr_table_t *)calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
 
     if (prate_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlg_mt_intl_sbr_table_t));
@@ -66,7 +67,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)prate_table) + 1;
+    if (fread(load_buffer, sizeof(dlg_mt_intl_sbr_table_t) - 1, 1, instream) != 1) {
         printf("Error reading RATEINT table.\n");
         free(prate_table);
         fclose(instream);
@@ -129,7 +131,7 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(prate_table, sizeof(dlg_mt_intl_sbr_table_t), 1, ostream) != 1) {
+        if (fwrite(load_buffer, sizeof(dlg_mt_intl_sbr_table_t) - 1, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }

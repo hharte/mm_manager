@@ -40,7 +40,8 @@ const char *str_flags[4] = {
 int main(int argc, char *argv[]) {
     FILE *instream;
     dlog_mt_npa_nxx_table_t *lcd_table;
-    uint8_t c;
+    uint8_t* load_buffer;
+    uint8_t c = 0;
     int     nxx;
     uint8_t npa_char[2];
     uint8_t check_digit;
@@ -54,7 +55,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Double-Compressed LCD Table (Tables 136-138) Dump\n\n");
 
-    lcd_table = calloc(1, sizeof(dlog_mt_npa_nxx_table_t));
+    lcd_table = (dlog_mt_npa_nxx_table_t *)calloc(1, sizeof(dlog_mt_npa_nxx_table_t));
 
     if (lcd_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_npa_nxx_table_t));
@@ -67,7 +68,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(lcd_table, sizeof(dlog_mt_npa_nxx_table_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)lcd_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_npa_nxx_table_t) - 1, 1, instream) != 1) {
         printf("Error reading LCD table.\n");
         free(lcd_table);
         fclose(instream);

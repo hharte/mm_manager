@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h> /* String function definitions */
+#include <time.h>
 
 #include "./mm_manager.h"
 
@@ -154,6 +155,23 @@ char* callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t *n
     return string_buf;
 }
 
+/* Convert seconds to DDHHMMSS. */
+char* seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds) {
+    int days, hours, minutes, secs;
+
+    secs = seconds;
+    days = secs / (3600 * 24);
+    secs -= days * (3600 * 24);
+    hours = secs / 3600;
+    secs -= hours * 3600;
+    minutes = secs / 60;
+    secs -= minutes * 60;
+
+    snprintf(string_buf, string_buf_len, "%02d:%02d:%02d:%02d", days, hours, minutes, secs);
+
+    return string_buf;
+}
+
 /* Call Type (lower 4-bits) of CALLTYP */
 const char *call_type_str[16] = {
     "Incoming",
@@ -220,6 +238,28 @@ char* timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t string_bu
              timestamp[4],
              timestamp[5]);
 
+    return string_buf;
+}
+
+char* timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len) {
+    snprintf(string_buf, string_buf_len, "%04d%02d%02d,%02d%02d%02d",
+             timestamp[0] + 1900,
+             timestamp[1],
+             timestamp[2],
+             timestamp[3],
+             timestamp[4],
+             timestamp[5]);
+
+    return string_buf;
+}
+
+char* received_time_to_db_string(char *string_buf, size_t string_buf_len) {
+    time_t rawtime;
+    struct tm ptm = { 0 };
+
+    time(&rawtime);
+    localtime_r(&rawtime, &ptm);
+    strftime(string_buf, string_buf_len, "%Y%m%d,%H%M%S", &ptm);
     return string_buf;
 }
 
@@ -421,3 +461,219 @@ const char* table_to_string(uint8_t table) {
 
     return table_string[table];
 }
+
+/* Millennium Alarm Strings */
+const char* alarm_type_str[] = {
+    /* 0 */  "Telephony Board Not Responding",  // TSTATUS_HANDSET_DISCONT_IND
+    /* 1 */  "TELEPHONY_STATUS_IND",
+    /* 2 */  "EPM/SAM Not Responding",
+    /* 3 */  "EPM/SAM Locked Out",
+    /* 4 */  "EPM/SAM Expired",
+    /* 5 */  "EPM/SAM has reached the transaction limit",
+    /* 6 */  "Unable to Reach Primary Collection System",
+    /* 7 */  "Reserved TELEPHONY_STATUS_BIT_7",
+    /* 8 */  "Power Fail",
+    /* 9 */  "Display Not Responding",
+    /* 10 */  "Voice Synthesis Not Responding",
+    /* 11 */  "Unable to Reach Secondary Collection System",
+    /* 12 */  "Card Reader Blocked",
+    /* 13 */  "Mandatory Table Alarm",
+    /* 14 */  "Datajack Port Blocked",
+    /* 15 */  "Reserved CTRL_HW_STATUS_BIT_7",
+    /* 16 */  "CDR Checksum Error",
+    /* 17 */  "Statistics Checksum Error",
+    /* 18 */  "Table Checksum Error",
+    /* 19 */  "Data Checksum Error",
+    /* 20 */  "CDR List Full",
+    /* 21 */  "Bad EEPROM",
+    /* 22 */  "Control Microprocessor RAM Contents Lost",
+    /* 23 */  "Control Microprocessor RAM Defective",
+    /* 24 */  "Station Access Cover Opened",
+    /* 25 */  "Stuck Button",
+    /* 26 */  "Set Removal",  /* Not all terminals have this switch sensor */
+    /* 27 */  "Cash Box Threshold Met",
+    /* 28 */  "Coin Box Cover Opened",
+    /* 29 */  "Cash Box Removed",
+    /* 30 */  "Cash Box Full",
+    /* 31 */  "Validator Jam",
+    /* 32 */  "Escrow Jam",
+    /* 33 */  "Coin Hardware Jam",
+    /* 34 */  "Central Office Line Check Failure",
+    /* 35 */  "Dialog Failure",
+    /* 36 */  "Cash Box Electronic Lock Failure",
+    /* 37 */  "Dialog Failure with Collection System",
+    /* 38 */  "Code Server Connection Failure",
+    /* 39 */  "Code Server Aborted",
+    /* ... */
+    /* 99  */  "Un-Alarm",
+    /* >39 */  "Unknown Alarm!"
+};
+
+const char* alarm_id_to_string(uint8_t alarm_id) {
+    int alarm_index;
+
+    /* Our Alarm Table only has 41 entries, if alarm is 99 (Un-Alarm) set it to 40,
+     * if our alarm is > 39 (last valid alarm, except 99) then use alarm 41 to display
+     * "Unknown Alarm."
+     */
+    if (alarm_id == 99) {
+        alarm_index = 40;
+    } else if (alarm_id > 39) {
+        alarm_index = 41;
+    } else {
+        alarm_index = alarm_id;
+    }
+
+    return alarm_type_str[alarm_index];
+}
+
+const char* stats_call_type_str_lut[4] = {
+    "Local        ",
+    "Inter-LATA   ",
+    "Intra-LATA   ",
+    "International"
+};
+
+const char* stats_call_type_to_str(uint8_t type) {
+    if (type >= (sizeof(stats_call_type_str_lut) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return stats_call_type_str_lut[type];
+}
+
+const char* stats_to_str_lut[29] = {
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "InterLATA Coin",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28"
+};
+
+const char* stats_to_str(uint8_t type) {
+    if (type >= (sizeof(stats_to_str_lut) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return stats_to_str_lut[type];
+}
+
+const char* TCALSTE_stats_to_str_lut[16] = {
+    "        Local",
+    "   Intra-LATA",
+    "   Inter-LATA",
+    "International",
+    "     Incoming",
+    "   Unanswered",
+    "    Abandoned",
+    "  Oper Assist",
+    "           0+",
+    "   1-800 Free",
+    "       Denied",
+    "   Dir Assist",
+    "         Free",
+    "    Follow-On",
+    " Fail to POTS",
+    "   Rep Dialer"
+};
+
+const char* TCALSTE_stats_to_str(uint8_t type) {
+    if (type >= (sizeof(TCALSTE_stats_to_str_lut) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return TCALSTE_stats_to_str_lut[type];
+}
+
+const char* TPERFST_stats_to_str_lut[43] = {
+    "Call Attempts",
+    "Busy Signal",
+    "Call Cleared No Data",
+    "No Carrier Detect",
+    "CO Access Dial 1",
+    "CO Access Dial 2",
+    "CO Access Dial 3",
+    "CO Access Dial 4",
+    "CO Access Dial 5",
+    "CO Access Dial 6",
+    "CO Access Dial 7",
+    "Dial to Carrier 1",
+    "Dial to Carrier 2",
+    "Dial to Carrier 3",
+    "Dial to Carrier 4",
+    "Dial to Carrier 5",
+    "Dial to Carrier 6",
+    "Dial to Carrier 7",
+    "Carrier to 1st Packet 1",
+    "Carrier to 1st Packet 2",
+    "Carrier to 1st Packet 3",
+    "Carrier to 1st Packet 4",
+    "Carrier to 1st Packet 5",
+    "Carrier to 1st Packet 6",
+    "Carrier to 1st Packet 7",
+    "User Wait to Expect Info 1",
+    "User Wait to Expect Info 2",
+    "User Wait to Expect Info 3",
+    "User Wait to Expect Info 4",
+    "User Wait to Expect Info 5",
+    "User Wait to Expect Info 6",
+    "User Wait to Expect Info 7",
+    "Total Dialogs Failed",
+    "Packet Received Errors",
+    "Packet Retries Received",
+    "Inactivity Count",
+    "Retry Limit Out of Service",
+    "Card Auth Timeouts",
+    "Rate Request Timeouts",
+    "No Dial Tone",
+    "Spare 1",
+    "Spare 2",
+    "Spare 3"
+};
+
+const char* TPERFST_stats_to_str(uint8_t type) {
+    if (type >= (sizeof(TPERFST_stats_to_str_lut) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return TPERFST_stats_to_str_lut[type];
+}
+
+#ifdef _WIN32
+char* basename(char* path) {
+    char fname[20] = { 0 };
+
+    _splitpath(path, NULL, NULL, fname, NULL);
+
+    snprintf(path, sizeof(fname), "%s", fname);
+    return path;
+}
+
+errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest) {
+    return localtime_s(tmDest, sourceTime);
+}
+#endif /* _WIN32 */

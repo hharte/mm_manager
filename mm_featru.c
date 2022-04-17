@@ -136,6 +136,7 @@ int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     dlog_mt_fconfig_opts_t *featru_table;
+    uint8_t* load_buffer;
     int ret = 0;
 
     if (argc <= 1) {
@@ -146,7 +147,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium FEATRU Table 0x1a (26) Dump\n\n");
 
-    featru_table = calloc(1, sizeof(dlog_mt_fconfig_opts_t));
+    featru_table = (dlog_mt_fconfig_opts_t *)calloc(1, sizeof(dlog_mt_fconfig_opts_t));
 
     if (featru_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_fconfig_opts_t));
@@ -159,7 +160,8 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (fread(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, instream) != 1) {
+    load_buffer = ((uint8_t*)featru_table) + 1;
+    if (fread(load_buffer, sizeof(dlog_mt_fconfig_opts_t) - 1, 1, instream) != 1) {
         printf("Error reading FEATRU table.\n");
         free(featru_table);
         fclose(instream);
@@ -288,7 +290,7 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(featru_table, sizeof(dlog_mt_fconfig_opts_t), 1, ostream) != 1) {
+        if (fwrite(load_buffer, sizeof(dlog_mt_fconfig_opts_t) - 1, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }

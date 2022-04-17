@@ -199,21 +199,25 @@ typedef struct mm_table {
  * consumed by the terminal.
  */
 typedef struct dlog_mt_alarm {
+    uint8_t id;
     uint8_t timestamp[6];
     uint8_t alarm_id;
 } dlog_mt_alarm_t;
 
 typedef struct dlog_mt_maint_req {
+    uint8_t  id;
     uint16_t type;
-    uint8_t access_pin[3];
+    uint8_t  access_pin[3];
 } dlog_mt_maint_req_t;
 
 typedef struct dlog_mt_call_back_req {
+    uint8_t  id;
     uint16_t type;
-    uint8_t callback_time[6];
+    uint8_t  callback_time[6];
 } dlog_mt_call_back_req_t;
 
 typedef struct dlog_mt_ncc_term_params {
+    uint8_t id;
     uint8_t terminal_id[5];
     uint8_t pri_ncc_number[10];
     uint8_t sec_ncc_number[10];
@@ -221,6 +225,7 @@ typedef struct dlog_mt_ncc_term_params {
 } dlog_mt_ncc_term_params_t;
 
 typedef struct dlog_mt_ncc_term_params_mtr1 {
+    uint8_t id;
     uint8_t terminal_id[5];
     uint8_t pri_ncc_number[6];
     uint8_t sec_ncc_number[6];
@@ -228,6 +233,7 @@ typedef struct dlog_mt_ncc_term_params_mtr1 {
 
 /* From TERM table, pp. 2-517 */
 typedef struct dlog_mt_call_in_params {
+    uint8_t id;
     uint8_t call_in_start_date[3];      /* Call-in start date YY:MM:DD */
     uint8_t call_in_start_time[3];      /* Call-in start date HH:MM:SS */
     uint8_t call_in_interval[3];        /* Call-in inteval DD:HH:MM */
@@ -239,6 +245,7 @@ typedef struct dlog_mt_call_in_params {
 
 /* From CALLST (Call Statistics Parameters) pp. 2-36 */
 typedef struct dlog_mt_call_stat_params {
+    uint8_t id;
     uint8_t callstats_start_time[2];    /* Call stats start date HH:MM */
     uint8_t callstats_duration;         /* Indicates the number of days over which call statistics will be accumulated. */
     uint8_t callstats_threshold;        /* Indicates the number of Call Statistics records that the terminal will store before automatically calling in to the Millennium Manager to upload them. */
@@ -252,6 +259,7 @@ typedef struct dlog_mt_call_stat_params {
 
 /* From COMMST (Communications Statistics Parameters) pp. 2-86 */
 typedef struct dlog_mt_comm_stat_params {
+    uint8_t  id;
     uint16_t co_access_dial_complete;       /* 100 */
     uint16_t co_access_dial_complete_int;   /* 50 */
     uint16_t dial_complete_carr_detect;     /* 100 */
@@ -269,6 +277,7 @@ typedef struct dlog_mt_comm_stat_params {
 
 /* From USERPRM (User Interface Parameters) pp. 2-670 */
 typedef struct dlog_mt_user_if_params {
+    uint8_t  id;
     uint16_t digit_clear_delay;             /* 450 */
     uint16_t transient_delay;               /* 450 */
     uint16_t transient_hint_time;           /* 450 */
@@ -305,7 +314,9 @@ typedef struct dlog_mt_user_if_params {
     uint16_t datajack_ias_timer;            /* 10 (100ms) */
 } dlog_mt_user_if_params_t;
 
+/* TCDR (Terminal Call Detail) pp 2-425 */
 typedef struct dlog_mt_call_details {
+    uint8_t id;
     uint8_t rate_type;
     uint8_t called_num[10];
     uint8_t carrier_code;
@@ -356,15 +367,16 @@ typedef struct dlog_mt_call_details {
 
 /* DLOG_MT_CASH_BOX_COLLECTION */
 typedef struct dlog_mt_cash_box_collection {
-    uint8_t pad[14];
-    uint8_t timestamp[6];
-    uint8_t pad2[4];
-    uint8_t status;                     // Cash box status bits (0=normal, 1=$value exceeded, 2=%threshold exceeded, 3=both exceeded, >3 totally full)
-    uint8_t percent_full;               // Percent full (0-100%)
+    uint8_t  id;
+    uint8_t  pad[14];
+    uint8_t  timestamp[6];
+    uint8_t  pad2[4];
+    uint8_t  status;                     // Cash box status bits (0=normal, 1=$value exceeded, 2=%threshold exceeded, 3=both exceeded, >3 totally full)
+    uint8_t  percent_full;               // Percent full (0-100%)
     uint16_t currency_value;            // Contains the total value of the currency which was collected, not including any previous collections.
-    uint16_t pad3[2];
+    uint8_t  pad3[4];
     uint16_t coin_count[8];             // Array of counts of Nickles, Dime, Quarters, Dollars for US and CA.
-    uint8_t spare[22];
+    uint8_t  spare[22];
 } dlog_mt_cash_box_collection_t;
 
 #define COIN_COUNT_CA_NICKELS   0
@@ -378,6 +390,7 @@ typedef struct dlog_mt_cash_box_collection {
 
 /* TABLE_ID_CASHBOX_STATUS_UNIV */
 typedef struct cashbox_status_univ {
+    uint8_t id;
     uint8_t timestamp[6];
     uint8_t pad[4];
     uint8_t status;                     // Cash box status bits (0=normal, 1=$value exceeded, 2=%threshold exceeded, 3=both exceeded, >3 totally full)
@@ -390,6 +403,7 @@ typedef struct cashbox_status_univ {
 
 /* DLOG_MT_PERF_STATS_RECORD 97 bytes */
 typedef struct dlog_mt_perf_stats_record {
+    uint8_t id;
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
     uint16_t stats[43];
@@ -397,8 +411,9 @@ typedef struct dlog_mt_perf_stats_record {
 
 /* DLOG_MT_SUMMARY_CALL_STATS - TCALSTE (Terminal Call Statistics Enhanced) pp. 2-393 */
 typedef struct dlog_mt_summary_call_stats {
-    uint8_t timestamp[6];                   /* Summary period start timestamp. */
-    uint8_t timestamp2[6];                  /* Summary period end timestamp. */
+    uint8_t  id;
+    uint8_t  start_timestamp[6];            /* Summary period start timestamp. */
+    uint8_t  end_timestamp[6];              /* Summary period end timestamp. */
     uint16_t stats[16];                     /* Call counts for different types of calls. */
     uint16_t rep_dialer_peg_count[10];      /* Counts for each of the reperatory dialer keys. */
     uint32_t total_call_duration;           /* Total call duration (seconds,) timed from answer supervision to on-hook. */
@@ -416,6 +431,7 @@ typedef struct carrier_stats_entry {
 
 /* DLOG_MT_CARRIER_CALL_STATS 106 bytes */
 typedef struct dlog_mt_carrier_call_stats {
+    uint8_t id;
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
     carrier_stats_entry_t carrier_stats[3];
@@ -426,7 +442,7 @@ typedef struct dlog_mt_carrier_call_stats {
 #define STATS_EXP_PAYMENT_TYPE_MAX  12
 
 typedef struct carrier_stats_exp_entry {
-    uint8_t carrier_ref;
+    uint8_t  carrier_ref;
     uint16_t stats[4][12];                  /* 4 call types: local, Intra-LATA, Inter-LATA, IXL.  12 stats each. */
     uint16_t operator_assist_call_count;
     uint16_t zero_plus_call_count;
@@ -441,6 +457,7 @@ typedef struct carrier_stats_exp_entry {
 /* DLOG_MT_CARRIER_STATS_EXP TCARRST (Terminal Carrier Call Statistics) pp. 2-406 */
 #define CARRIER_STATS_EXP_MAX_CARRIERS  2
 typedef struct dlog_mt_carrier_stats_exp {
+    uint8_t id;
     uint8_t timestamp[6];
     uint8_t timestamp2[6];
     uint8_t stats_vintage;
@@ -449,6 +466,7 @@ typedef struct dlog_mt_carrier_stats_exp {
 
 /* DLOG_MT_SW_VERSION (TSWVERS pp. 2-647) */
 typedef struct dlog_mt_sw_version {
+    uint8_t id;
     uint8_t control_rom_edition[7];
     uint8_t control_version[4];
     uint8_t telephony_rom_edition[7];
@@ -457,6 +475,53 @@ typedef struct dlog_mt_sw_version {
     uint8_t validator_sw_ver[2];
     uint8_t validator_hw_ver[2];
 } dlog_mt_sw_version_t;
+
+/* DLOG_MT_DLOG_MT_CALL_IN */
+typedef struct dlog_mt_call_in {
+    uint8_t id;
+} dlog_mt_call_in_t;
+
+/* DLOG_MT_DLOG_MT_CALL_IN */
+typedef struct dlog_mt_call_back {
+    uint8_t id;
+} dlog_mt_call_back_t;
+
+/* DLOG_MT_END_DATA */
+typedef struct dlog_mt_end_data {
+    uint8_t id;
+} dlog_mt_end_data_t;
+
+/* DLOG_MT_TRANS_DATA */
+typedef struct dlog_mt_trans_data {
+    uint8_t id;
+} dlog_mt_trans_data_t;
+
+/* DLOG_MT_TABLE_UPD */
+typedef struct dlog_mt_table_upd {
+    uint8_t id;
+} dlog_mt_table_upd_t;
+
+/* DLOG_MT_TIME_SYNC_REQ */
+typedef struct dlog_mt_time_sync_req {
+    uint8_t id;
+} dlog_mt_time_sync_req_t;
+
+/* DLOG_MT_TIME_SYNC */
+typedef struct dlog_mt_time_sync {
+    uint8_t id;         /* 0x14 */
+    uint8_t year;
+    uint8_t month;      /* 1 - 12 */
+    uint8_t day;
+    uint8_t hour;
+    uint8_t min;
+    uint8_t sec;
+    uint8_t wday;       /* Day of week, 1=Sunday ... 7=Saturday */
+} dlog_mt_time_sync_t;
+
+/* DLOG_MT_QUERY_TERM_ERR */
+typedef struct dlog_mt_query_term_err {
+    uint8_t id;
+} dlog_mt_query_term_err_t;
 
 /* Constants and data structures for the RATEINT (Set Based Rating - International) pp. 2-326
  *
@@ -479,6 +544,7 @@ typedef struct intl_rate_table_entry {
 } intl_rate_table_entry_t;
 
 typedef struct dlg_mt_intl_sbr_table {
+    uint8_t id;
     uint8_t flags;
     uint8_t default_rate_index;     // 28 + default_rate_index is the entry in the RATE table.
     uint8_t spare;
@@ -510,26 +576,30 @@ typedef struct rate_table_entry {
 
 #define RATE_TABLE_MAX_ENTRIES  128
 typedef struct dlog_mt_rate_table {
+    uint8_t id;
     uint8_t unknown[39];
     rate_table_entry_t r[RATE_TABLE_MAX_ENTRIES];
 } dlog_mt_rate_table_t;
 
 /* DLOG_MT_RATE_REQUEST */
 typedef struct dlog_mt_rate_request {
+    uint8_t  id;
     uint16_t seq;
-    uint8_t phone_number[10];
-    uint8_t timestamp[6];
-    uint8_t pad[6];
+    uint8_t  phone_number[10];
+    uint8_t  timestamp[6];
+    uint8_t  pad[6];
 } dlog_mt_rate_request_t;
 
 /* DLOG_MT_RATE_RESPONSE  (25 bytes) */
 typedef struct dlog_mt_rate_response {
+    uint8_t id;
     rate_table_entry_t rate;
     uint8_t pad2[16];
 } dlog_mt_rate_response_t;
 
 /* DLOG_MT_FUNF_CARD_AUTH - see: TAUTH (Terminal Card Authorization) pp. 2-370 */
 typedef struct dlog_mt_funf_card_auth {
+    uint8_t id;
     uint8_t control_flag;
     uint8_t phone_number[10];               /* Dialed number for which authorization is requested */
     uint8_t carrier_ref;                    /* Unique number for each carrier used to cross reference the carrier in other tables. */
@@ -548,6 +618,7 @@ typedef struct dlog_mt_funf_card_auth {
 
 /* DLOG_MT_AUTH_RESP_CODE */
 typedef struct dlog_mt_auth_resp_code {
+    uint8_t  id;
     uint8_t  resp_code;                     /* Authorization response code: 0=card valid, otherwise card invalid. */
     uint8_t  pad[20];
 } dlog_mt_auth_resp_code_t;
@@ -567,6 +638,7 @@ typedef struct carrier_table_entry {
 #define DEFAULT_CARRIERS_MAX        9
 #define CARRIER_TABLE_MAX_CARRIERS  33
 typedef struct dlog_mt_carrier_table {
+    uint8_t id;
     uint8_t defaults[DEFAULT_CARRIERS_MAX];
     carrier_table_entry_t carrier[CARRIER_TABLE_MAX_CARRIERS];
     uint8_t spare[10];
@@ -581,6 +653,7 @@ typedef struct rdlist_table_entry {
 
 #define RDLIST_MAX                  10
 typedef struct dlog_mt_rdlist_table {
+    uint8_t id;
     rdlist_table_entry_t rd[10];
 } dlog_mt_rdlist_table_t;
 
@@ -616,6 +689,7 @@ typedef struct call_screen_list_entry {
 
 #define CALLSCRN_TABLE_MAX                      180
 typedef struct dlog_mt_call_screen_list {
+    uint8_t id;
     call_screen_list_entry_t entry[CALLSCRN_TABLE_MAX];
 } dlog_mt_call_screen_list_t;
 
@@ -684,6 +758,7 @@ typedef struct admess_table_entry {
 
 #define ADVERT_PROMPTS_MAX                      20
 typedef struct dlog_mt_advert_prompts {
+    uint8_t id;
     admess_table_entry_t entry[ADVERT_PROMPTS_MAX];
 } dlog_mt_advert_prompts_t;
 
@@ -697,6 +772,7 @@ typedef struct dlog_mt_advert_prompts {
 
 /* FEATRU (Universal Feature Configuration Table) pp 2-151 */
 typedef struct dlog_mt_fconfig_opts {
+    uint8_t     id;
     uint8_t     term_type;                      /* Corresponds to the same Terminal Type which is used in the Terminal Control table. */
     uint8_t     display_present;                /* Indicates whether a Visual display is present on the terminal.  If value is “0”, Advertising Enabled should be “0”. */
     uint8_t     num_call_follows;               /* This indicates the maximum number of Follow-on calls which can be made by one user without requiring re-insertion and re-validation of card. */
@@ -863,6 +939,7 @@ typedef struct dlog_mt_fconfig_opts {
  * also: https://wiki.millennium.management/dlog:dlog_mt_install_parms
  */
 typedef struct dlog_mt_install_params {
+    uint8_t id;
     uint8_t access_code[4];                     /* This value will be compared to a password entered by the maintenance person, to verify access to the terminal. */
     uint8_t key_card_number[5];                 /* This is the telephone number to be dialed by the terminal when it is being tested by the installer or maintenance person. It is usually the number of a maintenance phone for the Telco. */
     uint8_t flags;                              /* See bit definitions below. */
@@ -917,18 +994,19 @@ typedef struct dlog_mt_install_params {
 #define TSTATUS_CASH_BOX_COVER_OPEN_IND         (1 << 28)
 #define TSTATUS_CASH_BOX_REMOVED_IND            (1 << 29)
 #define TSTATUS_COIN_BOX_FULL_IND               (1 << 30)
-#define TSTATUS_COIN_JAM_COIN_CHUTE_IND         (1 << 31)
-#define TSTATUS_ESCROW_JAM_IND                  (1 << 32)
-#define TSTATUS_VAL_HARDWARE_FAIL_IND           (1 << 33)
-#define TSTATUS_CO_LINE_CHECK_FAIL_IND          (1 << 34)
-#define TSTATUS_DIALOG_FAILURE_IND              (1 << 35)
-#define TSTATUS_CASH_BOX_ELECTRONIC_LOCK_IND    (1 << 36)
-#define TSTATUS_DIALOG_FAILURE_WITH_COL_SYS     (1 << 37)
-#define TSTATUS_CODE_SERVE_CONNECTION_FAILURE   (1 << 38)
-#define TSTATUS_CODE_SERVER_ABORTED             (1 << 39)
+#define TSTATUS_COIN_JAM_COIN_CHUTE_IND         (1ULL << 31)
+#define TSTATUS_ESCROW_JAM_IND                  (1ULL << 32)
+#define TSTATUS_VAL_HARDWARE_FAIL_IND           (1ULL << 33)
+#define TSTATUS_CO_LINE_CHECK_FAIL_IND          (1ULL << 34)
+#define TSTATUS_DIALOG_FAILURE_IND              (1ULL << 35)
+#define TSTATUS_CASH_BOX_ELECTRONIC_LOCK_IND    (1ULL << 36)
+#define TSTATUS_DIALOG_FAILURE_WITH_COL_SYS     (1ULL << 37)
+#define TSTATUS_CODE_SERVE_CONNECTION_FAILURE   (1ULL << 38)
+#define TSTATUS_CODE_SERVER_ABORTED             (1ULL << 39)
 
 /* DLOG_MT_TERM_STATUS */
 typedef struct dlog_mt_term_status {
+    uint8_t id;
     uint8_t serialnum[5];
     uint8_t status[5];
 } dlog_mt_term_status_t;
@@ -964,6 +1042,7 @@ typedef struct des_key {
 
 /* SMCARD (Smart Card Parameters Table) pp 2-351 */
 typedef struct dlog_mt_scard_parm_table {
+    uint8_t     id;
     des_key_t   des_key[SC_DES_KEY_MAX];                /* 20 8-byte DES keys */
     uint16_t    mult_max_unit[SC_MULT_MAX_UNIT_MAX];    /* 15 Mult / Max Unit entries */
     uint16_t    rebates[SC_REBATE_MAX];                 /* Rebate table (14 entries) */
@@ -972,16 +1051,19 @@ typedef struct dlog_mt_scard_parm_table {
 
 #define MAX_NPA     800
 typedef struct dlog_mt_npa_sbr_table {
+    uint8_t     id;
     uint8_t     npa[MAX_NPA / 2];                       /* Storage for 800 4-bit NPAs */
 } dlog_mt_npa_sbr_table_t;
 
 typedef struct dlog_mt_npa_nxx_table {
+    uint8_t     id;
     uint8_t     npa[2];
     uint8_t     lcd[MAX_NPA / 4];                       /* Storage for 800 2-bit NPAs */
 } dlog_mt_npa_nxx_table_t;
 
 /* LCD (Local Call Determination) pp 2-248, 818 bytes */
 typedef struct dlog_mt_lcd_table {
+    uint8_t     id;
     uint8_t     term_npa_nxx[3];
     uint8_t     called_npa[2];
     uint8_t     lcd[MAX_NPA];                           /* Storage for 800 8-bit NPAs */
@@ -990,6 +1072,7 @@ typedef struct dlog_mt_lcd_table {
 
 /* Compressed LCD (Local Call Determination), 403 */
 typedef struct dlog_mt_compressed_lcd_table {
+    uint8_t     id;
     uint8_t     npa[2];
     uint8_t     lcd[MAX_NPA / 2];                       /* Storage for 800 4-bit NPAs */
 } dlog_mt_compressed_lcd_table_t;
@@ -1003,6 +1086,8 @@ typedef struct mm_context {
     FILE *cdr_stream;
     char phone_rev;
     char terminal_id[11];   /* The terminal's phone number */
+    uint8_t telco_id[2];
+    uint8_t region_code[3];
     char ncc_number[2][21];
     char default_table_dir[256];
     char term_table_dir[256];
@@ -1024,6 +1109,7 @@ typedef struct mm_context {
     uint8_t terminal_upd_reason;
     dlog_mt_install_params_t instsv;
     cashbox_status_univ_t cashbox_status;
+    void *database;
 } mm_context_t;
 
 
@@ -1058,6 +1144,34 @@ extern int init_modem(int fd);
 extern int wait_for_modem_response(int fd, const char* match_str, int max_tries);
 extern int hangup_modem(int fd);
 
+/* accounting functions */
+extern int mm_acct_create_tables(void *db);
+extern int mm_acct_save_TALARM(mm_context_t *context, dlog_mt_alarm_t *alarm);
+extern int mm_acct_save_TAUTH(mm_context_t *context, dlog_mt_funf_card_auth_t* auth_request);
+extern int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr);
+extern int mm_acct_save_TCALLST(mm_context_t *context, dlog_mt_summary_call_stats_t* summary_call_stats);
+extern int mm_acct_load_TCASHST(mm_context_t *context, cashbox_status_univ_t* cashbox_status);
+extern int mm_acct_save_TCASHST(mm_context_t *context, cashbox_status_univ_t* cashbox_status);
+extern int mm_acct_save_TCOLLST(mm_context_t *context, dlog_mt_cash_box_collection_t* cash_box_collection);
+extern int mm_acct_save_TOPCODE(mm_context_t *context, dlog_mt_maint_req_t *maint);
+extern int mm_acct_save_TPERFST(mm_context_t *context, dlog_mt_perf_stats_record_t* perf_stats);
+extern int mm_acct_save_TSTATUS(mm_context_t *context, dlog_mt_term_status_t* dlog_mt_term_status);
+extern int mm_acct_save_TSWVERS(mm_context_t *context, dlog_mt_sw_version_t* dlog_mt_sw_version);
+
+/* Table functions */
+int    mm_table_create_tables(void* db);
+size_t mm_table_load(mm_context_t* context, uint8_t table_id, uint64_t version_timestamp, uint8_t* buffer, size_t buflen);
+int    mm_table_save(mm_context_t* context, uint8_t table_id, uint64_t version_timestamp, uint8_t* buffer, size_t buflen);
+
+/* database functions */
+extern int mm_open_database(mm_context_t *context);
+extern int mm_close_database(mm_context_t *context);
+extern int mm_sql_exec(void *db, const char *sql);
+extern uint64_t mm_sql_read_uint64(void* db, const char* sql);
+extern int mm_sql_read_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen);
+extern int mm_sql_write_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen);
+extern int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t* cashbox_status);
+
 /* mm_util */
 extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
 extern void dump_hex(const uint8_t *data, size_t len);
@@ -1066,8 +1180,21 @@ extern uint8_t string_to_bcd_a(char* number_string, uint8_t* buffer, uint8_t buf
 extern char *callscrn_num_to_string(char *string_buf, size_t string_buf_len, uint8_t* num_buf, size_t num_buf_len);
 extern char *call_type_to_string(uint8_t call_type, char *string_buf, size_t string_buf_len);
 extern char *timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len);
+extern char *timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len);
+extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len);
+extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
+#ifdef _WIN32
+char* basename(char* path);
+errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest);
+#endif /* _WIN32 */
+
 extern void print_bits(uint8_t bits, char *str_array[]);
 extern const char *table_to_string(uint8_t table);
+extern const char *alarm_id_to_string(uint8_t alarm_id);
+extern const char *stats_call_type_to_str(uint8_t type);
+extern const char *stats_to_str(uint8_t type);
+extern const char *TCALSTE_stats_to_str(uint8_t type);
+extern const char *TPERFST_stats_to_str(uint8_t type);
 
 #pragma pack(pop)
 
