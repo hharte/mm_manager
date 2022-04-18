@@ -643,7 +643,6 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 break;
             }
             case DLOG_MT_CASH_BOX_STATUS: {
-                update_terminal_cash_box_staus_table(context, (cashbox_status_univ_t*)ppayload);
                 mm_acct_save_TCASHST(context, (cashbox_status_univ_t*)ppayload);
 
                 ppayload += sizeof(cashbox_status_univ_t);
@@ -893,6 +892,10 @@ int mm_download_tables(mm_context_t *context) {
                 break;
             case DLOG_MT_CASH_BOX_STATUS:
                 table_buffer = calloc(1, sizeof(cashbox_status_univ_t));
+                if (table_buffer == NULL) {
+                    printf("%s: Error: failed to allocate %lu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
+                    return -ENOMEM;
+                }
                 mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);
                 table_len = sizeof(cashbox_status_univ_t);
                 break;
@@ -1118,7 +1121,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     fflush(stdout);
 
     if (*buffer == 0) {
-        printf("Erorr: failed to allocate %u bytes for table %d\n", size, table_id);
+        printf("%s: Error: failed to allocate %u bytes for table %d\n", __FUNCTION__, size, table_id);
         fclose(stream);
         return -ENOMEM;
     }
@@ -1560,30 +1563,6 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
     }
 
     printf("Created directory: %s\n", dirname);
-    return status;
-}
-
-int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status) {
-    int   status  = 0;
-    FILE *ostream = NULL;
-    char  filename[TABLE_PATH_MAX_LEN];
-
-    snprintf(filename, sizeof(filename), "%s/%s/mm_table_26.bin", context->term_table_dir, context->terminal_id);
-    printf("Saving CASH_BOX_STATUS_UNIV for terminal %s to %s\n", context->terminal_id, filename);
-
-    /* Make sure the terminal-specific directory exists, create if needed. */
-    create_terminal_specific_directory(context->term_table_dir, context->terminal_id);
-
-    if (!(ostream = fopen(filename, "wb"))) {
-        printf("Error writing %s\n", filename);
-        return -ENOENT;
-    }
-
-    if (ostream != NULL) {
-        fwrite(cashbox_status, sizeof(cashbox_status_univ_t), 1, ostream);
-        fclose(ostream);
-    }
-
     return status;
 }
 

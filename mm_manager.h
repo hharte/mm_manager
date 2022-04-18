@@ -1127,7 +1127,6 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
 void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len);
-int update_terminal_cash_box_staus_table(mm_context_t *context, cashbox_status_univ_t *cashbox_status);
 static int update_terminal_download_time(mm_context_t *context);
 static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id);
 static void mm_display_help(const char *name, FILE *stream);
