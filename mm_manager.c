@@ -154,6 +154,7 @@ int main(int argc, char *argv[]) {
     int  baudrate      = 19200;
     char access_code_str[8];
     int  quiet = 0;
+    int  status;
 
     time_t rawtime;
     struct tm ptm = { 0 };
@@ -345,78 +346,80 @@ int main(int argc, char *argv[]) {
             free(mm_context);
             return -EPERM;
         }
-        mm_context->connected = 1;
     } else {
-        int status;
-
+        mm_context->bytestream = NULL;
         if (modem_dev == NULL) {
             (void)fprintf(stderr, "mm_manager: -f <modem_dev> must be specified.\n");
             free(mm_context);
             return(-EINVAL);
         }
+    }
 
-        if (baudrate < 1200) {
-            printf("Error: baud rate must be 1200 bps or faster.\n");
-            free(mm_context);
-            return -EINVAL;
-        }
-        printf("Baud Rate: %d\n", baudrate);
+    if (baudrate < 1200) {
+        printf("Error: baud rate must be 1200 bps or faster.\n");
+        free(mm_context);
+        return -EINVAL;
+    }
+    printf("Baud Rate: %d\n", baudrate);
 
-        mm_context->fd = open_serial(modem_dev);
+    mm_context->serial_context = open_serial(modem_dev, mm_context->logstream, mm_context->bytestream);
 
-        if (mm_context->fd == -1) {
-            printf("Unable to open modem: %s.", modem_dev);
-            free(mm_context);
-            return -ENODEV;
-        }
+    if (mm_context->serial_context == NULL) {
+        printf("Unable to open modem: %s.", modem_dev);
+        free(mm_context);
+        return -ENODEV;
+    }
 
-        init_serial(mm_context->fd, baudrate);
-        status = init_modem(mm_context->fd);
+    init_serial(mm_context->serial_context, baudrate);
+    status = init_modem(mm_context->serial_context);
 
-        if (status == 0) {
-            printf("Modem initialized.\n");
-        } else {
-            printf("Error initializing modem.\n");
-            close_serial(mm_context->fd);
-            free(mm_context);
-            return -EIO;
-        }
+    if (status == 0) {
+        printf("Modem initialized.\n");
+    } else {
+        printf("Error initializing modem.\n");
+        close_serial(mm_context->serial_context);
+        free(mm_context);
+        return -EIO;
     }
 
     mm_context->cdr_ack_buffer_len = 0;
 
     while (1) {
-        if (mm_context->use_modem == 1) {
-            printf("Waiting for call from terminal...\n");
+        printf("Waiting for call from terminal...\n");
 
-            if (wait_for_modem_response(mm_context->fd, "CONNECT", 1000) == 0) {
-                mm_context->tx_seq = 0;
+        if (wait_for_modem_response(mm_context->serial_context, "CONNECT", 1000) == 0) {
+            mm_context->tx_seq = 0;
+            if (mm_context->use_modem == 1) {
                 time(&rawtime);
-                localtime_r(&rawtime, &ptm);
-
-                printf("%04d-%02d-%02d %2d:%02d:%02d: Connected!\n\n",
-                       ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
-
-                mm_context->connected          = 1;
-                mm_context->cdr_ack_buffer_len = 0;
-            } else {
-                printf("Timed out waiting for connect, retrying...\n");
-                continue;
             }
+            else {
+                rawtime = JAN12020;
+            }
+            localtime_r(&rawtime, &ptm);
+
+            printf("%04d-%02d-%02d %2d:%02d:%02d: Connected!\n\n",
+                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+
+            mm_context->connected = 1;
+            mm_context->cdr_ack_buffer_len = 0;
+        }
+        else {
+            printf("Timed out waiting for connect, retrying...\n");
+            continue;
         }
 
         while ((receive_mm_table(mm_context, &mm_table) == 0) && (mm_context->connected == 1)) {}
 
         if (mm_context->use_modem == 1) {
             time(&rawtime);
-        } else {
+        }
+        else {
             rawtime = JAN12020;
         }
-
         localtime_r(&rawtime, &ptm);
 
         printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Disconnected.\n\n",
-               ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+            ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
     }
 
     free(mm_context);
@@ -876,7 +879,7 @@ int mm_download_tables(mm_context_t *context) {
             case DLOG_MT_CASH_BOX_STATUS:
                 table_buffer = calloc(1, sizeof(cashbox_status_univ_t));
                 if (table_buffer == NULL) {
-                    printf("%s: Error: failed to allocate %lu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
+                    printf("%s: Error: failed to allocate %zu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
                     return -ENOMEM;
                 }
                 mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);

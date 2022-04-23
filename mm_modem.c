@@ -23,24 +23,25 @@
 # include <unistd.h>  /* UNIX standard function definitions */
 # include <termios.h> /* POSIX terminal control definitions */
 #endif /* _WIN32 */
+#include "./mm_manager.h"
 #include "./mm_serial.h"
 
 /* Static function declarations */
-static int send_at_command(int fd, char *command);
+static int send_at_command(mm_serial_context_t *pserial_context, char *command);
 
 /* Initialize modem with a series of AT commands */
-int        init_modem(int fd) {
+int        init_modem(mm_serial_context_t *pserial_context) {
     int status;
 
     printf("Reset modem.\n");
-    status = send_at_command(fd, "ATZ");
+    status = send_at_command(pserial_context, "ATZ");
 
     if (status != 0) {
         return -1;
     }
 
     printf("Disable modem command echo.\n");
-    status = send_at_command(fd, "ATE=1");
+    status = send_at_command(pserial_context, "ATE=1");
 
     if (status != 0) {
         return -1;
@@ -50,32 +51,32 @@ int        init_modem(int fd) {
 
     // status = send_at_command(fd, "AT&N2");        // 3-Com Business Modem 56K USB (use 1200 baud)
     // status = send_at_command(fd, "ATB1");         // USR 5686 Modem
-    status = send_at_command(fd, "AT+MS=B212");      // Lenovo 56K USB Modem
+    status = send_at_command(pserial_context, "AT+MS=B212");      // Lenovo 56K USB Modem
 
     if (status != 0) {
         return -1;
     }
 
     printf("Set carrier wait timeout to 3 seconds.\n");
-    status = send_at_command(fd, "ATS7=3"); /* Wait 3 seconds for carrier. */
+    status = send_at_command(pserial_context, "ATS7=3"); /* Wait 3 seconds for carrier. */
 
     if (status != 0) {
         return -1;
     }
 
     printf("Set modem autoanswer.\n");
-    status = send_at_command(fd, "ATS0=1");
+    status = send_at_command(pserial_context, "ATS0=1");
 
     return status;
 }
 
 /* Wait for modem to connect */
-int wait_for_modem_response(int fd, const char *match_str, int max_tries) {
+int wait_for_modem_response(mm_serial_context_t *pserial_context, const char *match_str, int max_tries) {
     char buffer[255] = { 0 }; /* Input buffer */
     uint8_t bufindex = 0;
     int     tries    = 0;     /* Number of tries so far */
 
-    drain_serial(fd);
+    drain_serial(pserial_context);
 
     do {
         ssize_t nbytes; /* Number of bytes read */
@@ -83,7 +84,7 @@ int wait_for_modem_response(int fd, const char *match_str, int max_tries) {
         buffer[0] = '\0';
 
         /* read characters into our string buffer until we get a CR or NL */
-        while ((nbytes = read_serial(fd, &buffer[bufindex], 1)) > 0) {
+        while ((nbytes = read_serial(pserial_context, &buffer[bufindex], 1)) > 0) {
             bufindex        += (uint8_t)nbytes;
             buffer[bufindex] = '\0';
 
@@ -100,14 +101,14 @@ int wait_for_modem_response(int fd, const char *match_str, int max_tries) {
     return -1;
 }
 
-int hangup_modem(int fd) {
+int hangup_modem(mm_serial_context_t *pserial_context) {
     int tries; /* Number of tries so far */
 
     for (tries = 0; tries < 3; tries++) {
-        flush_serial(fd);
+        flush_serial(pserial_context);
 
         for (int i = 0; i < 3; i++) {
-            write_serial(fd, "+", 1);
+            write_serial(pserial_context, "+", 1);
 #ifdef _WIN32
             Sleep(100);
 #else  /* ifdef _WIN32 */
@@ -115,30 +116,33 @@ int hangup_modem(int fd) {
 #endif /* ifdef _WIN32 */
         }
 
+        /* Sleep only if using a real modem. */
+        if (pserial_context->fd != -1) {
 #ifdef _WIN32
-        Sleep(1000);
+            Sleep(1000);
 #else  /* ifdef _WIN32 */
-        sleep(1); /* Some modems need time to process the AT command. */
+            sleep(1); /* Some modems need time to process the AT command. */
 #endif /* ifdef _WIN32 */
+        }
 
-        if (wait_for_modem_response(fd, "OK", 1) == 0) {
-            return send_at_command(fd, "ATH0");
+        if (wait_for_modem_response(pserial_context, "OK", 1) == 0) {
+            return send_at_command(pserial_context, "ATH0");
         }
     }
     return -1;
 }
 
 /* Send AT Command to Modem */
-static int send_at_command(int fd, char *command) {
+static int send_at_command(mm_serial_context_t *pserial_context, char *command) {
     char buffer[80]; /* Input buffer */
     int  tries;      /* Number of tries so far */
 
     for (tries = 0; tries < 3; tries++) {
-        flush_serial(fd);
+        flush_serial(pserial_context);
         snprintf(buffer, sizeof(buffer), "%s\r", command);
 
         /* send an AT command followed by a CR */
-        if (write_serial(fd, buffer, strnlen(buffer, sizeof(buffer))) == 0) {
+        if (write_serial(pserial_context, buffer, strnlen(buffer, sizeof(buffer))) == 0) {
             continue;
         }
 
@@ -149,7 +153,7 @@ static int send_at_command(int fd, char *command) {
         nanosleep((const struct timespec[]) { { 0, 100 * 1000000L } }, NULL);
 #endif /* _WIN32 */
 
-        if (wait_for_modem_response(fd, "OK", 5) == 0) {
+        if (wait_for_modem_response(pserial_context, "OK", 5) == 0) {
             return 0;
         }
     }

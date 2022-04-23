@@ -34,6 +34,7 @@ set(MANAGER_SRC
     "mm_accounting.c"
     "mm_modem.c"
     "mm_proto.c"
+    "mm_serial.c"
     "mm_serial.h"
     "mm_sqlite3.c"
     "mm_tables.c"

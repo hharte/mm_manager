@@ -1080,7 +1080,7 @@ typedef struct dlog_mt_compressed_lcd_table {
 #define TABLE_PATH_MAX_LEN   283
 
 typedef struct mm_context {
-    int fd;
+    struct mm_serial_context *serial_context;
     FILE *logstream;
     FILE *bytestream;
     char phone_rev;
@@ -1138,9 +1138,9 @@ extern int wait_for_mm_ack(mm_context_t *context);
 extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
 /* modem functions: */
-extern int init_modem(int fd);
-extern int wait_for_modem_response(int fd, const char* match_str, int max_tries);
-extern int hangup_modem(int fd);
+extern int init_modem(struct mm_serial_context *pserial_context);
+extern int wait_for_modem_response(struct mm_serial_context *pserial_context, const char* match_str, int max_tries);
+extern int hangup_modem(struct mm_serial_context *pserial_context);
 
 /* accounting functions */
 extern int mm_acct_create_tables(void *db);

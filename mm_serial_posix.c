@@ -20,7 +20,7 @@
  *
  * Returns the file descriptor on success or -1 on error.
  */
-int open_serial(const char *modem_dev) {
+int platform_open_serial(const char *modem_dev) {
     int fd;
 
     fd = open(modem_dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
@@ -35,7 +35,7 @@ int open_serial(const char *modem_dev) {
 }
 
 /* Initialize Serial Port options */
-int init_serial(int fd, int baudrate) {
+int platform_init_serial(int fd, int baudrate) {
     struct termios options;
     speed_t speed;
 
@@ -97,22 +97,22 @@ int init_serial(int fd, int baudrate) {
     return 0;
 }
 
-int close_serial(int fd) {
+int platform_close_serial(int fd) {
     return close(fd);
 }
 
-ssize_t read_serial(int fd, void *buf, size_t count) {
+ssize_t platform_read_serial(int fd, void *buf, size_t count) {
     return read(fd, buf, count);
 }
 
-ssize_t write_serial(int fd, const void *buf, size_t count) {
+ssize_t platform_write_serial(int fd, const void *buf, size_t count) {
     return write(fd, buf, count);
 }
 
-int drain_serial(int fd) {
+int platform_drain_serial(int fd) {
     return tcdrain(fd);
 }
 
-int flush_serial(int fd) {
+int platform_flush_serial(int fd) {
     return tcflush(fd, TCIOFLUSH);
 }

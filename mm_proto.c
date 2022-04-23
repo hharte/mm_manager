@@ -60,19 +60,14 @@ const char *str_disconnect_code[16] = {
  * +------+-------+--------+-----------+--------+-----+
  */
 int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
-    char buf[100]        = { 0 };  /* buffer to hold line of data from UART log file. */
-    uint8_t pktbuf[1024] = { 0 };
     uint8_t pkt_received = 0;
-    char   *bytep;
     uint8_t databyte     = 0;
-    unsigned int bytecnt = 0;
     uint8_t l2_state     = L2_STATE_SEARCH_FOR_START;
     uint8_t status       = PKT_SUCCESS;
     uint8_t timeout      = 0;
 
     while (pkt_received == 0) {
-        if (context->use_modem == 1) {
-            while (read_serial(context->fd, &databyte, 1) == 0) {
+            while (read_serial(context->serial_context, &databyte, 1) == 0) {
                 putchar('.');
                 fflush(stdout);
                 timeout++;
@@ -84,33 +79,9 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 }
             }
             timeout = 0;
-        } else {
-            if (feof(context->bytestream)) {
-                printf("%s: Terminating due to EOF.\n", __FUNCTION__);
-                fflush(stdout);
-                fclose(context->bytestream);
-
-                exit(0);
-            }
-
-            fgets(buf, 80, context->bytestream);
-
-            /* Data that came from the Millennium Terminal. */
-            if ((bytep = strstr(buf, "RX: ")) != NULL) {
-                uint32_t filebyte;
-                sscanf(bytep, "RX: %x", &filebyte);
-                databyte = filebyte & 0xFF;
-            }
-        }
-
-        if (context->logstream != NULL) {
-            fprintf(context->logstream, "UART: RX: %02X\n", databyte);
-            fflush(context->logstream);
-        }
 
         switch (l2_state) {
             case L2_STATE_SEARCH_FOR_START:
-
                 if (databyte == START_BYTE) {
                     l2_state         = L2_STATE_GET_FLAGS;
                     pkt->payload_len = 0;
@@ -153,7 +124,6 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 }
                 break;
             case L2_STATE_SEARCH_FOR_STOP:
-
                 if (databyte == STOP_BYTE) {
                     l2_state = L2_STATE_SEARCH_FOR_START;
                 } else {
@@ -162,21 +132,19 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 }
                 pkt->trailer.end = databyte;
                 pkt_received     = 1;
-
                 break;
         }
     }
 
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
+        if (context->debuglevel > 0) print_mm_packet(RX, pkt);
         printf("%s: Received disconnect status %s from terminal.\n", __FUNCTION__,
                str_disconnect_code[pkt->hdr.flags & 0x0F]);
         context->tx_seq = 0;
 
-        if (context->use_modem == 1) {
             printf("%s: Hanging up modem.\n", __FUNCTION__);
-            hangup_modem(context->fd);
+            hangup_modem(context->serial_context);
             context->connected = 0;
-        }
         status |= PKT_ERROR_DISCONNECT;
     }
 
@@ -264,16 +232,8 @@ int send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t 
         dump_hex(&pkt.hdr.start, pkt.hdr.pktlen + 1);
     }
 
-    if (context->use_modem == 1) {
-        write_serial(context->fd, &pkt, (size_t)pkt.hdr.pktlen + 1);
-        drain_serial(context->fd);
-    }
-
-    for (int i = 0; i < pkt.hdr.pktlen + 1; i++) {
-        if (context->logstream != NULL) fprintf(context->logstream, "UART: TX: %02X\n", ((uint8_t *)(&pkt))[i]);
-    }
-
-    if (context->logstream != NULL) fflush(context->logstream);
+        write_serial(context->serial_context, &pkt, (size_t)pkt.hdr.pktlen + 1);
+        drain_serial(context->serial_context);
 
     if (payload != NULL) {
         context->tx_seq++;

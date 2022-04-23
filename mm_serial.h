@@ -16,12 +16,26 @@ typedef SSIZE_T ssize_t;
 # include <unistd.h>
 #endif /* if defined(_MSC_VER) */
 
-extern int open_serial(const char *modem_dev);
-extern int init_serial(int fd, int baudrate);
-extern int close_serial(int fd);
-ssize_t    read_serial(int fd, void *buf, size_t count);
-ssize_t    write_serial(int fd, const void *buf, size_t count);
-int        drain_serial(int fd);
-int        flush_serial(int fd);
+typedef struct mm_serial_context {
+    int fd;
+    FILE *logstream;
+    FILE *bytestream;
+} mm_serial_context_t;
+
+mm_serial_context_t* open_serial(const char *modem_dev, FILE *logstream, FILE *bytestream);
+extern int init_serial(mm_serial_context_t *pserial_context, int baudrate);
+extern int close_serial(mm_serial_context_t *pserial_context);
+ssize_t    read_serial(mm_serial_context_t *pserial_context, void *buf, size_t count);
+ssize_t    write_serial(mm_serial_context_t *pserial_context, const void *buf, size_t count);
+int        drain_serial(mm_serial_context_t *pserial_context);
+int        flush_serial(mm_serial_context_t *pserial_context);
+
+extern int platform_open_serial(const char *modem_dev);
+extern int platform_init_serial(int fd, int baudrate);
+extern int platform_close_serial(int fd);
+ssize_t    platform_read_serial(int fd, void *buf, size_t count);
+ssize_t    platform_write_serial(int fd, const void *buf, size_t count);
+int        platform_drain_serial(int fd);
+int        platform_flush_serial(int fd);
 
 #endif  /* MM_SERIAL_H_ */

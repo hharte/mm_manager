@@ -16,7 +16,7 @@ typedef SSIZE_T ssize_t;
 
 static HANDLE hHandleTable[10] = { 0 };
 
-int open_serial(const char *modem_dev) {
+int platform_open_serial(const char *modem_dev) {
     HANDLE hComm;
     int    fd = 0; /* FIXME: only one serial connection allowed. */
 
@@ -31,14 +31,14 @@ int open_serial(const char *modem_dev) {
     return fd;
 }
 
-int close_serial(int fd) {
+int platform_close_serial(int fd) {
     HANDLE hComm = hHandleTable[fd];
 
     return CloseHandle(hComm);
 }
 
 /* Initialize Serial Port options */
-int init_serial(int fd, int baudrate) {
+int platform_init_serial(int fd, int baudrate) {
     HANDLE hComm = hHandleTable[fd];
     DCB    myDCB;
 
@@ -80,30 +80,30 @@ int init_serial(int fd, int baudrate) {
     return -1;
 }
 
-ssize_t read_serial(int fd, void *buf, size_t count) {
+ssize_t platform_read_serial(int fd, void *buf, size_t count) {
     HANDLE   hComm      = hHandleTable[fd];
     uint32_t bytes_read = 0;
     BOOL     Status;
 
-    Status = ReadFile(hComm, buf, (DWORD)count, &bytes_read, NULL);
+    Status = ReadFile(hComm, buf, (DWORD)count, (LPDWORD)&bytes_read, NULL);
 
     if (Status == 0) return 0;
     return (ssize_t)bytes_read;
 }
 
-ssize_t write_serial(int fd, const void *buf, size_t count) {
+ssize_t platform_write_serial(int fd, const void *buf, size_t count) {
     HANDLE   hComm         = hHandleTable[fd];
     uint32_t bytes_written = 0;
     BOOL     Status;
 
-    Status = WriteFile(hComm, buf, (DWORD)count, &bytes_written, NULL);
+    Status = WriteFile(hComm, buf, (DWORD)count, (LPDWORD)&bytes_written, NULL);
 
     if (Status == 0) return 0;
 
     return (ssize_t)bytes_written;
 }
 
-int drain_serial(int fd) {
+int platform_drain_serial(int fd) {
     HANDLE hComm = hHandleTable[fd];
 
     if (!FlushFileBuffers(hComm)) {
@@ -113,7 +113,7 @@ int drain_serial(int fd) {
     return 0;
 }
 
-int flush_serial(int fd) {
+int platform_flush_serial(int fd) {
     HANDLE hComm = hHandleTable[fd];
 
     if (!PurgeComm(hComm, PURGE_RXCLEAR | PURGE_TXCLEAR)) {
