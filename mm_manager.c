@@ -379,7 +379,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (!(mm_context->bytestream = fopen(modem_dev, "r"))) {
-            printf("Error opening input stream: %s\n", modem_dev);
+            fprintf(stderr, "Error opening input stream: %s\n", modem_dev);
             free(mm_context);
             return -EPERM;
         }
@@ -393,7 +393,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (baudrate < 1200) {
-        printf("Error: baud rate must be 1200 bps or faster.\n");
+        fprintf(stderr, "Error: baud rate must be 1200 bps or faster.\n");
         free(mm_context);
         return -EINVAL;
     }
@@ -402,7 +402,7 @@ int main(int argc, char *argv[]) {
     mm_context->serial_context = open_serial(modem_dev, mm_context->logstream, mm_context->bytestream);
 
     if (mm_context->serial_context == NULL) {
-        printf("Unable to open modem: %s.", modem_dev);
+        fprintf(stderr, "Unable to open modem: %s.", modem_dev);
         free(mm_context);
         return -ENODEV;
     }
@@ -413,7 +413,7 @@ int main(int argc, char *argv[]) {
     if (status == 0) {
         printf("Modem initialized.\n");
     } else {
-        printf("Error initializing modem.\n");
+        fprintf(stderr, "Error initializing modem.\n");
         close_serial(mm_context->serial_context);
         free(mm_context);
         return -EIO;
@@ -521,7 +521,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
     if (pkt->payload_len < PKT_TABLE_ID_OFFSET) {
         table->table_id = 0;
         print_mm_packet(RX, pkt);
-        printf("Error: Received an ACK without expecting it!\n");
+        fprintf(stderr, "Error: Received an ACK without expecting it!\n");
         return 0;
     }
 
@@ -863,7 +863,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
                 break;
             default:
-                printf("* * * Unhandled table %d (0x%02x)", table->table_id, table->table_id);
+                fprintf(stderr, "Error: * * * Unhandled table %d (0x%02x)", table->table_id, table->table_id);
                 ppayload++;
                 send_mm_ack(context, 0);
                 break;
@@ -933,7 +933,7 @@ int mm_download_tables(mm_context_t *context) {
             case DLOG_MT_CASH_BOX_STATUS:
                 table_buffer = (uint8_t *)(calloc(1, sizeof(cashbox_status_univ_t)));
                 if (table_buffer == NULL) {
-                    printf("%s: Error: failed to allocate %zu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
+                    fprintf(stderr, "%s: Error: failed to allocate %zu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
                     return -ENOMEM;
                 }
                 mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);
@@ -1005,7 +1005,7 @@ static int update_terminal_download_time(mm_context_t *context) {
     strftime(date, 99, "%Y-%m-%d %H:%M:%S", &ptm);
 
     if (!(stream = fopen(fname, "a+"))) {
-        printf("Could not open '%s'.\n", fname);
+        fprintf(stderr, "%s: Error: Could not open '%s'.\n", __FUNCTION__, fname);
         return -ENOENT;
     }
 
@@ -1161,7 +1161,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     fflush(stdout);
 
     if (*buffer == 0) {
-        printf("%s: Error: failed to allocate %u bytes for table %d\n", __FUNCTION__, size, table_id);
+        fprintf(stderr, "%s: Error: failed to allocate %u bytes for table %d\n", __FUNCTION__, size, table_id);
         fclose(stream);
         return -ENOMEM;
     }
@@ -1200,7 +1200,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     int i;
 
     if (strnlen(access_code, 8) != ACCESS_CODE_LEN) {
-        printf("Error: Access Code must be 7-digits\n");
+        fprintf(stderr, "Error: Access Code must be 7-digits\n");
         return -1;
     }
 
@@ -1215,7 +1215,7 @@ int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pin
     pinstsv_table->access_code[3] |= 0x0e; /* Terminate the Access Code with 0xe */
 
     if (!(ostream = fopen(filename, "wb"))) {
-        printf("Error opening %s\n", filename);
+        printf("%s: Error opening %s\n", __FUNCTION__, filename);
         return -ENOENT;
     }
 
@@ -1605,7 +1605,7 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 #endif /* ifdef _WIN32 */
 
     if ((status != 0) && (errno != EEXIST)) {
-        printf("Failed to create directory: %s\n", dirname);
+        fprintf(stderr, "%s: Failed to create directory: %s\n", __FUNCTION__, dirname);
         return -ENOENT;
     }
 
