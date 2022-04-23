@@ -1113,6 +1113,7 @@ typedef struct mm_context {
 
 
 /* MM Table Operations */
+int mm_shutdown(mm_context_t *context);
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, size_t len);

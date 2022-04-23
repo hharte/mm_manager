@@ -17,9 +17,11 @@
 #ifndef _WIN32
 # include <unistd.h> /* UNIX standard function definitions */
 # include <libgen.h>
+# include <signal.h>
 #else  /* ifndef _WIN32 */
 # include <direct.h>
 # include "third-party/getopt.h"
+# include <windows.h>
 #endif /* ifndef _WIN32 */
 #include <errno.h> /* Error number definitions */
 #include <time.h>  /* time_t, struct tm, time, gmtime */
@@ -140,8 +142,37 @@ uint8_t table_list_minimal[] = {
     0                         /* End of table list */
 };
 
-
 const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:q";
+
+#ifdef _WIN32
+int manager_running = 1;
+
+BOOL WINAPI signal_handler(DWORD dwCtrlType) {
+    switch (dwCtrlType)
+    {
+    case CTRL_C_EVENT:
+        printf("\nReceived ^C, wait for shutdown.\n");
+        manager_running = 0;
+        return TRUE;
+    default:
+        printf("Event: %lu\n", dwCtrlType);
+        return FALSE;
+    }
+}
+#else
+volatile sig_atomic_t manager_running = 1;
+
+void signal_handler(int sig) {
+    switch (sig) {
+    case SIGINT:
+        printf("\nReceived ^C, wait for shutdown.\n");
+        manager_running = 0;
+        break;
+    default:
+        printf("Received signal %d\n", sig);
+    }
+}
+#endif /* _WIN32 */
 
 int main(int argc, char *argv[]) {
     mm_context_t *mm_context;
@@ -158,6 +189,12 @@ int main(int argc, char *argv[]) {
 
     time_t rawtime;
     struct tm ptm = { 0 };
+
+#ifdef _WIN32
+    SetConsoleCtrlHandler(signal_handler, TRUE);
+#else
+    signal(SIGINT, signal_handler);
+#endif /* _WIN32 */
 
     opterr = 0;
 
@@ -383,16 +420,14 @@ int main(int argc, char *argv[]) {
     }
 
     mm_context->cdr_ack_buffer_len = 0;
+    printf("Waiting for call from terminal...\n");
 
-    while (1) {
-        printf("Waiting for call from terminal...\n");
-
-        if (wait_for_modem_response(mm_context->serial_context, "CONNECT", 1000) == 0) {
+    while (manager_running) {
+        if (wait_for_modem_response(mm_context->serial_context, "CONNECT", 1) == 0) {
             mm_context->tx_seq = 0;
             if (mm_context->use_modem == 1) {
                 time(&rawtime);
-            }
-            else {
+            } else {
                 rawtime = JAN12020;
             }
             localtime_r(&rawtime, &ptm);
@@ -402,30 +437,49 @@ int main(int argc, char *argv[]) {
 
             mm_context->connected = 1;
             mm_context->cdr_ack_buffer_len = 0;
-        }
-        else {
-            printf("Timed out waiting for connect, retrying...\n");
+        } else {
             continue;
         }
 
-        while ((receive_mm_table(mm_context, &mm_table) == 0) && (mm_context->connected == 1)) {}
+        while ((receive_mm_table(mm_context, &mm_table) == 0) && (mm_context->connected == 1) && (manager_running == 1)) {}
 
         if (mm_context->use_modem == 1) {
             time(&rawtime);
-        }
-        else {
+        } else {
             rawtime = JAN12020;
         }
         localtime_r(&rawtime, &ptm);
 
         printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Disconnected.\n\n",
             ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+        printf("Waiting for call from terminal...\n");
     }
 
-    free(mm_context);
+    mm_shutdown(mm_context);
+
     return 0;
 }
 
+int mm_shutdown(mm_context_t* context) {
+    printf("mm_manager: Shutting down.\n");
+
+    close_serial(context->serial_context);
+
+    if (context->database) {
+        mm_close_database(context);
+    }
+
+    if (context->bytestream) {
+        fclose(context->bytestream);
+    }
+
+    if (context->logstream) {
+        fclose(context->logstream);
+    }
+
+    free(context);
+    return 0;
+}
 static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint8_t length) {
     if ((size_t)context->cdr_ack_buffer_len + length > sizeof(context->cdr_ack_buffer)) {
         printf("ERROR: %s: cdr_ack_buffer_len exceeded.\n", __FUNCTION__);
@@ -877,7 +931,7 @@ int mm_download_tables(mm_context_t *context) {
                 generate_dlog_mt_end_data(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_CASH_BOX_STATUS:
-                table_buffer = calloc(1, sizeof(cashbox_status_univ_t));
+                table_buffer = (uint8_t *)(calloc(1, sizeof(cashbox_status_univ_t)));
                 if (table_buffer == NULL) {
                     printf("%s: Error: failed to allocate %zu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
                     return -ENOMEM;
@@ -1184,7 +1238,8 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     pncc_term_params = (dlog_mt_ncc_term_params_t *)(uint8_t*)calloc(1, *len);
 
     if (pncc_term_params == NULL) {
-        printf("Error allocating %zu bytes of memory\n", *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
@@ -1221,7 +1276,8 @@ void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffe
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        printf("Error allocating %zu bytes of memory\n", *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
@@ -1261,7 +1317,8 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        printf("Error allocating memory\n");
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
@@ -1337,7 +1394,8 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        printf("Error allocating memory\n");
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
@@ -1392,7 +1450,8 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        printf("Error allocating memory\n");
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
@@ -1441,7 +1500,8 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        printf("Error allocating memory\n");
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
@@ -1522,7 +1582,8 @@ void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *
     *len    = 1;
     *buffer = (uint8_t *)calloc(1, *len);
     if (*buffer == NULL) {
-        printf("Error allocating memory\n");
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
         exit(-ENOMEM);
     }
 
