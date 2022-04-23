@@ -149,26 +149,6 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
         cdr->rate_type,
         cdr->seq);
 
-    if (context->cdr_stream != NULL) {
-        fprintf(context->cdr_stream, "%s,%d,%s,%d,%s,%s,%s,$%3.2f,$%3.2f,%d,%d\n",
-                context->terminal_id,
-                cdr->seq,
-                timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
-                cdr->call_duration[0] * 3600 +
-                cdr->call_duration[1] * 60 +
-                cdr->call_duration[2],
-                call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
-                phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num,
-                                    sizeof(cdr->called_num)),
-                phone_num_to_string(card_number_string,  sizeof(card_number_string),  cdr->card_num,
-                                    sizeof(cdr->card_num)),
-                (float)cdr->call_cost[1] / 100,
-                (float)cdr->call_cost[0] / 100,
-                cdr->carrier_code,
-                cdr->rate_type);
-        fflush(context->cdr_stream);
-    }
-
     if (context->debuglevel > 2) {
         printf("\t\t\tDLOG_MT_CALL_DETAILS Pad:");
         dump_hex(cdr->pad, sizeof(cdr->pad));

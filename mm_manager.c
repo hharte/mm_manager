@@ -227,23 +227,6 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             }
-            case 'c':
-                if (!(mm_context->cdr_stream = fopen(optarg, "a+"))) {
-                    fprintf(stderr, "mm_manager: Can't access CDR file %s: %s\n", optarg, strerror(errno));
-                    free(mm_context);
-                    return -ENOENT;
-                }
-                fseek(mm_context->cdr_stream, 0, SEEK_END);
-
-                if (ftell(mm_context->cdr_stream) == 0) {
-                    printf("Created CDR file '%s'\n", optarg);
-                    fprintf(mm_context->cdr_stream,
-                            "TERMINAL_ID,SEQ,TIMESTAMP,DURATION,TYPE,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE\n");
-                    fflush(mm_context->cdr_stream);
-                } else {
-                    printf("Appending existing CDR file '%s'\n", optarg);
-                }
-                break;
             case 'v':
                 mm_context->debuglevel++;
                 break;
@@ -1575,7 +1558,6 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-d default_table_dir - default table directory.\n" \
             "\t-f <filename> modem device or file\n"              \
             "\t-h this help.\n"                                   \
-            "\t-c <cdrfile.csv> - Write Call Detail Records to a CSV file.\n"                                                \
             "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
             "\t-m use serial modem (specify device with -f)\n"                                                               \
             "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \

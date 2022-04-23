@@ -90,9 +90,6 @@ int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 fflush(stdout);
                 fclose(context->bytestream);
 
-                if (context->cdr_stream != NULL) {
-                    fclose(context->cdr_stream);
-                }
                 exit(0);
             }
 

@@ -1083,7 +1083,6 @@ typedef struct mm_context {
     int fd;
     FILE *logstream;
     FILE *bytestream;
-    FILE *cdr_stream;
     char phone_rev;
     char terminal_id[11];   /* The terminal's phone number */
     uint8_t telco_id[2];
