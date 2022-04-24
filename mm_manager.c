@@ -142,7 +142,8 @@ uint8_t table_list_minimal[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:qe:";
+const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:st:qe:";
+#define DEFAULT_MODEM_INIT_STRING "ATZE=1 S0=1 S7=3 &D2 +MS=B212"
 
 volatile int inject_comm_error = 0;
 
@@ -219,6 +220,7 @@ int main(int argc, char *argv[]) {
 
     snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "tables/default");
     snprintf(mm_context->term_table_dir,    sizeof(mm_context->term_table_dir),    "tables");
+    snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), DEFAULT_MODEM_INIT_STRING);
 
     /* Parse command line to get -q (quiet) option. */
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
@@ -286,6 +288,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 mm_context->use_modem = 1;
+                break;
+            case 'i':
+                snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), "%s", optarg);
                 break;
             case 'b':
                 baudrate = atoi(optarg);
@@ -427,7 +432,7 @@ int main(int argc, char *argv[]) {
     }
 
     init_serial(mm_context->serial_context, baudrate);
-    status = init_modem(mm_context->serial_context, "ATZE=1 S0=1 S7=3 &D2 +MS=B212");
+    status = init_modem(mm_context->serial_context, mm_context->modem_init_string);
 
     if (status == 0) {
         printf("Modem initialized.\n");
@@ -1653,7 +1658,7 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 
 static void mm_display_help(const char *name, FILE *stream) {
     fprintf(stream,
-        "usage: %s [-vhmq] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
+        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
         name);
     fprintf(stream,
             "\t-v verbose (multiple v's increase verbosity.)\n"   \
@@ -1661,6 +1666,7 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-e <error_inject_type> - Inject error on SIGBRK.\n" \
             "\t-f <filename> modem device or file\n"              \
             "\t-h this help.\n"                                   \
+            "\t-i \"modem init string\" - Modem initialization string.\n" \
             "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
             "\t-m use serial modem (specify device with -f)\n"                                                               \
             "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \

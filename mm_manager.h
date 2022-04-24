@@ -1100,6 +1100,7 @@ typedef struct mm_context {
     char ncc_number[2][21];
     char default_table_dir[256];
     char term_table_dir[256];
+    char modem_init_string[256];
     uint8_t rx_seq;
     uint8_t tx_seq;
     uint8_t first_chunk;
