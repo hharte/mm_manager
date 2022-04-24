@@ -142,7 +142,9 @@ uint8_t table_list_minimal[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:q";
+const char cmdline_options[] = "rvmb:c:d:l:f:ha:n:st:qe:";
+
+volatile int inject_comm_error = 0;
 
 #ifdef _WIN32
 int manager_running = 1;
@@ -153,6 +155,10 @@ BOOL WINAPI signal_handler(DWORD dwCtrlType) {
     case CTRL_C_EVENT:
         printf("\nReceived ^C, wait for shutdown.\n");
         manager_running = 0;
+        return TRUE;
+    case CTRL_BREAK_EVENT:
+        printf("\nReceived ^BREAK, inject communication error.\n");
+        inject_comm_error = 1;
         return TRUE;
     default:
         printf("Event: %lu\n", dwCtrlType);
@@ -308,6 +314,19 @@ int main(int argc, char *argv[]) {
             case 'd':
                 snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "%s", optarg);
                 break;
+            case 'e':
+                mm_context->error_inject_type = atoi(optarg);
+                if (mm_context->error_inject_type < 5) {
+                    printf("SIGBRK will inject %s.\n", error_inject_type_to_str(mm_context->error_inject_type));
+                } else {
+                    fprintf(stderr, "Error: -e <inject_error_type> must be one of:\n");
+                    for (int i = 0; i < 5; i++) {
+                        fprintf(stderr, "\t%d - %s\n", i, error_inject_type_to_str(i));
+                    }
+                    free(mm_context);
+                    return -EINVAL;
+                }
+                break;
             case 't':
                 snprintf(mm_context->term_table_dir,    sizeof(mm_context->term_table_dir),    "%s", optarg);
                 break;
@@ -408,7 +427,7 @@ int main(int argc, char *argv[]) {
     }
 
     init_serial(mm_context->serial_context, baudrate);
-    status = init_modem(mm_context->serial_context);
+    status = init_modem(mm_context->serial_context, "ATZE=1 S0=1 S7=3 &D2 +MS=B212");
 
     if (status == 0) {
         printf("Modem initialized.\n");
@@ -492,24 +511,30 @@ static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint
     return 0;
 }
 
-int receive_mm_table(mm_context_t *context, mm_table_t *table) {
-    mm_packet_t *pkt                             = &table->pkt;
+int receive_mm_table(mm_context_t* context, mm_table_t* table) {
+    mm_packet_t* pkt = &table->pkt;
     uint8_t  ack_payload[PKT_TABLE_DATA_LEN_MAX] = { 0 };
-    uint8_t *pack_payload                        = ack_payload;
+    uint8_t* pack_payload = ack_payload;
     char     timestamp_str[20];
     char     timestamp2_str[20];
-    uint8_t *ppayload;
-    uint8_t  cashbox_pending        = 0;
-    uint8_t  dont_send_reply        = 0;
+    uint8_t* ppayload;
+    uint8_t  cashbox_pending = 0;
+    uint8_t  dont_send_reply = 0;
     uint8_t  table_download_pending = 0;
-    uint8_t  end_of_data            = 0;
+    uint8_t  end_of_data = 0;
     uint8_t  status;
 
-    if ((status = receive_mm_packet(context, pkt)) != 0) {
+    status = receive_mm_packet(context, pkt);
+
+    if ((status != PKT_SUCCESS) && (status != PKT_ERROR_RETRY)) {
         if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
         if ((status & PKT_ERROR_DISCONNECT) == 0) {
-            send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
+            send_mm_ack(context, FLAG_NACK);  /* Retry unless the terminal disconnected. */
+            status = wait_for_mm_ack(context);
+            if (status != PKT_ERROR_NACK) {
+                fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
+            }
         }
         return 0;
     }
@@ -533,7 +558,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
     }
 
     /* Acknowledge the received packet */
-    send_mm_ack(context, 0);
+    send_mm_ack(context, FLAG_ACK);
 
     while (ppayload < pkt->payload + pkt->payload_len) {
         table->table_id = *ppayload;
@@ -865,7 +890,7 @@ int receive_mm_table(mm_context_t *context, mm_table_t *table) {
             default:
                 fprintf(stderr, "Error: * * * Unhandled table %d (0x%02x)", table->table_id, table->table_id);
                 ppayload++;
-                send_mm_ack(context, 0);
+                send_mm_ack(context, FLAG_ACK);
                 break;
         }
     }
@@ -971,7 +996,9 @@ int mm_download_tables(mm_context_t *context) {
         table_buffer = NULL;
 
         if (status & PKT_ERROR_DISCONNECT) {
-            printf("Download failed!!!\n");
+            printf("%s: Download failed, hanging up modem.\n", __FUNCTION__);
+            hangup_modem(context->serial_context);
+            context->connected = 0;
             return status;
         }
     }
@@ -1015,10 +1042,11 @@ static int update_terminal_download_time(mm_context_t *context) {
 
     return 0;
 }
+
 int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
     size_t   bytes_remaining;
     size_t   chunk_len;
-    int      status;
+    pkt_status_t status = PKT_SUCCESS;
     uint8_t *p = payload;
     uint8_t  table_id;
 
@@ -1033,10 +1061,8 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
             chunk_len = bytes_remaining;
         }
 
-        send_mm_packet(context, p, chunk_len, 0);
+        status = send_mm_packet(context, p, chunk_len, 0);
 
-        status = wait_for_mm_ack(context);
-        if (status != 0) return status;
         p               += chunk_len;
         bytes_remaining -= chunk_len;
         printf("\tTable %d (0x%02x) %s progress: (%3d%%) - %4d / %4zu\n",
@@ -1044,7 +1070,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
                (uint16_t)(((p - payload) * 100) / len), (uint16_t)(p - payload), len);
     }
 
-    return 0;
+    return status;
 }
 
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
@@ -1054,7 +1080,9 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
 
     if (context->debuglevel > 1) printf("Waiting for ACK for table %d (0x%02x)\n", table_id, table_id);
 
-    if ((status = receive_mm_packet(context, pkt)) == PKT_SUCCESS) {
+    status = receive_mm_packet(context, pkt);
+
+    if ((status == PKT_SUCCESS) || (status == PKT_ERROR_RETRY)) {
         context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
 
         if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
@@ -1072,7 +1100,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
                            table_id,
                            table_id);
                 }
-                send_mm_ack(context, 0);
+                send_mm_ack(context, FLAG_ACK);
             } else {
                 printf("%s: Error: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
                        __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
@@ -1082,6 +1110,16 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
     } else {
         printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",
                __FUNCTION__, table_id, table_id, status);
+
+        if (context->debuglevel > 2) print_mm_packet(RX, pkt);
+
+        if ((status & PKT_ERROR_DISCONNECT) == 0) {
+            send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
+            status = wait_for_mm_ack(context);
+            if (status != PKT_ERROR_NACK) {
+                fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
+            }
+        }
     }
     return status;
 }
@@ -1620,6 +1658,7 @@ static void mm_display_help(const char *name, FILE *stream) {
     fprintf(stream,
             "\t-v verbose (multiple v's increase verbosity.)\n"   \
             "\t-d default_table_dir - default table directory.\n" \
+            "\t-e <error_inject_type> - Inject error on SIGBRK.\n" \
             "\t-f <filename> modem device or file\n"              \
             "\t-h this help.\n"                                   \
             "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \

@@ -62,7 +62,7 @@ int init_serial(mm_serial_context_t *pserial_context, int baudrate) {
     return status;
 }
 
-ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t count) {
+ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t count, int inject_error) {
     ssize_t bytes_read = -1;
     char testbuf[80];
     char* bytep;
@@ -70,6 +70,11 @@ ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t coun
 
     if (pserial_context->bytestream == NULL) {
         bytes_read = platform_read_serial(pserial_context->fd, buf, count);
+        if (inject_error) {
+            printf("Invert RX data\n");
+            /* Force an error by inverting the recevied data */
+            ((uint8_t *)buf)[0] = ~((uint8_t*)buf)[0];
+        }
     }
     else {
         for (int i = 0; i < count; i++) {
@@ -133,6 +138,14 @@ int flush_serial(mm_serial_context_t *pserial_context) {
     int status = -1;
     if (pserial_context->bytestream == NULL) {
         status = platform_flush_serial(pserial_context->fd);
+    }
+    return status;
+}
+
+int serial_set_dtr(mm_serial_context_t *pserial_context, int set) {
+    int status = -1;
+    if (pserial_context->bytestream == NULL) {
+        status = platform_serial_set_dtr(pserial_context->fd, set);
     }
     return status;
 }

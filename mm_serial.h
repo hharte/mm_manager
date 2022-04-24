@@ -25,10 +25,11 @@ typedef struct mm_serial_context {
 mm_serial_context_t* open_serial(const char *modem_dev, FILE *logstream, FILE *bytestream);
 extern int init_serial(mm_serial_context_t *pserial_context, int baudrate);
 extern int close_serial(mm_serial_context_t *pserial_context);
-ssize_t    read_serial(mm_serial_context_t *pserial_context, void *buf, size_t count);
+ssize_t    read_serial(mm_serial_context_t *pserial_context, void *buf, size_t count, int inject_error);
 ssize_t    write_serial(mm_serial_context_t *pserial_context, const void *buf, size_t count);
 int        drain_serial(mm_serial_context_t *pserial_context);
 int        flush_serial(mm_serial_context_t *pserial_context);
+int        serial_set_dtr(mm_serial_context_t* pserial_context, int set);
 
 extern int platform_open_serial(const char *modem_dev);
 extern int platform_init_serial(int fd, int baudrate);
@@ -37,5 +38,6 @@ ssize_t    platform_read_serial(int fd, void *buf, size_t count);
 ssize_t    platform_write_serial(int fd, const void *buf, size_t count);
 int        platform_drain_serial(int fd);
 int        platform_flush_serial(int fd);
+int        platform_serial_set_dtr(int fd, int set);
 
 #endif  /* MM_SERIAL_H_ */

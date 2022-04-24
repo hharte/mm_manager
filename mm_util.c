@@ -663,6 +663,22 @@ const char* TPERFST_stats_to_str(uint8_t type) {
     return TPERFST_stats_to_str_lut[type];
 }
 
+const char* error_inject_type_str[] = {
+    "No error",
+    "CRC Error on Transmit Dialog",
+    "CRC Error on Transmit ACK",
+    "CRC Error on Receive Dialog",
+    "CRC Error on Receive ACK"
+};
+
+const char* error_inject_type_to_str(uint8_t type) {
+    if (type >= (sizeof(error_inject_type_str) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return error_inject_type_str[type];
+}
+
 #ifdef _WIN32
 char* basename(char* path) {
     char fname[20] = { 0 };

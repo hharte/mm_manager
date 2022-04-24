@@ -14,6 +14,7 @@
 #include <errno.h>  /* Error number definitions */
 #include <unistd.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 
 /*
  * Open serial port specified in modem_dev.
@@ -115,4 +116,19 @@ int platform_drain_serial(int fd) {
 
 int platform_flush_serial(int fd) {
     return tcflush(fd, TCIOFLUSH);
+}
+
+int platform_serial_set_dtr(int fd, int set) {
+    int status = 0;
+
+    ioctl(fd, TIOCMGET, &status);
+
+    if (set) {
+        status |= TIOCM_DTR;
+    } else {
+        status &= ~TIOCM_DTR;
+    }
+    ioctl(fd, TIOCMSET, status);
+
+    return 0;
 }

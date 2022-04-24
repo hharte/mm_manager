@@ -23,23 +23,33 @@
 
 #define FLAG_DISCONNECT (1 << 5)
 #define FLAG_ACK        (1 << 3)
+#define FLAG_NACK       (0)
 #define FLAG_RETRY      (1 << 2)
 #define FLAG_SEQUENCE   (0x3)
 
+/* Packet Error Flags */
 #define PKT_SUCCESS                 (0)
 #define PKT_ERROR_RETRY             (1 << 0)
 #define PKT_ERROR_DISCONNECT        (1 << 1)
 #define PKT_ERROR_CRC               (1 << 2)
 #define PKT_ERROR_FRAMING           (1 << 3)
 #define PKT_ERROR_TIMEOUT           (1 << 4)
-#define PKT_ERROR_EOF               (1 << 5)
+#define PKT_ERROR_NACK              (1 << 6)
+#define PKT_ERROR_EOF               (1 << 7)
 
-#define PKT_TIMEOUT_MAX             (10)    // Maximum time  to wait for modem character
+#define PKT_TIMEOUT_MAX             (10)    // Maximum time to wait for modem character
+#define PKT_MAX_RETRIES             (5)     // Maximum number of time to retry an errored packet
 
 #define PKT_TABLE_ID_OFFSET         (0x05)
 #define PKT_TABLE_DATA_OFFSET       (PKT_TABLE_ID_OFFSET + 1)
 
 #define PKT_TABLE_DATA_LEN_MAX      (245)   // Maximum table data length
+
+#define ERROR_INJECT_NONE           (0)
+#define ERROR_INJECT_CRC_DLOG_TX    (1)
+#define ERROR_INJECT_CRC_ACK_TX     (2)
+#define ERROR_INJECT_CRC_DLOG_RX    (3)
+#define ERROR_INJECT_CRC_ACK_RX     (4)
 
 /* TERMSCH (Terminal Schedule) pp. 2-533
  * Renamed per https://wiki.millennium.management/dlog:start
@@ -1109,8 +1119,11 @@ typedef struct mm_context {
     dlog_mt_install_params_t instsv;
     cashbox_status_univ_t cashbox_status;
     void *database;
+    uint8_t error_inject_type;
+    uint8_t waiting_for_ack;
 } mm_context_t;
 
+typedef uint32_t pkt_status_t;  /* Packet status flags. */
 
 /* MM Table Operations */
 int mm_shutdown(mm_context_t *context);
@@ -1132,14 +1145,14 @@ static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id);
 static void mm_display_help(const char *name, FILE *stream);
 
 /* MM Protocol */
-extern int receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
-extern int send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t flags);
-extern int send_mm_ack(mm_context_t *context, uint8_t flags);
-extern int wait_for_mm_ack(mm_context_t *context);
+extern pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
+extern pkt_status_t send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t flags);
+extern pkt_status_t send_mm_ack(mm_context_t *context, uint8_t flags);
+extern pkt_status_t wait_for_mm_ack(mm_context_t *context);
 extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
 /* modem functions: */
-extern int init_modem(struct mm_serial_context *pserial_context);
+extern int init_modem(struct mm_serial_context *pserial_context, const char *modem_init_string);
 extern int wait_for_modem_response(struct mm_serial_context *pserial_context, const char* match_str, int max_tries);
 extern int hangup_modem(struct mm_serial_context *pserial_context);
 
@@ -1182,6 +1195,7 @@ extern char *timestamp_to_string(uint8_t *timestamp, char *string_buf, size_t st
 extern char *timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t string_buf_len);
 extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len);
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
+extern const char* error_inject_type_to_str(uint8_t type);
 #ifdef _WIN32
 char* basename(char* path);
 errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest);

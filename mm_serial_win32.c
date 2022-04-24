@@ -122,3 +122,19 @@ int platform_flush_serial(int fd) {
 
     return 0;
 }
+
+int platform_serial_set_dtr(int fd, int set) {
+    HANDLE hComm = hHandleTable[fd];
+    DWORD dwFunc = CLRDTR;
+
+    if (set) {
+        dwFunc = SETDTR;
+    }
+
+    if (!EscapeCommFunction(hComm, dwFunc)) {
+        fprintf(stderr, "%s: EscapeCommFunction() failed.\n", __FUNCTION__);
+        return -1;
+    }
+
+    return 0;
+}
