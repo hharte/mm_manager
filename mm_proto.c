@@ -34,25 +34,6 @@ extern volatile int inject_comm_error;
 #define L2_STATE_GET_CRC1           6
 #define L2_STATE_SEARCH_FOR_STOP    7
 
-const char *str_disconnect_code[16] = {
-    "OK",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "Error",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-};
-
 /*
  * Receive a packet from Millennium Terminal.
  *
@@ -157,7 +138,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
         if (context->debuglevel > 0) print_mm_packet(RX, pkt);
         printf("%s: Received disconnect status %s from terminal.\n", __FUNCTION__,
-               str_disconnect_code[pkt->hdr.flags & 0x0F]);
+               pkt->hdr.flags & FLAG_STATUS ? "Failure" : "OK");
         context->tx_seq = 0;
 
         printf("%s: Hanging up modem.\n", __FUNCTION__);
@@ -331,11 +312,12 @@ int print_mm_packet(int direction, mm_packet_t *pkt) {
     int status = 0;
 
     /* Decode flags: bit 3 = Req/Ack, 2=Retry, 1:0=Sequence. */
-    printf("\n%s %s: flags=%02x [ %s | %s | %s | Seq:%d], len=%3d (datalen=%3d), crc=%04x.\n",
+    printf("\n%s %s: flags=%02x [ %s | %s | %s | %s | Seq:%d], len=%3d (datalen=%3d), crc=%04x.\n",
            (direction == RX) ? "T-->M" : "T<--M",
            (direction == RX) ? "RX" : "TX",
            pkt->hdr.flags,
            (pkt->hdr.flags & FLAG_DISCONNECT) ? "DIS" : "---",
+           (pkt->hdr.flags & FLAG_STATUS) ? "ERR" : "OK ",
            (pkt->hdr.flags & FLAG_ACK) ? "ACK" : "REQ",
            (pkt->hdr.flags & FLAG_RETRY) ? "RETRY" : " --- ",
            (pkt->hdr.flags & FLAG_SEQUENCE),

@@ -22,6 +22,7 @@
 #define STOP_BYTE       (0x03)
 
 #define FLAG_DISCONNECT (1 << 5)
+#define FLAG_STATUS     (1 << 4)    /* 0 = Success, 1 = Failure */
 #define FLAG_ACK        (1 << 3)
 #define FLAG_NACK       (0)
 #define FLAG_RETRY      (1 << 2)
