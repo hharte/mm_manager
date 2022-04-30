@@ -128,8 +128,8 @@
 #define DLOG_MT_SERIAL_NUM          0x54    // 84: Serial Number
 #define DLOG_MT_EXP_VIS_PROPTS_L1   0x55    // 85: Expanded Visual Prompts Language A
 #define DLOG_MT_EXP_VIS_PROPTS_L2   0x56    // 86: Expanded Visual Prompts Language B
-#define DLOG_MT_LCD_TABLE_9         0x5a    // 90: NPA/NXX Table 7
-#define DLOG_MT_LCD_TABLE_10        0x5b    // 91: NPA/NXX Table 8
+#define DLOG_MT_LCD_TABLE_9         0x5a    // 90: NPA/NXX Table 9
+#define DLOG_MT_LCD_TABLE_10        0x5b    // 91: NPA/NXX Table 10
 #define DLOG_MT_CALL_SCREEN_LIST    0x5c    // 92B: 180 Number Call Screening List
 #define DLOG_MT_SCARD_PARM_TABLE    0x5d    // 93: Smart Card Parameters Table
 #define DLOG_MT_CODE_DOWNLOAD       0x5e    // 94: Code Download Table
@@ -1066,13 +1066,7 @@ typedef struct dlog_mt_npa_sbr_table {
     uint8_t     npa[MAX_NPA / 2];                       /* Storage for 800 4-bit NPAs */
 } dlog_mt_npa_sbr_table_t;
 
-typedef struct dlog_mt_npa_nxx_table {
-    uint8_t     id;
-    uint8_t     npa[2];
-    uint8_t     lcd[MAX_NPA / 4];                       /* Storage for 800 2-bit NPAs */
-} dlog_mt_npa_nxx_table_t;
-
-/* LCD (Local Call Determination) pp 2-248, 818 bytes */
+/* LCD (Local Call Determination) pp 2-248, 819 bytes */
 typedef struct dlog_mt_lcd_table {
     uint8_t     id;
     uint8_t     term_npa_nxx[3];
@@ -1081,12 +1075,19 @@ typedef struct dlog_mt_lcd_table {
     uint8_t     spare[13];
 } dlog_mt_lcd_table_t;
 
-/* Compressed LCD (Local Call Determination), 403 */
+/* Compressed LCD (Local Call Determination), 403 bytes */
 typedef struct dlog_mt_compressed_lcd_table {
     uint8_t     id;
     uint8_t     npa[2];
     uint8_t     lcd[MAX_NPA / 2];                       /* Storage for 800 4-bit NPAs */
 } dlog_mt_compressed_lcd_table_t;
+
+/* Double-Compressed LCD (Local Call Determination), 203 bytes */
+typedef struct dlog_mt_npa_nxx_table {
+    uint8_t     id;
+    uint8_t     npa[2];
+    uint8_t     lcd[MAX_NPA / 4];                       /* Storage for 800 2-bit NPAs */
+} dlog_mt_npa_nxx_table_t;
 
 #define TABLE_PATH_MAX_LEN   283
 
