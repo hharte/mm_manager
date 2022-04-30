@@ -303,8 +303,8 @@ const char *table_string[] = {
     "DLOG_MT_CALLSCRN_UNIVERSAL",   // 0x18
     "0x19",                         // 0x19
     "DLOG_MT_FCONFIG_OPTS",         // 0x1a
-    "DLOG_MT_VIS_PROPTS_L1",        // 0x1b
-    "DLOG_MT_VIS_PROPTS_L2",        // 0x1c
+    "DLOG_MT_VIS_PROMPTS_L1",       // 0x1b
+    "DLOG_MT_VIS_PROMPTS_L2",       // 0x1c
     "DLOG_MT_ADVERT_PROMPTS",       // 0x1d
     "DLOG_MT_USER_IF_PARMS",        // 0x1e
     "DLOG_MT_INSTALL_PARAMS",       // 0x1f
