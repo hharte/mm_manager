@@ -1156,6 +1156,7 @@ typedef struct mm_context {
     char ncc_number[2][21];
     char default_table_dir[256];
     char term_table_dir[256];
+    char modem_reset_string[256];
     char modem_init_string[256];
     uint8_t rx_seq;
     uint8_t tx_seq;
@@ -1209,7 +1210,7 @@ extern pkt_status_t wait_for_mm_ack(mm_context_t *context);
 extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
 /* modem functions: */
-extern int init_modem(struct mm_serial_context *pserial_context, const char *modem_init_string);
+extern int init_modem(struct mm_serial_context *pserial_context, const char *modem_reset_string, const char *modem_init_string);
 extern int wait_for_modem_response(struct mm_serial_context *pserial_context, const char* match_str, int max_tries);
 extern int hangup_modem(struct mm_serial_context *pserial_context);
 
