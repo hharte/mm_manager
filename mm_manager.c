@@ -544,7 +544,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
     if ((status != PKT_SUCCESS) && (status != PKT_ERROR_RETRY)) {
         if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
-        if ((status & PKT_ERROR_DISCONNECT) == 0) {
+        if (context->connected) {
             send_mm_ack(context, FLAG_NACK);  /* Retry unless the terminal disconnected. */
             status = wait_for_mm_ack(context);
             if (status != PKT_ERROR_NACK) {
@@ -1010,10 +1010,8 @@ int mm_download_tables(mm_context_t *context) {
         free(table_buffer);
         table_buffer = NULL;
 
-        if (status & PKT_ERROR_DISCONNECT) {
-            printf("%s: Download failed, hanging up modem.\n", __FUNCTION__);
-            hangup_modem(context->serial_context);
-            context->connected = 0;
+        if (context->connected == 0) {
+            printf("%s: Download failed.\n", __FUNCTION__);
             return status;
         }
     }
@@ -1131,13 +1129,15 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
 
             if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
-            if ((status & PKT_ERROR_DISCONNECT) == 0) {
+            if (context->connected) {
                 send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
                 status = wait_for_mm_ack(context);
                 if (status != PKT_ERROR_NACK) {
                     fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
                 }
-                send_mm_ack(context, FLAG_ACK);  /* Retry unless the terminal disconnected. */
+                if (context->connected) {
+                    send_mm_ack(context, FLAG_ACK);  /* Retry unless the terminal disconnected. */
+                }
             }
         }
     }

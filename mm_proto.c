@@ -49,6 +49,9 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     pkt_status_t status  = PKT_SUCCESS;
     uint8_t timeout      = 0;
 
+    if (context->connected == 0) {
+        fprintf(stderr, "%s: Attempt to receive packet while disconnected, bailing.\n", __FUNCTION__);
+    }
     while (pkt_received == 0) {
         int inject_error = 0;
         if (inject_comm_error == 1) {
