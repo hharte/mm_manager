@@ -1092,47 +1092,52 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
     mm_packet_t  packet = { { 0 } };
     mm_packet_t *pkt    = &packet;
     int status;
+    int retries = 2;
 
     if (context->debuglevel > 1) printf("Waiting for ACK for table %d (0x%02x)\n", table_id, table_id);
 
-    status = receive_mm_packet(context, pkt);
+    while (retries > 0) {
+        status = receive_mm_packet(context, pkt);
 
-    if ((status == PKT_SUCCESS) || (status == PKT_ERROR_RETRY)) {
-        context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
+        if ((status == PKT_SUCCESS) || (status == PKT_ERROR_RETRY)) {
+            context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
 
-        if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
-            phone_num_to_string(context->terminal_id, sizeof(context->terminal_id), pkt->payload, PKT_TABLE_ID_OFFSET);
+            if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
+                phone_num_to_string(context->terminal_id, sizeof(context->terminal_id), pkt->payload, PKT_TABLE_ID_OFFSET);
 
-            if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->terminal_id);
+                if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->terminal_id);
+
+                if (context->debuglevel > 2) print_mm_packet(RX, pkt);
+
+                if ((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
+                    (pkt->payload[PKT_TABLE_DATA_OFFSET] == table_id)) {
+                    if (context->debuglevel > 0) {
+                        printf("Seq: %d: Received ACK for table %d (0x%02x)\n",
+                            context->rx_seq,
+                            table_id,
+                            table_id);
+                    }
+                    send_mm_ack(context, FLAG_ACK);
+                    return 0;
+                } else {
+                    printf("%s: Error: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
+                        __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
+                    return -1;
+                }
+            }
+        } else {
+            printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",
+                __FUNCTION__, table_id, table_id, status);
 
             if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
-            if ((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
-                (pkt->payload[PKT_TABLE_DATA_OFFSET] == table_id)) {
-                if (context->debuglevel > 0) {
-                    printf("Seq: %d: Received ACK for table %d (0x%02x)\n",
-                           context->rx_seq,
-                           table_id,
-                           table_id);
+            if ((status & PKT_ERROR_DISCONNECT) == 0) {
+                send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
+                status = wait_for_mm_ack(context);
+                if (status != PKT_ERROR_NACK) {
+                    fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
                 }
-                send_mm_ack(context, FLAG_ACK);
-            } else {
-                printf("%s: Error: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
-                       __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
-                return -1;
-            }
-        }
-    } else {
-        printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",
-               __FUNCTION__, table_id, table_id, status);
-
-        if (context->debuglevel > 2) print_mm_packet(RX, pkt);
-
-        if ((status & PKT_ERROR_DISCONNECT) == 0) {
-            send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
-            status = wait_for_mm_ack(context);
-            if (status != PKT_ERROR_NACK) {
-                fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
+                send_mm_ack(context, FLAG_ACK);  /* Retry unless the terminal disconnected. */
             }
         }
     }
