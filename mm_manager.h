@@ -193,7 +193,9 @@ typedef struct mm_packet_trailer {
 
 typedef struct mm_packet {
     mm_packet_header_t  hdr;        /* MM packet header */
-    uint8_t payload[250];           /* Data payload */
+    uint8_t payload[253];           /* Data payload, actual payload is maximum of 250   */
+                                    /* bytes, add three padding bytes to leave room for */
+                                    /* CRC to be copied immediately following the data. */
     mm_packet_trailer_t trailer;    /* MM packet trailer */
     uint8_t payload_len;            /* Metadata not part of actual packet on the wire. */
     uint16_t calculated_crc;        /* Metadata not part of actual packet on the wire. */
@@ -1095,6 +1097,7 @@ typedef struct mm_context {
     struct mm_serial_context *serial_context;
     FILE *logstream;
     FILE *bytestream;
+    FILE *pcapstream;
     char phone_rev;
     char terminal_id[11];   /* The terminal's phone number */
     uint8_t telco_id[2];
@@ -1129,7 +1132,7 @@ typedef struct mm_context {
 typedef uint32_t pkt_status_t;  /* Packet status flags. */
 
 /* MM Table Operations */
-int mm_shutdown(mm_context_t *context);
+int mm_shutdown(mm_context_t* context);
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
 int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, size_t len);
@@ -1199,6 +1202,12 @@ extern char *timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t
 extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len);
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
 extern const char* error_inject_type_to_str(uint8_t type);
+
+/* mm_pcap */
+int mm_create_pcap(const char* capfilename, FILE** pcapstream);
+int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t* pkt);
+int mm_close_pcap(FILE* pcapstream);
+
 #ifdef _WIN32
 char* basename(char* path);
 errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest);

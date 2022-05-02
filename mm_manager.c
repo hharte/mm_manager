@@ -142,7 +142,7 @@ uint8_t table_list_minimal[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:st:qe:";
+const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:p:st:qe:";
 #define DEFAULT_MODEM_INIT_STRING "ATZE=1 S0=1 S7=3 &D2 +MS=B212"
 
 volatile int inject_comm_error = 0;
@@ -289,6 +289,13 @@ int main(int argc, char *argv[]) {
             case 'm':
                 mm_context->use_modem = 1;
                 break;
+            case 'p':
+                if (mm_create_pcap(optarg, &mm_context->pcapstream) != 0) {
+                    fprintf(stderr, "mm_manager: Can't write packet capture file '%s': %s\n", optarg, strerror(errno));
+                    free(mm_context);
+                    return -ENOENT;
+                }
+                break;
             case 'i':
                 snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), "%s", optarg);
                 break;
@@ -296,7 +303,6 @@ int main(int argc, char *argv[]) {
                 baudrate = atoi(optarg);
                 break;
             case 'n':
-
                 if (ncc_index > 1) {
                     fprintf(stderr, "-n may only be specified twice.\n");
                     free(mm_context);
@@ -499,6 +505,10 @@ int mm_shutdown(mm_context_t* context) {
 
     if (context->logstream) {
         fclose(context->logstream);
+    }
+
+    if (context->pcapstream) {
+        mm_close_pcap(context->pcapstream);
     }
 
     free(context);

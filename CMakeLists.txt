@@ -33,6 +33,8 @@ set(MANAGER_SRC
     "mm_manager.h"
     "mm_accounting.c"
     "mm_modem.c"
+    "mm_pcap.c"
+    "mm_pcap.h"
     "mm_proto.c"
     "mm_serial.c"
     "mm_serial.h"

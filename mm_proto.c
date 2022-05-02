@@ -130,6 +130,11 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
         }
     }
 
+    /* Copy the packet trailer (CRC-16, STOP) immediately following the data */
+    memcpy(&(pkt->payload[pkt->payload_len]), &pkt->trailer, sizeof(pkt->trailer));
+
+    mm_add_pcap_rec(context->pcapstream, RX, pkt);
+
     if (pkt->hdr.flags & FLAG_RETRY) {
         if (context->debuglevel > 0) print_mm_packet(RX, pkt);
         status |= PKT_ERROR_RETRY;
@@ -150,8 +155,6 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     if (context->debuglevel > 3) {
         printf("\nRaw Packet received: ");
 
-        /* Copy the packet trailer (CRC-16, STOP) immediately following the data */
-        memcpy(&(pkt->payload[pkt->payload_len]), &pkt->trailer, sizeof(pkt->trailer));
         dump_hex(&pkt->hdr.start, (size_t)pkt->hdr.pktlen + 1);
     }
 
@@ -242,6 +245,8 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
 
         /* Copy the CRC and STOP_BYTE to be adjacent to the filled portion of the payload */
         memcpy(&(pkt.payload[pkt.payload_len]), &pkt.trailer.crc, 3);
+
+        mm_add_pcap_rec(context->pcapstream, TX, &pkt);
 
         if (context->debuglevel > 0) {
             print_mm_packet(TX, &pkt);
