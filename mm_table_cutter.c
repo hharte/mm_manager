@@ -7,8 +7,12 @@
  *
  * Example:
  *
- * MTR 1.7 ROM:
+ * MTR 1.7 ROMs:
  * mm_table_cutter NT_NAA1S05.bin 12502 91
+ * mm_table_cutter NT_FW_1.7_06CAA17_STM27C2001_32DIP.BIN 12453 91
+ * (Coin-only w/display): mm_table_cutter NAD4K02.bin 12453 91
+ * (Coin-only no display): mm_table_cutter NAD4S02.bin 12453 91
+ * (Desk) mm_table_cutter NAJ2S05.bin 12547 91
  *
  * MTR 1.9 ROMs:
  * mm_table_cutter NT_Millennium_Demo_SST39SF020A-70-4C-PHE.bin 14499 107
@@ -19,6 +23,9 @@
  *
  * MTR 2.12 ROM:
  * mm_table_cutter NT_FW_2.12_NQA1X01V1.3_U2_Rev2_CPC_STM29F040B_32PLCC.bin 10524 152
+ *
+ * International
+ * mm_table_cutter PBAXS05.BIN 13121 93
  *
  * Determining table data structure offset:
  *
@@ -60,7 +67,8 @@ typedef SSIZE_T ssize_t;
 # include <unistd.h>
 #endif /* if defined(_MSC_VER) */
 
-#define TABLE_MAX   152
+#define TABLE_MAX       152
+#define TABLE_LEN_MASK  0x1FFF      /* Maximum table length 8K */
 
 #pragma pack(push)
 #pragma pack(1)         /* Pack data structures for communication with terminal. */
@@ -95,7 +103,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Table Cutter\n\n");
 
-    ptable_entry = calloc(1, sizeof(mt_table_entry_t));
+    ptable_entry = (mt_table_entry_t *)calloc(1, sizeof(mt_table_entry_t));
 
     if (ptable_entry == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(mt_table_entry_t));
@@ -118,20 +126,32 @@ int main(int argc, char *argv[]) {
     fseek(instream, atoi(argv[2]), SEEK_SET);
     rom_pos = ftell(instream);
 
+    if (rom_pos < 0) {
+        fprintf(stderr, "Error: ftell() failed.\n");
+        goto done;
+    }
+
     printf("+---------------------------------------------------------------------------+\n" \
            "| Idx        | Table                       | Pad1 | Length | Address | Dir  |\n" \
            "+------------+-----------------------------+------+--------+---------+------+\n");
 
     for (index = 1; index <= TABLE_MAX; index++) {
-        fseek(instream, (long)rom_pos, SEEK_SET);
+        if (fseek(instream, (long)rom_pos, SEEK_SET) != 0) {
+            fprintf(stderr, "Error: fseek() failed.\n");
+            goto done;
+        }
 
         if (fread(ptable_entry, sizeof(mt_table_entry_t), 1, instream) != 1) {
-            printf("Error reading table entry %d.\n", index);
+            fprintf(stderr, "Error reading table entry %d.\n", index);
             ret = -EIO;
             goto done;
         }
 
         rom_pos = ftell(instream);
+        if (rom_pos < 0) {
+            fprintf(stderr, "Error: ftell() failed.\n");
+            goto done;
+        }
 
         if (argv[3] != NULL && argv[4] == NULL) {
             printf("| 0x%02x (%3d) | %27s | 0x%02x |  %4d  |  0x%04x | %s | ",
@@ -152,7 +172,7 @@ int main(int argc, char *argv[]) {
                     goto done;
                 }
 
-                ptable_buf = calloc(1, ptable_entry->len);
+                ptable_buf = (uint8_t *)calloc(1, (ptable_entry->len) & TABLE_LEN_MASK);
 
                 if (ptable_buf == NULL) {
                     printf("Failed to allocate %d bytes.\n", ptable_entry->len);
@@ -190,7 +210,9 @@ int main(int argc, char *argv[]) {
 
 done:
     fclose(instream);
-    fclose(ostream);
+    if (ostream != NULL) {
+        fclose(ostream);
+    }
 
     if (ptable_entry != NULL) {
         free(ptable_entry);
