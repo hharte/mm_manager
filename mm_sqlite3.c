@@ -29,6 +29,20 @@ int mm_sql_exec(void *db, const char *sql) {
     return 0;
 }
 
+uint8_t mm_sql_read_uint8(void* db, const char* sql) {
+    sqlite3_stmt* res = NULL;
+    int rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __FUNCTION__, sql, sqlite3_errmsg((sqlite3*)(db)));
+        return 0xFF;
+    }
+
+    sqlite3_step(res);
+
+    return (uint8_t)sqlite3_column_int(res, 0);
+}
+
 uint64_t mm_sql_read_uint64(void* db, const char* sql) {
     sqlite3_stmt* res = NULL;
     int rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, 0);
@@ -179,6 +193,12 @@ int mm_open_database(mm_context_t *context) {
 
     if (mm_table_create_tables(db) != 0) {
         fprintf(stderr, "Failure creating data tables: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return -1;
+    }
+
+    if (mm_config_create_tables(db) != 0) {
+        fprintf(stderr, "Failure creating configuration tables: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return -1;
     }

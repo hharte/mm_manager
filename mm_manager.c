@@ -10,6 +10,8 @@
  * Copyright (c) 2020-2022, Howard M. Harte
  */
 
+#define MTR17
+
 #include <stdio.h>   /* Standard input/output definitions */
 #include <stdlib.h>
 #include <stdint.h>
@@ -38,93 +40,189 @@
 #define JAN12020 1577865600
 
 /* Terminal Table Lists for Rev 1.3 and Rev 1.0 Control PCP */
-uint8_t table_list_rev1_3[] = {
-    DLOG_MT_INTL_SBR_TABLE,
-    DLOG_MT_NPA_SBR_TABLE,
-    DLOG_MT_NPA_NXX_TABLE_16,
-    DLOG_MT_NPA_NXX_TABLE_15,
-    DLOG_MT_NPA_NXX_TABLE_14,
-    DLOG_MT_NPA_NXX_TABLE_13,
-    DLOG_MT_NPA_NXX_TABLE_12,
-    DLOG_MT_NPA_NXX_TABLE_11,
-    DLOG_MT_NPA_NXX_TABLE_10,
-    DLOG_MT_NPA_NXX_TABLE_9,
-    DLOG_MT_NPA_NXX_TABLE_8,
-    DLOG_MT_NPA_NXX_TABLE_7,
-    DLOG_MT_NPA_NXX_TABLE_6,
-    DLOG_MT_NPA_NXX_TABLE_5,
-    DLOG_MT_NPA_NXX_TABLE_4,
-    DLOG_MT_NPA_NXX_TABLE_3,
-    DLOG_MT_NPA_NXX_TABLE_2,
-    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
-    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
-    DLOG_MT_CARD_TABLE_EXP,     /* Required */
-    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
-    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
-    DLOG_MT_EXP_VIS_PROPTS_L2,  /* 1.3 only */
-    DLOG_MT_EXP_VIS_PROPTS_L1,  /* 1.3 only */
-    DLOG_MT_RATE_TABLE,         /* Required */
-    DLOG_MT_SPARE_TABLE,        /* 1.3 only */
-    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
-    DLOG_MT_LIMSERV_DATA,
-    DLOG_MT_REP_DIAL_LIST,
-    DLOG_MT_COIN_VAL_TABLE,     /* Required */
-    DLOG_MT_CALL_IN_PARMS,
-    DLOG_MT_CALL_STAT_PARMS,
-    DLOG_MT_MODEM_PARMS,
-    DLOG_MT_COMM_STAT_PARMS,
-    DLOG_MT_INSTALL_PARAMS,    /* Required */
-    DLOG_MT_USER_IF_PARMS,
+uint8_t table_list_mtr_2x[] = {
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_FCONFIG_OPTS,      /* Required */
-    DLOG_MT_NCC_TERM_PARAMS,   /* Required */
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_SPARE_TABLE,        /* 1.3 only */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_EXP_VIS_PROPTS_L1,  /* 1.3 only */
+    DLOG_MT_EXP_VIS_PROPTS_L2,  /* 1.3 only */
+    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
+    DLOG_MT_CARD_TABLE_EXP,     /* Required */
+    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
+    DLOG_MT_NPA_NXX_TABLE_1,
+    DLOG_MT_NPA_NXX_TABLE_2,
+    DLOG_MT_NPA_NXX_TABLE_3,
+    DLOG_MT_NPA_NXX_TABLE_4,
+    DLOG_MT_NPA_NXX_TABLE_5,
+    DLOG_MT_NPA_NXX_TABLE_6,
+    DLOG_MT_NPA_NXX_TABLE_7,
+    DLOG_MT_NPA_NXX_TABLE_8,
+    DLOG_MT_NPA_NXX_TABLE_9,
+    DLOG_MT_NPA_NXX_TABLE_10,
+    DLOG_MT_NPA_NXX_TABLE_11,
+    DLOG_MT_NPA_NXX_TABLE_12,
+    DLOG_MT_NPA_NXX_TABLE_13,
+    DLOG_MT_NPA_NXX_TABLE_14,
+    DLOG_MT_NPA_SBR_TABLE,
+    DLOG_MT_INTL_SBR_TABLE,
+    DLOG_MT_NPA_NXX_TABLE_15,
+    DLOG_MT_NPA_NXX_TABLE_16,
     DLOG_MT_END_DATA,
     0                        /* End of table list */
 };
 
-uint8_t table_list_rev1_0[] = {
-    DLOG_MT_INTL_SBR_TABLE,
-    DLOG_MT_NPA_SBR_TABLE,
-    DLOG_MT_NPA_NXX_TABLE_16,
-    DLOG_MT_NPA_NXX_TABLE_15,
-    DLOG_MT_NPA_NXX_TABLE_14,
-    DLOG_MT_NPA_NXX_TABLE_13,
-    DLOG_MT_NPA_NXX_TABLE_12,
-    DLOG_MT_NPA_NXX_TABLE_11,
-    DLOG_MT_NPA_NXX_TABLE_10,
-    DLOG_MT_NPA_NXX_TABLE_9,
-    DLOG_MT_NPA_NXX_TABLE_8,
-    DLOG_MT_NPA_NXX_TABLE_7,
-    DLOG_MT_NPA_NXX_TABLE_6,
-    DLOG_MT_NPA_NXX_TABLE_5,
-    DLOG_MT_NPA_NXX_TABLE_4,
-    DLOG_MT_NPA_NXX_TABLE_3,
-    DLOG_MT_NPA_NXX_TABLE_2,
-    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
-    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
-    DLOG_MT_CARD_TABLE_EXP,     /* Required */
-    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
-    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
-    DLOG_MT_RATE_TABLE,         /* Required */
-    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
-    DLOG_MT_LIMSERV_DATA,
-    DLOG_MT_REP_DIAL_LIST,
-    DLOG_MT_COIN_VAL_TABLE,     /* Required */
-    DLOG_MT_CALL_IN_PARMS,
-    DLOG_MT_CALL_STAT_PARMS,
-    DLOG_MT_MODEM_PARMS,
-    DLOG_MT_COMM_STAT_PARMS,
-    DLOG_MT_INSTALL_PARAMS,    /* Required */
-    DLOG_MT_USER_IF_PARMS,
-    DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_VIS_PROMPTS_L2,
+uint8_t table_list_mtr_120[] = {
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_VIS_PROMPTS_L1,
-    DLOG_MT_FCONFIG_OPTS,      /* Required */
-    DLOG_MT_NCC_TERM_PARAMS,   /* Required */
+    DLOG_MT_VIS_PROMPTS_L2,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
+    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
+    DLOG_MT_CARD_TABLE_EXP,     /* Required */
+    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
+    DLOG_MT_NPA_NXX_TABLE_1,
+    DLOG_MT_NPA_NXX_TABLE_2,
+    DLOG_MT_NPA_NXX_TABLE_3,
+    DLOG_MT_NPA_NXX_TABLE_4,
+    DLOG_MT_NPA_NXX_TABLE_5,
+    DLOG_MT_NPA_NXX_TABLE_6,
+    DLOG_MT_NPA_NXX_TABLE_7,
+    DLOG_MT_NPA_NXX_TABLE_8,
+    DLOG_MT_NPA_NXX_TABLE_9,
+    DLOG_MT_NPA_NXX_TABLE_10,
+    DLOG_MT_NPA_NXX_TABLE_11,
+    DLOG_MT_NPA_NXX_TABLE_12,
+    DLOG_MT_NPA_NXX_TABLE_13,
+    DLOG_MT_NPA_NXX_TABLE_14,
+    DLOG_MT_NPA_SBR_TABLE,
+    DLOG_MT_INTL_SBR_TABLE,
+    DLOG_MT_NPA_NXX_TABLE_15,
+    DLOG_MT_NPA_NXX_TABLE_16,
     DLOG_MT_END_DATA,
     0                          /* End of table list */
 };
 
+uint8_t table_list_mtr19[] = {
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
+    DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
+    DLOG_MT_VIS_PROMPTS_L1,
+    DLOG_MT_VIS_PROMPTS_L2,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_CALL_SCREEN_LIST,   /* Required, Length: 3401 */
+    DLOG_MT_SCARD_PARM_TABLE,
+    DLOG_MT_COMP_LCD_TABLE_1,
+    DLOG_MT_COMP_LCD_TABLE_2,
+    DLOG_MT_COMP_LCD_TABLE_3,
+    DLOG_MT_COMP_LCD_TABLE_4,
+    DLOG_MT_COMP_LCD_TABLE_5,
+    DLOG_MT_COMP_LCD_TABLE_6,
+    DLOG_MT_COMP_LCD_TABLE_7,
+    DLOG_MT_END_DATA,
+    0                         /* End of table list */
+};
+
+uint8_t table_list_mtr17[] = {
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
+    DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
+    DLOG_MT_CALLSCRN_UNIVERSAL, /* MTR 1.7 Length: 721 */
+    DLOG_MT_VIS_PROMPTS_L1,
+    DLOG_MT_VIS_PROMPTS_L2,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_LCD_TABLE_1,        /* MTR 1.7 Length: 819 */
+    DLOG_MT_LCD_TABLE_2,
+    DLOG_MT_LCD_TABLE_3,
+    DLOG_MT_LCD_TABLE_4,
+    DLOG_MT_LCD_TABLE_5,
+    DLOG_MT_LCD_TABLE_6,
+    DLOG_MT_LCD_TABLE_7,
+    DLOG_MT_LCD_TABLE_8,
+    DLOG_MT_LCD_TABLE_9,
+    DLOG_MT_LCD_TABLE_10,
+    DLOG_MT_END_DATA,
+    0                         /* End of table list */
+};
+
+uint8_t table_list_mtr17_intl[] = {
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
+    DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
+    DLOG_MT_VIS_PROMPTS_L1,
+    DLOG_MT_VIS_PROMPTS_L2,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_CALLSCRN_EXP,
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_LCD_TABLE_1,        /* MTR 1.7 Length: 819 */
+    DLOG_MT_LCD_TABLE_2,
+    DLOG_MT_LCD_TABLE_3,
+    DLOG_MT_LCD_TABLE_4,
+    DLOG_MT_LCD_TABLE_5,
+    DLOG_MT_LCD_TABLE_6,
+    DLOG_MT_LCD_TABLE_7,
+    DLOG_MT_END_DATA,
+    0                         /* End of table list */
+};
 uint8_t table_list_minimal[] = {
     DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
     DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
@@ -940,10 +1038,33 @@ int mm_download_tables(mm_context_t *context) {
     int      status;
     size_t   table_len;
     uint8_t *table_buffer;
-    uint8_t *table_list = table_list_rev1_3;
+    uint8_t *table_list = table_list_mtr_2x;
 
-    /* Rev 1 PCP does not accept table 0x048, 0x55, 0x56 */
-    if (context->phone_rev == 10) table_list = table_list_rev1_0;
+    switch (term_type_to_mtr(context->terminal_type)) {
+    case MTR_2_X:
+        table_list = table_list_mtr_2x;
+        break;
+    case MTR_1_20:
+    case MTR_1_13:
+    case MTR_1_11:
+    case MTR_1_10:
+        table_list = table_list_mtr_120;
+        break;
+    case MTR_1_9:
+        table_list = table_list_mtr19;
+        break;
+    case MTR_1_7_INTL:
+        table_list = table_list_mtr17_intl;
+        break;
+    case MTR_1_7:
+    case MTR_1_6:
+        table_list = table_list_mtr17;
+        break;
+    default:
+        fprintf(stderr, "%s: Error: Unknown terminal type %d, defaulting to MTR 1.7\n", __FUNCTION__, context->terminal_type);
+        table_list = table_list_mtr17;
+        break;
+    }
 
     /* If -s was specified, download only the minimal config */
     if (context->minimal_table_set == 1) table_list = table_list_minimal;
@@ -956,7 +1077,11 @@ int mm_download_tables(mm_context_t *context) {
                 generate_call_in_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_NCC_TERM_PARAMS:
-                generate_term_access_parameters(context, &table_buffer, &table_len);
+                if (term_type_to_mtr(context->terminal_type) <= MTR_1_9) {
+                    generate_term_access_parameters_mtr1(context, &table_buffer, &table_len);
+                } else {
+                    generate_term_access_parameters(context, &table_buffer, &table_len);
+                }
                 break;
             case DLOG_MT_CALL_STAT_PARMS:
                 generate_call_stat_parameters(context, &table_buffer, &table_len);
@@ -971,7 +1096,10 @@ int mm_download_tables(mm_context_t *context) {
                 generate_dlog_mt_end_data(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_CASH_BOX_STATUS:
-                table_buffer = (uint8_t *)(calloc(1, sizeof(cashbox_status_univ_t)));
+            {
+                cashbox_status_univ_t *pcashbox_status = { 0 };
+                pcashbox_status = (cashbox_status_univ_t *)calloc(1, sizeof(cashbox_status_univ_t));
+                table_buffer = (uint8_t*)pcashbox_status;
                 if (table_buffer == NULL) {
                     fprintf(stderr, "%s: Error: failed to allocate %zu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
                     return -ENOMEM;
@@ -979,6 +1107,7 @@ int mm_download_tables(mm_context_t *context) {
                 mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);
                 table_len = sizeof(cashbox_status_univ_t);
                 break;
+            }
             default:
                 printf("\t");
                 /* For Craft Force Download, only download tables that are newer. */
@@ -1138,6 +1267,9 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
                 if (context->connected) {
                     send_mm_ack(context, FLAG_ACK);  /* Retry unless the terminal disconnected. */
                 }
+            } else {
+                /* Not connected anymore, bail out. */
+                break;
             }
         }
     }
@@ -1215,6 +1347,12 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     fseek(stream, 0, SEEK_SET);
 
     size++;  // Make room for table ID.
+
+    if ((table_id == DLOG_MT_CALL_SCREEN_LIST) &&
+        (term_type_to_mtr(context->terminal_type) == MTR_1_9)) {
+        size += 340;    /* Pad 180-entry Call Screen List to 200-entries. */
+    }
+
     *buffer = (uint8_t *)calloc(size, sizeof(uint8_t));
     fflush(stdout);
 
@@ -1244,6 +1382,8 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
             return -1;
         }
     }
+
+    *len = size;
 
     printf("Loaded table ID %d (0x%02x) from %s (%zu bytes).\n", table_id, table_id, fname, *len - 1);
     fclose(stream);

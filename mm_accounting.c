@@ -690,21 +690,16 @@ int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw
     memcpy(validator_hw_ver, dlog_mt_sw_version->validator_hw_ver,
         sizeof(dlog_mt_sw_version->validator_hw_ver));
 
-    if (strcmp(control_version, "V1.0") == 0) {
-        context->phone_rev = 10;
-    }
-    else if (strcmp(control_version, "V1.1") == 0) {
-        context->phone_rev = 13;
-    }
-    else if (strcmp(control_version, "V1.3") == 0) {
-        context->phone_rev = 13;
-    }
-    else {
-        printf("Error: Unknown control version %s, defaulting to tables for V1.0.\n", control_version);
-        context->phone_rev = 10;
+    context->terminal_type = mm_config_get_term_type_from_control_rom_edition(context->database, control_rom_edition);
+
+    if (context->terminal_type == MTR_UNKNOWN) {
+        printf("Error: Unknown control ROM edition %s\n", control_rom_edition);
     }
 
     printf("\t\t\t             Terminal Type: %02d (0x%02x)\n",
+        context->terminal_type,
+        context->terminal_type);
+    printf("\t\t\t     Feature Terminal Type: %02d (0x%02x)\n",
         dlog_mt_sw_version->term_type,
         dlog_mt_sw_version->term_type);
     printf("\t\t\t       Control ROM Edition: %s\n", control_rom_edition);

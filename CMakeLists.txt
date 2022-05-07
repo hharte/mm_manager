@@ -39,6 +39,7 @@ set(MANAGER_SRC
     "mm_serial.c"
     "mm_serial.h"
     "mm_sqlite3.c"
+    "mm_config.c"
     "mm_tables.c"
 )
 

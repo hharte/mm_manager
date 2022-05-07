@@ -103,6 +103,7 @@
 #define DLOG_MT_SUMMARY_CALL_STATS  0x38    // 56: Summary Call Statistics Record – Post MSR 1.6
 #define DLOG_MT_CARRIER_CALL_STATS  0x39    // 57: Carrier Call Statistics Message
 #define DLOG_MT_LIMSERV_DATA        0x3a    // 58: (Limit) Service Level Table
+#define DLOG_MT_CALLSCRN_EXP        0x3b    // 59: Expanded Call Screening List (1021 bytes)
 #define DLOG_MT_SW_VERSION          0x3c    // 60: Terminal Software Version Message
 #define DLOG_MT_COIN_CALL_DETAILS   0x3d    // 61: Coin call detail record
 #define DLOG_MT_NUM_PLAN_TABLE      0x3e    // 62: Numbering Plan Table
@@ -161,6 +162,19 @@
 #define DLOG_MT_NPA_SBR_TABLE       0x96    // 150: Set Based Rating NPA Table
 #define DLOG_MT_INTL_SBR_TABLE      0x97    // 151: Set Based Rating International Table
 #define DLOG_MT_DISCOUNT_TABLE      0x98    // 152: Discount Table
+
+#define MTR_UNKNOWN     (0)
+#define MTR_1_6         (106)
+#define MTR_1_7         (107)
+#define MTR_1_7_INTL    (108)
+#define MTR_1_9         (109)
+#define MTR_1_10        (110)
+#define MTR_1_11        (111)
+#define MTR_1_13        (113)
+#define MTR_1_20        (120)
+#define MTR_2_X         (200)
+
+#define TERM_TYPE_MAX   (60)
 
 /* TTBLREQ (Terminal Table Request) pp. 2-651 */
 #define TTBLREQ_CRAFT_FORCE_DL      0x01    // Menu Item - Craft I/F Table Download
@@ -1098,8 +1112,8 @@ typedef struct mm_context {
     FILE *logstream;
     FILE *bytestream;
     FILE *pcapstream;
-    char phone_rev;
     char terminal_id[11];   /* The terminal's phone number */
+    uint8_t terminal_type;
     uint8_t telco_id[2];
     uint8_t region_code[3];
     char ncc_number[2][21];
@@ -1181,10 +1195,15 @@ int    mm_table_create_tables(void* db);
 size_t mm_table_load(mm_context_t* context, uint8_t table_id, uint64_t version_timestamp, uint8_t* buffer, size_t buflen);
 int    mm_table_save(mm_context_t* context, uint8_t table_id, uint64_t version_timestamp, uint8_t* buffer, size_t buflen);
 
+/* Manager Configuration Database */
+int mm_config_create_tables(void* db);
+uint8_t mm_config_get_term_type_from_control_rom_edition(void* db, const char* control_rom_edition);
+
 /* database functions */
 extern int mm_open_database(mm_context_t *context);
 extern int mm_close_database(mm_context_t *context);
 extern int mm_sql_exec(void *db, const char *sql);
+extern uint8_t mm_sql_read_uint8(void* db, const char* sql);
 extern uint64_t mm_sql_read_uint64(void* db, const char* sql);
 extern int mm_sql_read_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen);
 extern int mm_sql_write_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen);
@@ -1202,6 +1221,7 @@ extern char *timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t
 extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len);
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
 extern const char* error_inject_type_to_str(uint8_t type);
+extern const uint8_t term_type_to_mtr(uint8_t term_type);
 
 /* mm_pcap */
 int mm_create_pcap(const char* capfilename, FILE** pcapstream);

@@ -335,7 +335,7 @@ const char *table_string[] = {
     "DLOG_MT_SUMMARY_CALL_STATS",   // 0x38
     "DLOG_MT_CARRIER_CALL_STATS",   // 0x39
     "DLOG_MT_LIMSERV_DATA",         // 0x3a
-    "0x3b",                         // 0x3b
+    "DLOG_MT_CALLSCRN_EXP",         // 0x3b
     "DLOG_MT_SW_VERSION",           // 0x3c
     "DLOG_MT_COIN_CALL_DETAILS",    // 0x3d
     "DLOG_MT_NUM_PLAN_TABLE",       // 0x3e
@@ -677,6 +677,75 @@ const char* error_inject_type_to_str(uint8_t type) {
     }
 
     return error_inject_type_str[type];
+}
+
+const uint8_t term_type_mtr[TERM_TYPE_MAX + 1] = {
+    MTR_UNKNOWN,
+    MTR_2_X,    /* 1 */
+    MTR_2_X,
+    MTR_2_X,
+    MTR_UNKNOWN,
+    MTR_2_X,    /* 5 */
+    MTR_1_9,
+    MTR_2_X,
+    MTR_1_6,
+    MTR_1_6,
+    MTR_1_13,   /* 10 */
+    MTR_1_7,
+    MTR_1_7,
+    MTR_1_7,
+    MTR_1_7,
+    MTR_1_7,    /* 15 */
+    MTR_1_7,
+    MTR_2_X,
+    MTR_1_20,
+    MTR_1_7,
+    MTR_1_20,   /* 20 */
+    MTR_1_7,
+    MTR_2_X,
+    MTR_1_7,
+    MTR_1_7,
+    MTR_1_7,    /* 25 */
+    MTR_1_7,
+    MTR_1_9,
+    MTR_1_9,
+    MTR_1_9,
+    MTR_1_9,    /* 30 */
+    MTR_1_9,
+    MTR_1_7_INTL,
+    MTR_1_9,
+    MTR_2_X,
+    MTR_2_X,    /* 35 */
+    MTR_2_X,
+    MTR_1_13,
+    MTR_2_X,
+    MTR_2_X,
+    MTR_2_X,    /* 40 */
+    MTR_UNKNOWN,
+    MTR_1_9,
+    MTR_UNKNOWN,
+    MTR_1_10,
+    MTR_1_11,   /* 45 */
+    MTR_1_9,
+    MTR_UNKNOWN,
+    MTR_UNKNOWN,
+    MTR_UNKNOWN,
+    MTR_UNKNOWN,/* 50 */
+    MTR_2_X,
+    MTR_UNKNOWN,
+    MTR_UNKNOWN,
+    MTR_UNKNOWN,
+    MTR_UNKNOWN,/* 55 */
+    MTR_2_X,
+    MTR_2_X,
+    MTR_1_20,
+    MTR_2_X,
+    MTR_2_X     /* 60 */
+};
+
+const uint8_t term_type_to_mtr(uint8_t term_type) {
+    if (term_type > 60) return MTR_UNKNOWN;
+    return term_type_mtr[term_type];
 }
 
 #ifdef _WIN32
