@@ -54,6 +54,8 @@ add_executable (mm_card "mm_card.c" "mm_manager.h" "mm_card.h")
 TARGET_LINK_LIBRARIES(mm_card mm_util)
 add_executable (mm_carrier "mm_carrier.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_carrier mm_util)
+add_executable (mm_carrier_mtr1 "mm_carrier_mtr1.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_carrier_mtr1 mm_util)
 add_executable (mm_coinvl "mm_coinvl.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_coinvl mm_util)
 add_executable (mm_featru "mm_featru.c" "mm_manager.h")
@@ -74,6 +76,7 @@ TARGET_LINK_LIBRARIES(mm_table_cutter mm_util)
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
   target_link_libraries(mm_carrier wsock32 ws2_32 sqlite3)
+  target_link_libraries(mm_carrier_mtr1 wsock32 ws2_32 sqlite3)
 endif()
 
 # Install
@@ -85,6 +88,7 @@ set(INSTALL_TARGETS
     "mm_callscrn"
     "mm_card"
     "mm_carrier"
+    "mm_carrier_mtr1"
     "mm_coinvl"
     "mm_featru"
     "mm_instsv"

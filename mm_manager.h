@@ -81,7 +81,7 @@
 #define DLOG_MT_CALLSCRN_UNIVERSAL  0x18    // 24: Call Screening List Universal
 #define DLOG_MT_FCONFIG_OPTS        0x1a    // 26: Feature Configuration – Universal
 #define DLOG_MT_VIS_PROMPTS_L1      0x1b    // 27: Visual Prompts Language A
-#define DLOG_MT_VIS_PROMPTS_L2      0x1c    // 28: Visual Prompts Language A
+#define DLOG_MT_VIS_PROMPTS_L2      0x1c    // 28: Visual Prompts Language B
 #define DLOG_MT_ADVERT_PROMPTS      0x1d    // 29: Advertising prompts
 #define DLOG_MT_USER_IF_PARMS       0x1e    // 30: User Interface Parameters
 #define DLOG_MT_INSTALL_PARAMS      0x1f    // 31: Installation/Servicing Parameters
@@ -670,6 +670,27 @@ typedef struct dlog_mt_carrier_table {
     carrier_table_entry_t carrier[CARRIER_TABLE_MAX_CARRIERS];
     uint8_t spare[10];
 } dlog_mt_carrier_table_t;
+
+typedef struct carrier_table_entry_mtr1 {
+    uint8_t  carrier_ref;                   /* Unique number for each carrier used to cross reference the carrier in other tables. */
+    uint16_t carrier_num;
+    uint8_t  valid_cards[3];
+    char     display_prompt[20];            /* Actual prompt for display on one line. */
+    uint8_t  control_byte2;
+    uint8_t  control_byte;
+    uint16_t fgb_timer;                     /* Time in 10 msec increments */
+    uint8_t  spare;
+    uint8_t  call_entry;                    /* This field is used for Call Entry. This indicates the pointer to the Call Screening list for Feature Group B access. */
+} carrier_table_entry_mtr1_t;
+
+#define DEFAULT_CARRIERS_MTR1_MAX        3
+#define CARRIER_TABLE_MTR1_MAX_CARRIERS  21
+typedef struct dlog_mt_carrier_table_mtr1 {
+    uint8_t id;
+    uint8_t defaults[DEFAULT_CARRIERS_MTR1_MAX];
+    carrier_table_entry_mtr1_t carrier[CARRIER_TABLE_MTR1_MAX_CARRIERS];
+    uint8_t spare[2];
+} dlog_mt_carrier_table_mtr1_t;
 
 typedef struct rdlist_table_entry {
     uint8_t  pad[3];
