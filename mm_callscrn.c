@@ -1,6 +1,8 @@
 /*
- * Code to dump Call Screening List table from Nortel Millennium Payphone
- * Table 92 (0x5c)
+ * Code to dump the Call Screening List table from Nortel Millennium Payphone
+ *
+ * Table 24 (0x18) - 60-entry DLOG_MT_CALLSCRN_UNIVERSAL
+ * Table 92 (0x5c) - 180-entry DLOG_MT_CALL_SCREEN_LIST
  *
  * www.github.com/hharte/mm_manager
  *
@@ -14,6 +16,9 @@
 #include <stdint.h>
 #include <errno.h>
 #include "./mm_manager.h"
+
+#define CALLSCRNU_TABLE_LEN     (sizeof(dlog_mt_call_screen_universal_t))
+#define CALLSCRN_TABLE_LEN      (sizeof(dlog_mt_call_screen_list_t))
 
 const char *callscrn_free_flags_str[] = {
     "FREE",  // "FREE_DENY_IND",
@@ -70,23 +75,29 @@ const char *call_type_strings[16] = {
 uint8_t call_class_lut[] = { 0x01, 0x11, 0x41, 0x81, 0x00 };
 
 int main(int argc, char *argv[]) {
-    FILE *instream;
-    int   callscrn_index;
-    char  phone_number_str[20] = { 0 };
-    int   i;
+    FILE  *instream;
+    int    callscrn_index;
+    char   phone_number_str[20] = { 0 };
+    int    i;
+    int    callscrn_max_entries = 0;
+    int    phone_num_len = 0;
+    size_t size;
 
     dlog_mt_call_screen_list_t *pcallscrn_table;
+    dlog_mt_call_screen_universal_t* pcallscrnu_table;
     uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
+               "\tmm_callscrn mm_table_18.bin\n"
                "\tmm_callscrn mm_table_5c.bin\n");
         return -1;
     }
 
-    printf("Nortel Millennium Call Screening List Table (Table 92) Dump\n\n");
+    printf("Nortel Millennium Call Screening List Table Dump\n\n");
 
     pcallscrn_table = (dlog_mt_call_screen_list_t *)calloc(1, sizeof(dlog_mt_call_screen_list_t));
+    pcallscrnu_table = (dlog_mt_call_screen_universal_t *)pcallscrn_table;
 
     if (pcallscrn_table == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_call_screen_list_t));
@@ -99,8 +110,30 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
+    fseek(instream, 0, SEEK_END);
+    size = ftell(instream);
+    fseek(instream, 0, SEEK_SET);
+
+    switch (size + 1) {
+    case CALLSCRNU_TABLE_LEN:
+        printf("Call Screen Universal (60-entry) table.\n");
+        callscrn_max_entries = CALLSCRNU_TABLE_MAX;
+        phone_num_len = 8;
+        break;
+    case CALLSCRN_TABLE_LEN:
+        printf("Call Screening List (180-entry) table.\n");
+        callscrn_max_entries = CALLSCRN_TABLE_MAX;
+        phone_num_len = 9;
+        break;
+    default:
+        printf("Invalid Call Screening table, len=%zd.\n", size);
+        free(pcallscrn_table);
+        fclose(instream);
+        return -EIO;
+    }
+
     load_buffer = ((uint8_t*)pcallscrn_table) + 1;
-    if (fread(load_buffer, sizeof(dlog_mt_call_screen_list_t) - 1, 1, instream) != 1) {
+    if (fread(load_buffer, size, 1, instream) != 1) {
         printf("Error reading CALLSCRN table.\n");
         free(pcallscrn_table);
         fclose(instream);
@@ -111,15 +144,20 @@ int main(int argc, char *argv[]) {
            "| Call Entry | FCF  |CALLTYP|Carrier|Flags2| Phone Number       | Class | Class Description |\n" \
            "+------------+------+-------+-------+------+--------------------+-------+-------------------+\n");
 
-    for (callscrn_index = 0; callscrn_index < CALLSCRN_TABLE_MAX; callscrn_index++) {
+    for (callscrn_index = 0; callscrn_index < callscrn_max_entries; callscrn_index++) {
         call_screen_list_entry_t *pcallscreen_entry;
 
-        pcallscreen_entry = &pcallscrn_table->entry[callscrn_index];
+        if (size + 1 == CALLSCRN_TABLE_LEN) {
+            pcallscreen_entry = &pcallscrn_table->entry[callscrn_index];
+        }
+        else {
+            pcallscreen_entry = (call_screen_list_entry_t *)&pcallscrnu_table->entry[callscrn_index];
+        }
 
         if (pcallscreen_entry->phone_number[0] == 0) continue;
 
         *phone_number_str = *callscrn_num_to_string(phone_number_str, sizeof(phone_number_str),
-                                                    pcallscreen_entry->phone_number, 9);
+                                                    pcallscreen_entry->phone_number, phone_num_len);
 
         printf("| %3d (0x%02x) | 0x%02x |%s|  0x%02x | 0x%02x | %18s |  0x%02x | ",
                callscrn_index + 1, callscrn_index + 1,

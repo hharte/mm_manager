@@ -724,7 +724,7 @@ typedef struct dlog_mt_rdlist_table {
 #define CB_OUTDIAL_STRING_ORDER                 (1 << 6)    /* 0=FGB#, Called #, Card #; 1=FGB#, Card #, Called # */
 #define CB_FEATURE_GROUP_B                      (1 << 7)    /* Feature Group B is a category of free access to the carrier network. It usually uses 1-800 or 950xxx. */
 
-/* CALLSCR (Call Screening List) pp. 2-33, and FREE (Free Call) pp. 2-187 */
+/* CALLSCRN (Call Screening List) pp. 2-33, and FREE (Free Call) pp. 2-187 */
 typedef struct call_screen_list_entry {
     uint8_t  free_call_flags;               /* FREE (Free Call) pp. 2-189 */
     uint8_t  call_type;                     /* CALLTYPE */
@@ -740,6 +740,22 @@ typedef struct dlog_mt_call_screen_list {
     uint8_t id;
     call_screen_list_entry_t entry[CALLSCRN_TABLE_MAX];
 } dlog_mt_call_screen_list_t;
+
+/* CALLSCRNU (Call Screening List Universal) similar to CALLSCRN */
+typedef struct call_screen_universal_entry {
+    uint8_t  free_call_flags;               /* FREE (Free Call) pp. 2-189 */
+    uint8_t  call_type;                     /* CALLTYPE */
+    uint8_t  carrier_ref;                   /* Reference to the RATE/CARRIER table. A value of 255 means there is no reference. */
+    uint8_t  ident2;                        /* IDENT2 Flags, see pp. 2-193 */
+    uint8_t  phone_number[8];               /* 0-terminated phone number, one digit per nibble. F=single digit wildcard, B=link to another CALLSCR entry (in decimal.) */
+} call_screen_universal_entry_t;
+
+#define CALLSCRNU_TABLE_MAX                      60
+typedef struct dlog_mt_call_screen_universal {
+    uint8_t id;
+    call_screen_universal_entry_t entry[CALLSCRNU_TABLE_MAX];
+} dlog_mt_call_screen_universal_t;
+
 
 #define CS_FREE_DENY_IND            (1 << 0)
 #define CS_ANSWER_SUPERVISION       (1 << 1)
