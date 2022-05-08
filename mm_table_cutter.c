@@ -167,7 +167,11 @@ int main(int argc, char *argv[]) {
                 ptable_entry->rom_addr != 0 ? "M->T" : "    ");
 
             if (ptable_entry->rom_addr != 0) {
-                fseek(instream, ptable_entry->rom_addr, SEEK_SET);
+                if (fseek(instream, ptable_entry->rom_addr, SEEK_SET) != 0) {
+                    fprintf(stderr, "Error: fseek() failed.\n");
+                    goto done;
+                }
+
                 snprintf(outfile, sizeof(outfile), "cut_table_%02x.bin", ptable_entry->id);
                 printf("Dumping %d bytes at %04x\n", ptable_entry->len, ptable_entry->rom_addr);
                 if ((ostream = fopen(outfile, "wb")) == NULL) {
