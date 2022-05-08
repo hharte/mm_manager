@@ -123,7 +123,11 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Last table: %d\n", last_table);
-    fseek(instream, atoi(argv[2]), SEEK_SET);
+    if (fseek(instream, atoi(argv[2]), SEEK_SET) != 0) {
+        fprintf(stderr, "Error: fseek() to ROM table entry point failed.\n");
+        goto done;
+    }
+
     rom_pos = ftell(instream);
 
     if (rom_pos < 0) {
@@ -172,7 +176,8 @@ int main(int argc, char *argv[]) {
                     goto done;
                 }
 
-                ptable_buf = (uint8_t *)calloc(1, (ptable_entry->len) & TABLE_LEN_MASK);
+                ptable_entry->len &= TABLE_LEN_MASK;
+                ptable_buf = (uint8_t *)calloc(1, ptable_entry->len);
 
                 if (ptable_buf == NULL) {
                     printf("Failed to allocate %d bytes.\n", ptable_entry->len);
