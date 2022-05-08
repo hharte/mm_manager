@@ -52,6 +52,10 @@ add_executable (mm_callscrn "mm_callscrn.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_callscrn mm_util)
 add_executable (mm_card "mm_card.c" "mm_manager.h" "mm_card.h")
 TARGET_LINK_LIBRARIES(mm_card mm_util)
+add_executable (mm_card_mtr1 "mm_card_mtr1.c" "mm_manager.h" "mm_card.h")
+TARGET_LINK_LIBRARIES(mm_card_mtr1 mm_util)
+add_executable (mm_convert_card_mtr2_to_mtr1 "mm_convert_card_mtr2_to_mtr1.c" "mm_manager.h" "mm_card.h")
+TARGET_LINK_LIBRARIES(mm_convert_card_mtr2_to_mtr1 mm_util)
 add_executable (mm_carrier "mm_carrier.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_carrier mm_util)
 add_executable (mm_carrier_mtr1 "mm_carrier_mtr1.c" "mm_manager.h")
@@ -87,6 +91,8 @@ set(INSTALL_TARGETS
     "mm_areacode"
     "mm_callscrn"
     "mm_card"
+    "mm_card_mtr1"
+    "mm_convert_card_mtr2_to_mtr1"
     "mm_carrier"
     "mm_carrier_mtr1"
     "mm_coinvl"

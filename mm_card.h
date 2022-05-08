@@ -17,7 +17,8 @@
 #pragma pack(push)
 #pragma pack(1)                 /* Pack data structures for communication with terminal. */
 
-#define CCARD_MAX           32  /* Number of entries in CARD table */
+#define CCARD_MAX           32  /* Number of entries in CARD table MTR 2.x */
+#define CCARD_MAX_MTR1      20  /* Number of entries in CARD table MTR 1.x */
 #define SERVICE_CODE_LEN    20
 #define SVC_CODE_MAX        5
 #define SPILL_STRING_LEN    8
@@ -45,7 +46,7 @@ typedef union service_code {
     service_code_sc_t sc;
 } service_code_t;
 
-/* CARD (Expanded Card table) pp. 2-57 */
+/* CARD (Expanded Card table, MTR 2.x) pp. 2-57 */
 typedef struct card_entry {
     uint8_t        pan_start[3];  /* Credit Card PAN-range start. */
     uint8_t        pan_end[3];    /* Credit Card PAN-range end. */
@@ -65,6 +66,24 @@ typedef struct card_entry {
 typedef struct dlog_mt_card_table {
     card_entry_t c[CCARD_MAX];  /* 32 entries */
 } dlog_mt_card_table_t;
+
+/* CARD (Card table, MTR 1.x) */
+typedef struct card_entry_mtr1 {
+    uint8_t        pan_start[3];  /* Credit Card PAN-range start. */
+    uint8_t        pan_end[3];    /* Credit Card PAN-range end. */
+    uint8_t        standard_cd;
+    uint8_t        vfy_flags;
+    uint8_t        p_exp_date;
+    uint8_t        p_init_date;
+    uint8_t        p_disc_data;
+    service_code_t svc_code;
+    uint8_t        ref_num;
+    uint8_t        carrier_ref;   /* Unique number for each carrier used to cross reference the carrier in other tables. */
+} card_entry_mtr1_t;
+
+typedef struct dlog_mt_card_table_mtr1 {
+    card_entry_mtr1_t c[CCARD_MAX_MTR1];  /* 20 entries */
+} dlog_mt_card_table_mtr1_t;
 
 typedef enum std_card_type {
     undefined = 0,
