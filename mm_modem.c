@@ -30,8 +30,17 @@
 static int send_at_command(mm_serial_context_t *pserial_context, const char *command);
 
 /* Initialize modem with a series of AT commands */
-int init_modem(mm_serial_context_t *pserial_context, const char *modem_init_string) {
+int init_modem(mm_serial_context_t *pserial_context, const char *modem_reset_string, const char *modem_init_string) {
     int status;
+
+    // Only do a separate reset if the modem_reset_string is present
+    if (modem_reset_string != NULL && *modem_reset_string != '\0') {
+        printf("Resetting modem: '%s'\n", modem_reset_string);
+        status = send_at_command(pserial_context, modem_reset_string);
+        if (status != 0) {
+            return -1;
+        }
+    }
 
     printf("Intializing modem: '%s'\n", modem_init_string);
     status = send_at_command(pserial_context, modem_init_string);

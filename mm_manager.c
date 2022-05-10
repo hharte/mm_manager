@@ -241,7 +241,8 @@ uint8_t table_list_minimal[] = {
 };
 
 const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:p:st:qe:";
-#define DEFAULT_MODEM_INIT_STRING "ATZE=1 S0=1 S7=3 &D2 +MS=B212"
+#define DEFAULT_MODEM_RESET_STRING "ATZ"
+#define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
 
 volatile int inject_comm_error = 0;
 
@@ -316,9 +317,10 @@ int main(int argc, char *argv[]) {
         return -ENOMEM;
     }
 
-    snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "tables/default");
-    snprintf(mm_context->term_table_dir,    sizeof(mm_context->term_table_dir),    "tables");
-    snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), DEFAULT_MODEM_INIT_STRING);
+    snprintf(mm_context->default_table_dir,  sizeof(mm_context->default_table_dir),  "tables/default");
+    snprintf(mm_context->term_table_dir,     sizeof(mm_context->term_table_dir),     "tables");
+    snprintf(mm_context->modem_reset_string, sizeof(mm_context->modem_reset_string), DEFAULT_MODEM_RESET_STRING);
+    snprintf(mm_context->modem_init_string,  sizeof(mm_context->modem_init_string),  DEFAULT_MODEM_INIT_STRING);
 
     /* Parse command line to get -q (quiet) option. */
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
@@ -536,7 +538,7 @@ int main(int argc, char *argv[]) {
     }
 
     init_serial(mm_context->serial_context, baudrate);
-    status = init_modem(mm_context->serial_context, mm_context->modem_init_string);
+    status = init_modem(mm_context->serial_context, mm_context->modem_reset_string, mm_context->modem_init_string);
 
     if (status == 0) {
         printf("Modem initialized.\n");
