@@ -1248,7 +1248,7 @@ extern int mm_sql_write_blob(void* db, const char* sql, uint8_t* buffer, size_t 
 extern int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t* cashbox_status);
 
 /* mm_util */
-extern unsigned crc16(unsigned crc, uint8_t *buf, size_t len);
+extern uint16_t crc16(uint16_t crc, uint8_t *buf, size_t len);
 extern void dump_hex(const uint8_t *data, size_t len);
 extern char *phone_num_to_string(char *string_buf, size_t string_len, uint8_t* num_buf, size_t num_buf_len);
 extern uint8_t string_to_bcd_a(char* number_string, uint8_t* buffer, uint8_t buff_len);

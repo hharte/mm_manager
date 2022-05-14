@@ -21,7 +21,7 @@
 #define POLY 0xa001 /* Polynomial to use for CRC-16 calculation */
 
 /* Calculate CRC-16 checksum using 0xA001 polynomial. */
-unsigned crc16(unsigned crc, uint8_t *buf, size_t len) {
+uint16_t crc16(uint16_t crc, uint8_t *buf, size_t len) {
     while (len--) {
         crc ^= *buf++;
         crc  = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
