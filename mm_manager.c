@@ -131,10 +131,10 @@ uint8_t table_list_mtr19[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
     DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_VIS_PROMPTS_L1,
     DLOG_MT_VIS_PROMPTS_L2,
     DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_USER_IF_PARMS,
     DLOG_MT_INSTALL_PARAMS,     /* Required */
     DLOG_MT_COMM_STAT_PARMS,
@@ -164,10 +164,10 @@ uint8_t table_list_mtr17[] = {
     DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
     DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
     DLOG_MT_CALLSCRN_UNIVERSAL, /* MTR 1.7 Length: 721 */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_VIS_PROMPTS_L1,
     DLOG_MT_VIS_PROMPTS_L2,
     DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_USER_IF_PARMS,
     DLOG_MT_INSTALL_PARAMS,     /* Required */
     DLOG_MT_COMM_STAT_PARMS,
@@ -197,10 +197,10 @@ uint8_t table_list_mtr17_intl[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
     DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_VIS_PROMPTS_L1,
     DLOG_MT_VIS_PROMPTS_L2,
     DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_FCONFIG_OPTS,       /* Required */
     DLOG_MT_USER_IF_PARMS,
     DLOG_MT_INSTALL_PARAMS,     /* Required */
     DLOG_MT_COMM_STAT_PARMS,
@@ -1047,11 +1047,11 @@ int mm_download_tables(mm_context_t *context) {
         table_list = table_list_mtr_2x;
         break;
     case MTR_1_20:
+        table_list = table_list_mtr_120;
+        break;
     case MTR_1_13:
     case MTR_1_11:
     case MTR_1_10:
-        table_list = table_list_mtr_120;
-        break;
     case MTR_1_9:
         table_list = table_list_mtr19;
         break;
@@ -1074,12 +1074,15 @@ int mm_download_tables(mm_context_t *context) {
     send_mm_table(context, &table_data, 1);
 
     for (table_index = 0; table_list[table_index] > 0; table_index++) {
+        /* Abort table download if manager is shutting down. */
+        if (manager_running == 0) break;
+
         switch (table_list[table_index]) {
             case DLOG_MT_CALL_IN_PARMS:
                 generate_call_in_parameters(context, &table_buffer, &table_len);
                 break;
             case DLOG_MT_NCC_TERM_PARAMS:
-                if (term_type_to_mtr(context->terminal_type) <= MTR_1_9) {
+                if (term_type_to_mtr(context->terminal_type) <= MTR_1_13) {
                     generate_term_access_parameters_mtr1(context, &table_buffer, &table_len);
                 } else {
                     generate_term_access_parameters(context, &table_buffer, &table_len);
@@ -1351,7 +1354,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     size++;  // Make room for table ID.
 
     if ((table_id == DLOG_MT_CALL_SCREEN_LIST) &&
-        (term_type_to_mtr(context->terminal_type) == MTR_1_9)) {
+        ((term_type_to_mtr(context->terminal_type) >= MTR_1_9) || (term_type_to_mtr(context->terminal_type) < MTR_1_20))) {
         size += 340;    /* Pad 180-entry Call Screen List to 200-entries. */
     }
 
