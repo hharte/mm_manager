@@ -334,7 +334,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (quiet == 0) {
-        printf("mm_manager v0.6 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
+        printf("mm_manager v0.7 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
     }
 
     /* Parse command line again to get the rest of the options. */
@@ -1818,7 +1818,7 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 
 static void mm_display_help(const char *name, FILE *stream) {
     fprintf(stream,
-        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
+        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
         name);
     fprintf(stream,
             "\t-v verbose (multiple v's increase verbosity.)\n"   \
@@ -1828,7 +1828,8 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-h this help.\n"                                   \
             "\t-i \"modem init string\" - Modem initialization string.\n" \
             "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
-            "\t-m use serial modem (specify device with -f)\n"                                                               \
+            "\t-m use serial modem (specify device with -f)\n" \
+            "\t-p <pcapfile> - Save packets in a .pcap file.\n" \
             "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \
             "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
             "\t-q quiet - Don't display sign-on banner.\n"                                                                   \
@@ -1836,4 +1837,3 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-t term_table_dir - terminal-specific table directory.\n");
     return;
 }
-

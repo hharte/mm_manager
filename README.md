@@ -3,16 +3,13 @@
 
 ### Manager for Nortel Millennium Payphones
 
-[![Codacy Badge]([https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b](https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b))](https://www.codacy.com/gh/hharte/mm_manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hharte/mm_manager&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/550811fd0fa140279b4edc2c1044860b)](https://www.codacy.com/gh/hharte/mm_manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hharte/mm_manager&amp;utm_campaign=Badge_Grade)
 
-[![Coverity]([https://scan.coverity.com/projects/20341](https://scan.coverity.com/projects/24658/badge.svg)
-
-[/badge.svg](https://scan.coverity.com/projects/24658/badge.svg))](https://scan.coverity.com/projects/hharte-mm_manager)
-
+[![Coverity](https://scan.coverity.com/projects/20341/badge.svg)](https://scan.coverity.com/projects/hharte-mm_manager)
 
 # Overview
 
-The Nortel Millennium payphones utilize a Manager to facilitate installation, reporting, and call cost rating.  This Millennium payphone calls into the Manager using a 1200-baud phone modem.
+The Nortel Millennium payphones utilize a Manager to facilitate installation, reporting, call cost rating, and credit card processing.  This Millennium payphone calls into the Manager using a 1200-baud phone modem.  Unlike some other COCOT payphones, the Manager **_never calls the payphone_**.
 
 
 # Compatibility
@@ -21,7 +18,216 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 
  
 
-The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.3 Control PCP (Surface-mount, 2.20 firmware.)  It may work with other versions, please let me know.
+The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.1 Control PCP (Surface-mount, 2.11 firmware.)  It partially works with other firmware versions, see table for limitations:
+
+
+<table>
+  <tr>
+   <td><strong><em>Firmware Version</em></strong>
+   </td>
+   <td><strong><em>MTR</em></strong>
+   </td>
+   <td><strong><em>Terminal Type</em></strong>
+   </td>
+   <td><strong><em>Languages</em></strong>
+   </td>
+   <td><strong><em>Notes</em></strong>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NQA1X01/NT_FW_2.12_U2_Rev2_CPC_STM29F040B_32PLCC">NQA1X01</a>
+   </td>
+   <td>2.20
+   </td>
+   <td>MP/MC
+   </td>
+   <td>English / Spanish
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/tree/master/firmware/NOK1X03">NOK1X03</a>
+   </td>
+   <td>2.13
+   </td>
+   <td>MP/MC/TTY
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/tree/master/firmware/NLA1X05">NLA1X05</a>
+   </td>
+   <td>2.12
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td>NKA1X02
+   </td>
+   <td>2.11
+   </td>
+   <td>MP/MC
+   </td>
+   <td>English / Spanish
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/armeniki/Nortel-Millennium/tree/master/Firmware/MTR_2.11/Multi_Pay">NKA1X05</a>
+   </td>
+   <td>2.11
+   </td>
+   <td>MP/MC
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NPA1S01/dump2/NT_FW_1.20_STM27C2001_32DIP">NPA1S01</a>
+   </td>
+   <td>1.20
+   </td>
+   <td>MP/MC
+   </td>
+   <td>English / Spanish
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NNK1F05/U5_MTR1.13%20Keyboard.BIN">NNK1F05</a>
+   </td>
+   <td>1.13
+   </td>
+   <td>MP/MC/TTY
+   </td>
+   <td>English / French
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NBA1F02/U5_NBA1F02.BIN">NBA1F02</a>
+   </td>
+   <td>1.9
+   </td>
+   <td>MP/MC
+   </td>
+   <td>
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td>06CAA17
+   </td>
+   <td>1.7
+   </td>
+   <td>MP/MC
+   </td>
+   <td>
+   </td>
+   <td>Appears working, but Mandatory Table Alarm is present.
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/06JAA03/U5_06JAA03.BIN">06JAA03</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>MP/MC
+   </td>
+   <td>English / Japanese
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/12AAV08/U5.BIN">12AAV08</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>MP/MC
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/armeniki/Nortel-Millennium/blob/master/Firmware/MTR_1.7/Multi_Pay/NAA1S05.bin">NAA1S05</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>MP/MC
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/armeniki/Nortel-Millennium/blob/master/Firmware/MTR_1.7/Coin/NAD4K02.bin">NAD4K02</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>Coin
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/armeniki/Nortel-Millennium/blob/master/Firmware/MTR_1.7/Coin_NoDisplay/NAD4S02.bin">NAD4S02</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>Coin
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/armeniki/Nortel-Millennium/blob/master/Firmware/MTR_1.7/Desk_Set/NAJ2S05.bin">NAJ2S05</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>Desk
+   </td>
+   <td>
+   </td>
+   <td>?
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/PBAXS05/TEST.BIN">PBAXS05</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>MP/MC/International
+   </td>
+   <td>
+   </td>
+   <td>Not working
+   </td>
+  </tr>
+</table>
+
 
 
 # Items Needed
@@ -31,10 +237,10 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
 1. Nortel Millennium Multi-Pay Terminal running firmware v1.20 or v2.20.  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to stock v1.20 or v2.20 firmware.
 2. 24VDC @500mA Power Supply for Millennium Terminal
 3. Two phone lines (one for `mm_manager`, one for Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 1- to 15-digit number.
-4. 1200-baud or faster modem that supports [Bell 212A](https://en.wikipedia.org/wiki/Bell_212A) modulation.  I like the [Lenovo 56K USB](https://www.ebay.com/sch/i.html?&_nkw=lenovo+56k+usb+modem) modems, but any 56K modem with Conexant chipset should work. Note for linux users - Conexant chipsets have never had a fully open-source driver, and the out-of-tree driver has not been maintained since kernel v2.4 - something like the US Robotics 5637 or another "real" modem where the device actually is responsible for encoding and decoding the data works well.
+4. 1200-baud or faster modem that supports [Bell 212A](https://en.wikipedia.org/wiki/Bell_212A) modulation.  I like the [Lenovo 56K USB](https://www.ebay.com/sch/i.html?&_nkw=lenovo+56k+usb+modem) modems, but any 56K modem with Conexant chipset should work.  Note for Linux users - Conexant soft-modems have never had a fully open-source driver, and the out-of-tree driver has not been maintained since kernel v2.4 - something like the US Robotics 5637 or another "real" modem where the device actually is responsible for encoding and decoding the data works well.
 5. T-Key such as the [Jonard JIC-719A](https://jonard.com/jic-719a-t-key-tool?v=248) to open the payphone.  I don’t recommend the flat, stamped T-keys as they are prone to bending.
 6. Keys for your terminal’s upper and lower locks, if locks are present.
-7. `mm_manager` software and a Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be left on 24x7 so the terminal can call in when needed.
+7. `mm_manager` software and a Windows, Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be available 24x7 so the terminal can call in when needed.
 
 
 # mm_manager Installation and Usage
@@ -53,7 +259,7 @@ make
 ```
 
 
-to compile `mm_manager`, and a few utilities.
+to compile `mm_manager`, and several utilities.
 
 
 ## Windows
@@ -65,18 +271,21 @@ Compile `mm_manager` with Microsoft Visual Studio 2019 or later with CMake, usin
 
 
 ```
-usage: mm_manager [-vhm] [-f <filename>] [-l <logfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]
-	-v verbose (multiple v's increase verbosity.)
-	-d default_table_dir - default table directory.
-	-f <filename> modem device or file
-	-h this help.
-	-c <cdrfile.csv> - Write Call Detail Records to a CSV file.
-	-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
-	-m use serial modem (specify device with -f)
-	-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
-	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
-	-s small - Download only minimum required tables to terminal.
-	-t term_table_dir - terminal-specific table directory.
+usage: mm_manager [-vhmq] [-f <filename>] [-i "modem init string"] [-l <logfile>] [-p <pcapfile] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]
+        -v verbose (multiple v's increase verbosity.)
+        -d default_table_dir - default table directory.
+        -e <error_inject_type> - Inject error on SIGBRK.
+        -f <filename> modem device or file
+        -h this help.
+        -i "modem init string" - Modem initialization string.
+        -l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
+        -m use serial modem (specify device with -f)
+        -p <pcapfile> - Save packets in a .pcap file.
+        -b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
+        -n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
+        -q quiet - Don't display sign-on banner.
+        -s small - Download only minimum required tables to terminal.
+        -t term_table_dir - terminal-specific table directory.
 ```
 
 
@@ -644,7 +853,7 @@ Text info about rates for local and anywhere in the US Calls. 20 entries.
 
 ## Generating NPA and LCD tables
 
-Python3 scripts are included to generate NPA and LCD tables automatically, using spreadsheets available from the [North American Numbering Plan Administrator](https://nationalnanpa.com/).  For Canada, spreadsheets are available from the [Canadian Numbering Administrator](http://www.cnac.ca/).  These scripts require the Python3 Pandas library to be installed.
+Python3 scripts are included to generate NPA and LCD tables automatically, using spreadsheets available from the [North American Numbering Plan Administrator](https://nationalnanpa.com/).  For Canada, spreadsheets are available from the [Canadian Numbering Administrator](http://www.cnac.ca/).  These scripts require the Python3 libraries: pandas, requests, and xmltodict to be installed.
 
 To generate an NPA table that classifies US and Canadian numbers as domestic:
 
@@ -710,7 +919,7 @@ The low-level protocol sent over the modem is a stream of bytes framed within ST
 </table>
 
 
-*CRC-16 IBM with A001 polynomial [per this site](https://www.scadacore.com/tools/programming-calculators/online-checksum-calculator/).  Includes all bytes including START through the DATA.
+*CRC-16 IBM with the 0xA001 polynomial [per this site](https://www.scadacore.com/tools/programming-calculators/online-checksum-calculator/).  Includes all bytes including START through the DATA.
 
 FLAG Bits:
 
@@ -741,7 +950,7 @@ FLAG Bits:
    </td>
    <td>DISCONNECT
    </td>
-   <td>?
+   <td>ERROR
    </td>
    <td>ACK
    </td>
@@ -780,9 +989,8 @@ If you find a bug, please provide the following information when you report the 
 
 
 
-1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a long time for the modem to detect this condition and go back on-hook.  One way around this is to kill `mm_manager` and restart it, before proceeding with the configuration download.
-2. Sometimes, `mm_manager` doesn’t properly detect a disconnect, and subsequently does not reset its tx_seq.  If the Terminal calls in after this, it will disconnect after receiving a packet with the incorrect tx_seq.  Eventually, it will get back in sync.
-3. Lots of tables are not well understood.  Please help figure more out if you can.
+1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a few seconds for the modem to detect this condition and go back on-hook.  You may want to wait a few seconds after the test completes before proceeding with the installation.
+2. Lots of tables are not well understood.  Please help figure more out if you can.
 
 
 # Further Work Needed (Feel free to help!)
@@ -805,7 +1013,8 @@ If you find a bug, please provide the following information when you report the 
 
 [millenniium-panel on GitHub](https://github.com/pc-coholic/millennium-panel)
 
+[Armeniki’s Nortel Millennium information on GitHub](https://github.com/armeniki/Nortel-Millennium)
+
 [Millennium Database Design Report MSR 2.1](https://github.com/muccc/millennium/blob/master/documentation/manager/A0xxxxxx_00_02.pdf)
 
 [Millennium Multi-Pay Terminal Installation, Operation, and Maintenance Guide](https://github.com/muccc/millennium/blob/master/documentation/nortel_millennium_text.pdf)
-
