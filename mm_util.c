@@ -384,14 +384,14 @@ const char *table_string[] = {
     "DLOG_MT_COMP_LCD_TABLE_5",     // 0x69
     "DLOG_MT_COMP_LCD_TABLE_6",     // 0x6a
     "DLOG_MT_COMP_LCD_TABLE_7",     // 0x6b
-    "0x6c",                         // 0x6c
-    "0x6d",                         // 0x6d
-    "0x6e",                         // 0x6e
-    "0x6f",                         // 0x6f
-    "0x70",                         // 0x70
-    "0x71",                         // 0x71
-    "0x72",                         // 0x72
-    "0x73",                         // 0x73
+    "DLOG_MT_COMP_LCD_TABLE_8",     // 0x6c
+    "DLOG_MT_COMP_LCD_TABLE_9",     // 0x6d
+    "DLOG_MT_COMP_LCD_TABLE_10",    // 0x6e
+    "DLOG_MT_COMP_LCD_TABLE_11",    // 0x6f
+    "DLOG_MT_COMP_LCD_TABLE_12",    // 0x70
+    "DLOG_MT_COMP_LCD_TABLE_13",    // 0x71
+    "DLOG_MT_COMP_LCD_TABLE_14",    // 0x72
+    "DLOG_MT_COMP_LCD_TABLE_15",    // 0x73
     "0x74",                         // 0x74
     "0x75",                         // 0x75
     "0x76",                         // 0x76

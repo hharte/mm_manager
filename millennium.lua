@@ -110,6 +110,14 @@ local vs_tableid = {
     [105] = "DLOG_MT_COMP_LCD_TABLE_5",
     [106] = "DLOG_MT_COMP_LCD_TABLE_6",
     [107] = "DLOG_MT_COMP_LCD_TABLE_7",
+    [108] = "DLOG_MT_COMP_LCD_TABLE_8",
+    [109] = "DLOG_MT_COMP_LCD_TABLE_9",
+    [110] = "DLOG_MT_COMP_LCD_TABLE_10",
+    [111] = "DLOG_MT_COMP_LCD_TABLE_11",
+    [112] = "DLOG_MT_COMP_LCD_TABLE_12",
+    [113] = "DLOG_MT_COMP_LCD_TABLE_13",
+    [114] = "DLOG_MT_COMP_LCD_TABLE_14",
+    [115] = "DLOG_MT_COMP_LCD_TABLE_15",
     [134] = "DLOG_MT_CARD_TABLE_EXP",
     [135] = "DLOG_MT_CARRIER_TABLE_EXP",
     [136] = "DLOG_MT_NPA_NXX_TABLE_1",
@@ -131,8 +139,8 @@ local vs_tableid = {
     [152] = "DLOG_MT_DISCOUNT_TABLE",
     [154] = "DLOG_MT_NPA_NXX_TABLE_15",
     [155] = "DLOG_MT_NPA_NXX_TABLE_16",
-    [160] = "DLOG_MT_NPA_NXX_TABLE_15",
-    [161] = "DLOG_MT_NPA_NXX_TABLE_16",
+--    [160] = "DLOG_MT_NPA_NXX_TABLE_15",
+--    [161] = "DLOG_MT_NPA_NXX_TABLE_16",
 }
 
 local vs_retry = {

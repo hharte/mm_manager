@@ -141,6 +141,14 @@
 #define DLOG_MT_COMP_LCD_TABLE_5    0x69    // 105: Compressed LCD table 5
 #define DLOG_MT_COMP_LCD_TABLE_6    0x6a    // 106: Compressed LCD table 6
 #define DLOG_MT_COMP_LCD_TABLE_7    0x6b    // 107: Compressed LCD table 7
+#define DLOG_MT_COMP_LCD_TABLE_8    0x6c    // 108: Compressed LCD table 8
+#define DLOG_MT_COMP_LCD_TABLE_9    0x6d    // 109: Compressed LCD table 9
+#define DLOG_MT_COMP_LCD_TABLE_10   0x6e    // 110: Compressed LCD table 10
+#define DLOG_MT_COMP_LCD_TABLE_11   0x6f    // 111: Compressed LCD table 11
+#define DLOG_MT_COMP_LCD_TABLE_12   0x70    // 112: Compressed LCD table 12
+#define DLOG_MT_COMP_LCD_TABLE_13   0x71    // 113: Compressed LCD table 13
+#define DLOG_MT_COMP_LCD_TABLE_14   0x72    // 114: Compressed LCD table 14
+#define DLOG_MT_COMP_LCD_TABLE_15   0x73    // 115: Compressed LCD table 15
 #define DLOG_MT_CARD_TABLE_EXP      0x86    // 134: Expanded Card Table (32 Entries)
 #define DLOG_MT_CARRIER_TABLE_EXP   0x87    // 135: Expanded Carrier Table (33 Entries)
 #define DLOG_MT_NPA_NXX_TABLE_1     0x88    // 136: Double Compressed LCD Table 1
