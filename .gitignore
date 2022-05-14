@@ -24,9 +24,15 @@ mm_rateint
 mm_rdlist
 mm_smcard
 mm_table_cutter
+mm_card_mtr1
+mm_carrier_mtr1
+mm_convert_callscrn_mtr2_to_mtr1
+mm_convert_card_mtr2_to_mtr1
 COCodeStatus_ALL.csv
 COCodeStatus_ALL.zip
 allutlzd.txt
 allutlzd.zip
 lata-*.csv
 npa_report.csv
+*.pcap
+*.bytes
