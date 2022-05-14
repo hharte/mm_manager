@@ -1263,7 +1263,7 @@ extern const uint8_t term_type_to_mtr(uint8_t term_type);
 
 /* mm_pcap */
 int mm_create_pcap(const char* capfilename, FILE** pcapstream);
-int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t* pkt);
+int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t* pkt, uint32_t ts_sec, uint32_t ts_usec);
 int mm_close_pcap(FILE* pcapstream);
 
 #ifdef _WIN32

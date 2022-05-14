@@ -136,7 +136,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     /* Copy the packet trailer (CRC-16, STOP) immediately following the data */
     memcpy(&(pkt->payload[pkt->payload_len]), &pkt->trailer, sizeof(pkt->trailer));
 
-    mm_add_pcap_rec(context->pcapstream, RX, pkt);
+    mm_add_pcap_rec(context->pcapstream, RX, pkt, 0, 0);
 
     if (pkt->hdr.flags & FLAG_RETRY) {
         if (context->debuglevel > 0) print_mm_packet(RX, pkt);
@@ -249,7 +249,7 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
         /* Copy the CRC and STOP_BYTE to be adjacent to the filled portion of the payload */
         memcpy(&(pkt.payload[pkt.payload_len]), &pkt.trailer.crc, 3);
 
-        mm_add_pcap_rec(context->pcapstream, TX, &pkt);
+        mm_add_pcap_rec(context->pcapstream, TX, &pkt, 0, 0);
 
         if (context->debuglevel > 0) {
             print_mm_packet(TX, &pkt);

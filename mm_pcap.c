@@ -33,7 +33,7 @@ int mm_create_pcap(const char* capfilename, FILE **pcapstream) {
     return 0;
 }
 
-int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t *pkt) {
+int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t *pkt, uint32_t ts_sec, uint32_t ts_usec) {
     mm_pcaprec_hdr_t pcap_rec = { 0 };
     struct timespec ts;
 
@@ -41,14 +41,19 @@ int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t *pkt) {
         return -1;
     }
 
-    if (timespec_get(&ts, TIME_UTC) != TIME_UTC)
-    {
-        fputs("timespec_get failed!", stderr);
-        return -1;
+    if (ts_sec == 0 && ts_usec == 0) {
+        if (timespec_get(&ts, TIME_UTC) != TIME_UTC)
+        {
+            fputs("timespec_get failed!", stderr);
+            return -1;
+        } else {
+            ts_sec = (uint32_t)ts.tv_sec;
+            ts_usec = ts.tv_nsec / 1000;
+        }
     }
 
-    pcap_rec.ts_sec = (uint32_t)ts.tv_sec;
-    pcap_rec.ts_usec = ts.tv_nsec / 1000;
+    pcap_rec.ts_sec   = ts_sec;
+    pcap_rec.ts_usec  = ts_usec;
     pcap_rec.incl_len = pkt->hdr.pktlen + 1;
     pcap_rec.orig_len = pkt->hdr.pktlen + 1;
 
