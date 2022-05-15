@@ -5,7 +5,7 @@
 -- Copyright (c) 2020-2022, Howard M. Harte
 
 -- declare the protocol
-millennium_proto = Proto("millennium", "Nortel Millennium Payphone (lua)")
+millennium_proto = Proto("millennium", "Nortel Millennium Payphone")
 
 -- declare the value strings
 local vs_tableid = {
@@ -139,8 +139,6 @@ local vs_tableid = {
     [152] = "DLOG_MT_DISCOUNT_TABLE",
     [154] = "DLOG_MT_NPA_NXX_TABLE_15",
     [155] = "DLOG_MT_NPA_NXX_TABLE_16",
---    [160] = "DLOG_MT_NPA_NXX_TABLE_15",
---    [161] = "DLOG_MT_NPA_NXX_TABLE_16",
 }
 
 local vs_retry = {
@@ -181,7 +179,10 @@ local vs_dst_direction = {
     [1] = "Manager "
 }
 
-packet_continuation = {}
+prev_len = 0
+prev_table_id = 0
+table_bytearray = ByteArray.new()
+
 
 -- declare the fields
 local f_start = ProtoField.uint8("millennium.start", "Start", base.HEX, vs_start)
@@ -197,12 +198,22 @@ local f_flags_bits67 = ProtoField.uint8("millennium.flags.bits67", "Reserved", b
 local f_len = ProtoField.uint8("millennium.len", "Length", base.DEC)
 local f_crc = ProtoField.uint16("millennium.crc", "CRC", base.HEX)
 local f_end = ProtoField.uint8("millennium.end", "End", base.HEX, vs_end)
-local f_termid = ProtoField.bytes("millennium.data", "Terminal ID")
+local f_termid = ProtoField.bytes("millennium.terminal_id", "Terminal ID")
 local f_tableid = ProtoField.uint8("millennium.tableid", "Table ID", base.DEC_HEX, vs_tableid)
+local f_tableackid = ProtoField.uint8("millennium.tableackid", "Table ACK ID", base.DEC_HEX, vs_tableid)
 local f_src = ProtoField.uint8("millennium.src", "Packet Source", base.DEC, vs_src_direction)
 local f_dst = ProtoField.uint8("millennium.dst", "Packet Destination", base.DEC, vs_dst_direction)
 
-millennium_proto.fields = { f_start, f_flags, f_flags_rxseq, f_flags_txseq, f_flags_retry, f_flags_ack, f_flags_status, f_flags_disconnect, f_flags_bits67, f_len, f_crc, f_end, f_termid, f_tableid, f_src, f_dst }
+millennium_proto.fields = { f_start, f_flags, f_flags_rxseq, f_flags_txseq, f_flags_retry, f_flags_ack, f_flags_status, f_flags_disconnect, f_flags_bits67, f_len, f_crc, f_end, f_termid, f_tableid, f_tableackid, f_src, f_dst }
+
+function millennium_proto.init()
+    frag_prev_len   = {}  -- Array to hold previous table length
+    frag_prev_id    = {}  -- Array to hold previous table ID
+    table_array     = {}
+    prev_len        = 0
+    prev_table_id   = 0
+    table_bytearray = ByteArray.new()
+end
 
 function millennium_proto.dissector(buffer, pinfo, tree)
 
@@ -243,12 +254,25 @@ function millennium_proto.dissector(buffer, pinfo, tree)
     local flags = flags_range:uint()
     local sequence = bit.band(flags, 0x03)
     local t_flags = t_hdr:add(f_flags, flags_range, flags)
+    local concat_frag = 0
+
+    if frag_prev_len[pinfo.number] == nil then
+        frag_prev_len[pinfo.number] = prev_len
+        frag_prev_id[pinfo.number] = prev_table_id
+
+        if direction == 0 and datalen > 0 then
+            prev_len = datalen
+            concat_frag = 1
+        end
+    end
+
+    local t_metadata = t_millennium:add(frag_prev_len[pinfo.number], "Metadata-Len")
+    local t_metadata = t_millennium:add(frag_prev_id[pinfo.number], "Metadata-ID")
 
     -- If direction == TX and the packet is not 0-length, use txseq
     -- If direction == RX and the packet is 0-length (ACK), use txseq
     -- If direction == RX and the packet is not 0-length, use rxseq
     -- If direction == TX and the packet is 0-length (ACK), use rxseq
-
     if (direction == 0 and datalen > 0) or (direction == 1 and datalen == 0) then
         t_flags:add(f_flags_txseq, flags_range, flags)
     else
@@ -266,13 +290,15 @@ function millennium_proto.dissector(buffer, pinfo, tree)
 
     local table_id
 
+    local t_data = t_millennium:add(buffer(offset, datalen), "Message")
+
     if datalen > 0 then
         table_id = buffer(offset + 5, 1):uint()
-        local t_data = t_millennium:add(buffer(offset, datalen), "Message")
+
         t_data:add(f_termid, buffer(offset, 5))
         t_data:add(f_tableid, buffer(offset + 5, 1))
-        if datalen == 250 then
-            packet_continuation[pinfo.number] = table_id
+        if direction == 0 and frag_prev_len[pinfo.number] < 250 then
+            prev_table_id = table_id
         end
         offset = offset + datalen
     end
@@ -305,18 +331,46 @@ function millennium_proto.dissector(buffer, pinfo, tree)
             end
         end
     else
-        pinfo.cols.info:append(vs_tableid[table_id] .. ", (datalen=" .. datalen .. " bytes)")
+        if frag_prev_len[pinfo.number] < 250 then
+            if table_id == 14 then -- DLOG_MT_TABLE_UPD_ACK
+                local ack_id = buffer(9, 1)
+
+                if table_array[ack_id:uint()] == nil then
+                    table_array[ack_id:uint()] = ByteArray.new(table_bytearray:tohex())
+                end
+
+                local acked_table_length = table_array[ack_id:uint()]:len()
+                t_data:add(f_tableackid, ack_id)
+                pinfo.cols.info:append("ACK [" .. vs_tableid[ack_id:uint()] .. ", len=" .. acked_table_length .. "]")
+                t_millennium:add(table_array[ack_id:uint()]:tvb():range(0), vs_tableid[ack_id:uint()] .. " (len=" .. acked_table_length .. ")")
+            else
+                pinfo.cols.info:append(vs_tableid[table_id])
+                table_bytearray:set_size(0)
+                if table_id == 20 then
+                end
+            end
+        else
+            pinfo.cols.info:append(vs_tableid[frag_prev_id[pinfo.number]] .. " (Continuation)")
+        end
+
+        pinfo.cols.info:append(", (datalen=" .. datalen .. " bytes)")
     end
 
     if calculated_crc ~= packet_crc then
         pinfo.cols.info:append(string.format(" CRC Error: Received 0x%04x, Expected 0x%04x", packet_crc, calculated_crc))
         t_trailer:add_expert_info(PI_CHECKSUM, PI_ERROR, string.format("CRC Error: Calculated 0x%04x, Received 0x%04x", packet_crc, calculated_crc))
+    else
+        if concat_frag == 1 then
+            table_bytearray:append(buffer(8, datalen - 5):bytes())
+        end
     end
 
 end
 
 wtap_encap_table = DissectorTable.get("wtap_encap")
 wtap_encap_table:add(wtap.USER0, millennium_proto)
+udp_table = DissectorTable.get("udp.port")
+udp_table:add(27273, millennium_proto)
 
 function crc16(data, length)
     sum = 0x0
