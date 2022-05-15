@@ -1130,10 +1130,9 @@ typedef struct dlog_mt_npa_sbr_table {
 /* LCD (Local Call Determination) pp 2-248, 819 bytes */
 typedef struct dlog_mt_lcd_table {
     uint8_t     id;
-    uint8_t     term_npa_nxx[3];
-    uint8_t     called_npa[2];
+    uint8_t     npa[2];
+    uint8_t     spare[16];
     uint8_t     lcd[MAX_NPA];                           /* Storage for 800 8-bit NPAs */
-    uint8_t     spare[13];
 } dlog_mt_lcd_table_t;
 
 /* Compressed LCD (Local Call Determination), 403 bytes */

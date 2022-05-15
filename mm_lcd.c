@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 
     fclose(instream);
 
-    npa_char[0] = lcd_table->term_npa_nxx[0];
+    npa_char[0] = lcd_table->npa[0];
 
     if ((npa_char[0] < 0x20) || (npa_char[0] > 0x99)) {
         printf("Invalid NPA, must be in the range of 200-999.\n");
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (size == LCD_TABLE_LEN - 1) {
-        npa_char[1] = lcd_table->called_npa[1];
+        npa_char[1] = lcd_table->npa[1];
         check_digit = (npa_char[1] & 0x0f);
     } else {
         npa_char[1] = ((dlog_mt_npa_nxx_table_t *)lcd_table)->npa[1];
