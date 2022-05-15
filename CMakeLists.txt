@@ -43,6 +43,13 @@ set(MANAGER_SRC
     "mm_tables.c"
 )
 
+set(DLOG2PCAP_SRC
+    "mm_dlog2pcap.c"
+    "mm_manager.h"
+    "mm_pcap.c"
+    "mm_pcap.h"
+)
+
 add_executable (mm_manager ${MANAGER_SRC})
 #target_compile_options(mm_manager PUBLIC $<$<CONFIG:DEBUG>:-fprofile-instr-generate -fcoverage-mapping>)
 TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util sqlite3)
@@ -78,6 +85,8 @@ TARGET_LINK_LIBRARIES(mm_rdlist mm_util)
 add_executable (mm_smcard "mm_smcard.c" "mm_manager.h")
 add_executable (mm_table_cutter "mm_table_cutter.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_table_cutter mm_util)
+add_executable (mm_dlog2pcap ${DLOG2PCAP_SRC})
+TARGET_LINK_LIBRARIES(mm_dlog2pcap mm_util)
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
@@ -86,7 +95,6 @@ if(MSVC)
 endif()
 
 # Install
-
 set(INSTALL_TARGETS
     "mm_manager"
     "mm_admess"
@@ -98,6 +106,7 @@ set(INSTALL_TARGETS
     "mm_carrier"
     "mm_carrier_mtr1"
     "mm_coinvl"
+    "mm_dlog2pcap"
     "mm_featru"
     "mm_instsv"
     "mm_lcd"
