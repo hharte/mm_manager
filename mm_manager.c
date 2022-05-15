@@ -1818,7 +1818,7 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 
 static void mm_display_help(const char *name, FILE *stream) {
     fprintf(stream,
-        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
+        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
         name);
     fprintf(stream,
             "\t-v verbose (multiple v's increase verbosity.)\n"   \
