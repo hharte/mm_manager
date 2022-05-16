@@ -10,8 +10,6 @@
  * Copyright (c) 2020-2022, Howard M. Harte
  */
 
-#define MTR17
-
 #include <stdio.h>   /* Standard input/output definitions */
 #include <stdlib.h>
 #include <stdint.h>
@@ -32,6 +30,7 @@
 
 #include "./mm_manager.h"
 #include "./mm_serial.h"
+#include "./mm_udp.h"
 
 #ifndef VERSION
 # define VERSION "Unknown"
@@ -240,7 +239,7 @@ uint8_t table_list_minimal[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:p:st:qe:";
+const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:p:st:qe:u";
 #define DEFAULT_MODEM_RESET_STRING "ATZ"
 #define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
 
@@ -441,6 +440,15 @@ int main(int argc, char *argv[]) {
             case 't':
                 snprintf(mm_context->term_table_dir,    sizeof(mm_context->term_table_dir),    "%s", optarg);
                 break;
+            case 'u':
+                printf("Sending UDP packets to 127.0.0.1:%d\n", MM_UDP_PORT);
+                if (mm_create_udp("127.0.0.1", MM_UDP_PORT) != 0) {
+                    fprintf(stderr, "mm_create_udp() failed.\n");
+                    free(mm_context);
+                    return -EINVAL;
+                }
+                mm_context->send_udp = 1;
+                break;
             case 'q':
                 break;
             case '?':
@@ -609,6 +617,10 @@ int mm_shutdown(mm_context_t* context) {
 
     if (context->pcapstream) {
         mm_close_pcap(context->pcapstream);
+    }
+
+    if (context->send_udp) {
+        mm_close_udp();
     }
 
     free(context);
@@ -1818,7 +1830,7 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
 
 static void mm_display_help(const char *name, FILE *stream) {
     fprintf(stream,
-        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]\n",
+        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]\n",
         name);
     fprintf(stream,
             "\t-v verbose (multiple v's increase verbosity.)\n"   \
@@ -1834,6 +1846,7 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
             "\t-q quiet - Don't display sign-on banner.\n"                                                                   \
             "\t-s small - Download only minimum required tables to terminal.\n"                                              \
-            "\t-t term_table_dir - terminal-specific table directory.\n");
+            "\t-t term_table_dir - terminal-specific table directory.\n" \
+            "\t-u <port> - Send packets as UDP to <port>.");
     return;
 }

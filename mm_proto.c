@@ -23,6 +23,7 @@
 #endif /* _WIN32 */
 #include "./mm_manager.h"
 #include "./mm_serial.h"
+#include "./mm_udp.h"
 
 extern volatile int inject_comm_error;
 
@@ -137,6 +138,9 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     memcpy(&(pkt->payload[pkt->payload_len]), &pkt->trailer, sizeof(pkt->trailer));
 
     mm_add_pcap_rec(context->pcapstream, RX, pkt, 0, 0);
+    if (context->send_udp) {
+        mm_udp_send_pkt(RX, pkt, 0, 0);
+    }
 
     if (pkt->hdr.flags & FLAG_RETRY) {
         if (context->debuglevel > 0) print_mm_packet(RX, pkt);
@@ -250,6 +254,9 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
         memcpy(&(pkt.payload[pkt.payload_len]), &pkt.trailer.crc, 3);
 
         mm_add_pcap_rec(context->pcapstream, TX, &pkt, 0, 0);
+        if (context->send_udp) {
+            mm_udp_send_pkt(TX, &pkt, 0, 0);
+        }
 
         if (context->debuglevel > 0) {
             print_mm_packet(TX, &pkt);
@@ -347,3 +354,4 @@ int print_mm_packet(int direction, mm_packet_t *pkt) {
 
     return status;
 }
+

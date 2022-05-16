@@ -1178,6 +1178,7 @@ typedef struct mm_context {
     uint8_t curr_table;
     uint8_t use_modem;
     uint8_t debuglevel;
+    uint8_t send_udp;
     uint8_t connected;
     uint8_t minimal_table_set;
     uint8_t terminal_upd_reason;

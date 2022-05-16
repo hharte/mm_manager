@@ -38,9 +38,11 @@ set(MANAGER_SRC
     "mm_proto.c"
     "mm_serial.c"
     "mm_serial.h"
-    "mm_sqlite3.c"
     "mm_config.c"
     "mm_tables.c"
+    "mm_udp.c"
+    "mm_udp.h"
+    "mm_sqlite3.c"
 )
 
 set(DLOG2PCAP_SRC
@@ -52,7 +54,11 @@ set(DLOG2PCAP_SRC
 
 add_executable (mm_manager ${MANAGER_SRC})
 #target_compile_options(mm_manager PUBLIC $<$<CONFIG:DEBUG>:-fprofile-instr-generate -fcoverage-mapping>)
+if(MSVC)
+TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util sqlite3 wsock32 ws2_32)
+else()
 TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util sqlite3)
+endif()
 add_executable (mm_admess "mm_admess.c" "mm_manager.h")
 add_executable (mm_areacode "mm_areacode.c" "mm_manager.h")
 add_executable (mm_callscrn "mm_callscrn.c" "mm_manager.h")

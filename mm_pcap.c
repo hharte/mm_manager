@@ -60,15 +60,19 @@ int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t *pkt, uint32_t 
     /* Write PCAP record header */
     fwrite(&pcap_rec, sizeof(mm_pcaprec_hdr_t), 1, pcapstream);
     pkt->hdr.start |= (direction == TX) ? 0x80 : 0;
+
     /* Write Payload */
     fwrite(&pkt->hdr.start, (size_t)pkt->hdr.pktlen + 1, 1, pcapstream);
-    pkt->hdr.start &= (direction == TX) ? 0x7F : 0;
+
+    pkt->hdr.start &= 0x7F;
     return 0;
 }
 
 int mm_close_pcap(FILE* pcapstream) {
+    /* Close .pcap file. */
     if (pcapstream != NULL) {
         fclose(pcapstream);
     }
+
     return 0;
 }
