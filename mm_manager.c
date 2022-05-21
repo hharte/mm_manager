@@ -749,7 +749,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                        context->terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
                        context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
 
-                cashbox_pending        = 1;
+                if (context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS) cashbox_pending = 1;
                 table_download_pending = 1;
                 break;
             }
@@ -1366,7 +1366,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     size++;  // Make room for table ID.
 
     if ((table_id == DLOG_MT_CALL_SCREEN_LIST) &&
-        ((term_type_to_mtr(context->terminal_type) >= MTR_1_9) || (term_type_to_mtr(context->terminal_type) < MTR_1_20))) {
+        ((term_type_to_mtr(context->terminal_type) >= MTR_1_9) && (term_type_to_mtr(context->terminal_type) < MTR_1_20))) {
         size += 340;    /* Pad 180-entry Call Screen List to 200-entries. */
     }
 
