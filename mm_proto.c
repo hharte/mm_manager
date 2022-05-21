@@ -52,7 +52,9 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
 
     if (context->connected == 0) {
         fprintf(stderr, "%s: Attempt to receive packet while disconnected, bailing.\n", __FUNCTION__);
+        return PKT_ERROR_DISCONNECT;
     }
+
     while (pkt_received == 0) {
         int inject_error = 0;
         if (inject_comm_error == 1) {
@@ -66,6 +68,9 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
             inject_comm_error = 0;
         }
         while (read_serial(context->serial_context, &databyte, 1, inject_error) == 0) {
+            if (context->connected == 0) {
+                return PKT_ERROR_DISCONNECT;
+            }
             putchar('.');
             fflush(stdout);
             timeout++;
@@ -302,6 +307,10 @@ pkt_status_t send_mm_ack(mm_context_t *context, uint8_t flags) {
 pkt_status_t wait_for_mm_ack(mm_context_t *context) {
     mm_packet_t pkt;
     pkt_status_t status = PKT_SUCCESS;
+
+    if (context->connected == 0) {
+        return PKT_ERROR_DISCONNECT;
+    }
 
     context->waiting_for_ack = 1;
     status = receive_mm_packet(context, &pkt);
