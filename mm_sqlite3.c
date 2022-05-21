@@ -169,6 +169,9 @@ int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t
         cashbox_status->coin_count[COIN_COUNT_US_DOLLARS] = sqlite3_column_int(res, 12);
     } else {
         printf("Cannot retrieve cash box status, assuming empty.\n");
+        cashbox_status->timestamp[0] = 90;
+        cashbox_status->timestamp[1] = 1;
+        cashbox_status->timestamp[2] = 1;
     }
 
     return 0;
