@@ -38,7 +38,7 @@
 
 #define JAN12020 1577865600
 
-/* Terminal Table Lists for Rev 1.3 and Rev 1.0 Control PCP */
+/* Terminal Table Lists for various MTR versions. */
 uint8_t table_list_mtr_2x[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_FCONFIG_OPTS,       /* Required */
@@ -219,22 +219,6 @@ uint8_t table_list_mtr17_intl[] = {
     DLOG_MT_LCD_TABLE_5,
     DLOG_MT_LCD_TABLE_6,
     DLOG_MT_LCD_TABLE_7,
-    DLOG_MT_END_DATA,
-    0                         /* End of table list */
-};
-uint8_t table_list_minimal[] = {
-    DLOG_MT_NPA_NXX_TABLE_1,    /* Required */
-    DLOG_MT_CARRIER_TABLE_EXP,  /* Required */
-    DLOG_MT_CARD_TABLE_EXP,     /* Required */
-    DLOG_MT_SCARD_PARM_TABLE,   /* Required */
-    DLOG_MT_CALL_SCREEN_LIST,   /* Required */
-    DLOG_MT_RATE_TABLE,         /* Required */
-    DLOG_MT_SPARE_TABLE,
-    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
-    DLOG_MT_COIN_VAL_TABLE,     /* Required */
-    DLOG_MT_INSTALL_PARAMS,     /* Required */
-    DLOG_MT_FCONFIG_OPTS,       /* Required */
-    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_END_DATA,
     0                         /* End of table list */
 };
@@ -849,12 +833,14 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 break;
             }
             case DLOG_MT_CALL_IN: {
+                printf("\tDLOG_MT_CALL_IN\n");
                 ppayload += sizeof(dlog_mt_call_in_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
                 break;
             }
             case DLOG_MT_CALL_BACK: {
+                printf("\tDLOG_MT_CALL_BACK\n");
                 ppayload += sizeof(dlog_mt_call_back_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
@@ -1080,14 +1066,38 @@ int mm_download_tables(mm_context_t *context) {
         break;
     }
 
-    /* If -s was specified, download only the minimal config */
-    if (context->minimal_table_set == 1) table_list = table_list_minimal;
-
     send_mm_table(context, &table_data, 1);
 
     for (table_index = 0; table_list[table_index] > 0; table_index++) {
         /* Abort table download if manager is shutting down. */
         if (manager_running == 0) break;
+
+        /* If -s was specified, only download mandatory tables */
+        if (context->minimal_table_set == 1) {
+            switch (table_list[table_index]) {
+            case DLOG_MT_NCC_TERM_PARAMS:
+            case DLOG_MT_CARD_TABLE:
+            case DLOG_MT_CARRIER_TABLE:
+            case DLOG_MT_CALLSCRN_UNIVERSAL:
+            case DLOG_MT_FCONFIG_OPTS:
+            case DLOG_MT_INSTALL_PARAMS:
+            case DLOG_MT_COIN_VAL_TABLE:
+            case DLOG_MT_NUM_PLAN_TABLE:
+            case DLOG_MT_SPARE_TABLE:
+            case DLOG_MT_RATE_TABLE:
+            case DLOG_MT_CALL_SCREEN_LIST:
+            case DLOG_MT_SCARD_PARM_TABLE:
+            case DLOG_MT_CARD_TABLE_EXP:
+            case DLOG_MT_CARRIER_TABLE_EXP:
+            case DLOG_MT_NPA_NXX_TABLE_1:
+            case DLOG_MT_COMP_LCD_TABLE_1:
+            case DLOG_MT_LCD_TABLE_1:
+            case DLOG_MT_END_DATA:
+                break;
+            default: /* Skip tables that are not mandatory */
+                continue;
+            }
+        }
 
         switch (table_list[table_index]) {
             case DLOG_MT_CALL_IN_PARMS:
