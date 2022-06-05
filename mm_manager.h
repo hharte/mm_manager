@@ -1102,9 +1102,8 @@ typedef struct dlog_mt_term_status {
 #define SC_MULT_MAX_UNIT_MAX        15
 #define SC_REBATE_MAX               14
 
-#define SC_MAX_UNIT_MASK            (0x3FFF)
-#define SC_MULT_MASK                (~SC_MAX_UNIT_MASK)
-#define SC_MULT_SHIFT               (14)
+#define SC_MAX_UNIT_SHIFT           (2)
+#define SC_MULT_MASK                (0x03)
 #define SC_DES_KEY_MAX              20
 #define SC_DES_KEY_LEN              8
 

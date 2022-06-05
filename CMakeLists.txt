@@ -98,7 +98,8 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
   target_link_libraries(mm_carrier wsock32 ws2_32 sqlite3)
   target_link_libraries(mm_carrier_mtr1 wsock32 ws2_32 sqlite3)
-endif()
+  target_link_libraries(mm_smcard wsock32 ws2_32 sqlite3)
+  endif()
 
 # Install
 set(INSTALL_TARGETS

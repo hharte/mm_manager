@@ -37,14 +37,16 @@ int mult_lut[4] = { 1, 5, 10, 25 };
 
 int main(int argc, char *argv[]) {
     FILE *instream;
+    FILE *ostream = NULL;
     int   index;
+    int   ret = 0;
 
     dlog_mt_scard_parm_table_t *psmcard_table;
     uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_smcard mm_table_5d.bin\n");
+               "\tmm_smcard mm_table_5d.bin [outputfile.bin]\n");
         return -1;
     }
 
@@ -96,8 +98,8 @@ int main(int argc, char *argv[]) {
            "+-----+------+-----------+\n");
 
     for (index = 0; index < SC_MULT_MAX_UNIT_MAX; index++) {
-        int multiplier = mult_lut[(psmcard_table->mult_max_unit[index] & SC_MULT_MASK) >> SC_MULT_SHIFT];
-        int max_units  = psmcard_table->mult_max_unit[index] & SC_MAX_UNIT_MASK;
+        int multiplier = mult_lut[(htons(psmcard_table->mult_max_unit[index]) & SC_MULT_MASK)];
+        int max_units  = htons(psmcard_table->mult_max_unit[index]) >> SC_MAX_UNIT_SHIFT;
 
         printf("|  %2d |  %2d  |     %5d |\n", index, multiplier, max_units);
     }
@@ -114,11 +116,31 @@ int main(int argc, char *argv[]) {
         printf("|  %2d | %s |  $%3.2f |\n", index, str_smcard_rebate[index], (float)rebate / 100);
     }
 
+    printf("+----------------------------------------------+\n");
+
+    if (argc > 2) {
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            return -ENOENT;
+        }
+    }
+
+    /* Modify SMCARD table */
+
+    /* If output file was specified, write it. */
+    if (ostream != NULL) {
+        printf("\nWriting new table to %s\n", argv[2]);
+
+        if (fwrite(load_buffer, sizeof(dlog_mt_scard_parm_table_t) - 1, 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
+        fclose(ostream);
+    }
+
     if (psmcard_table != NULL) {
         free(psmcard_table);
     }
 
-    printf("+----------------------------------------------+\n");
-
-    return 0;
+    return ret;
 }
