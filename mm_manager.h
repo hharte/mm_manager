@@ -1105,16 +1105,11 @@ typedef struct dlog_mt_term_status {
 #define SC_MAX_UNIT_SHIFT           (2)
 #define SC_MULT_MASK                (0x03)
 #define SC_DES_KEY_MAX              20
-#define SC_DES_KEY_LEN              8
-
-typedef struct des_key {
-    uint8_t x[SC_DES_KEY_LEN];
-} des_key_t;
 
 /* SMCARD (Smart Card Parameters Table) pp 2-351 */
 typedef struct dlog_mt_scard_parm_table {
     uint8_t     id;
-    des_key_t   des_key[SC_DES_KEY_MAX];                /* 20 8-byte DES keys */
+    uint64_t    des_key[SC_DES_KEY_MAX];                /* 20 8-byte DES keys */
     uint16_t    mult_max_unit[SC_MULT_MAX_UNIT_MAX];    /* 15 Mult / Max Unit entries */
     uint16_t    rebates[SC_REBATE_MAX];                 /* Rebate table (14 entries) */
     uint8_t     spare[6];                               /* Spare */

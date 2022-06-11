@@ -13,6 +13,11 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+#ifdef _WIN32
+# include <winsock.h>
+#else  /* ifdef _WIN32 */
+# include <arpa/inet.h>
+#endif /* ifdef _WIN32 */
 #include "./mm_manager.h"
 
 /* Smart Card Rebate Strings */
@@ -80,16 +85,9 @@ int main(int argc, char *argv[]) {
            "+--------------------------+\n");
 
     for (index = 0; index < SC_DES_KEY_MAX; index++) {
-        printf("|  %2d | 0x%02x%02x%02x%02x%02x%02x%02x%02x |\n",
+        printf("|  %2d | 0x%016llx |\n",
                index,
-               psmcard_table->des_key[index].x[0],
-               psmcard_table->des_key[index].x[1],
-               psmcard_table->des_key[index].x[2],
-               psmcard_table->des_key[index].x[3],
-               psmcard_table->des_key[index].x[4],
-               psmcard_table->des_key[index].x[5],
-               psmcard_table->des_key[index].x[6],
-               psmcard_table->des_key[index].x[7]);
+               psmcard_table->des_key[index]);
     }
     printf("+--------------------------+\n");
 
@@ -126,6 +124,16 @@ int main(int argc, char *argv[]) {
     }
 
     /* Modify SMCARD table */
+    psmcard_table->des_key[0] = 0xFFFFFFFFFFFFFFFFULL;
+    psmcard_table->des_key[1] = 0ULL;
+    psmcard_table->des_key[2] = 0x7F7F7F7F7F7F7F7FULL;
+    psmcard_table->des_key[3] = 0xFEFEFEFEFEFEFEFEULL;
+
+    psmcard_table->mult_max_unit[0] = htons(680 << 2 | 0x01);   // 20
+    psmcard_table->mult_max_unit[1] = htons(680 << 2 | 0x01);   // 60
+    psmcard_table->mult_max_unit[2] = htons(680 << 2 | 0x01);   // 105
+    psmcard_table->mult_max_unit[3] = htons(680 << 2 | 0x01);   // 220
+    psmcard_table->mult_max_unit[4] = htons(680 << 2 | 0x01);   // 440
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {

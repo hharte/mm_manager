@@ -22,7 +22,7 @@
 #define SERVICE_CODE_LEN    20
 #define SVC_CODE_MAX        5
 #define SPILL_STRING_LEN    8
-#define SC_CHECK_DIGIT_LEN  6
+#define SC_CHECK_DIGIT_LEN  5
 #define SC_CHECK_VALUE_LEN  8
 #define SC_MANUF_LEN        5
 
@@ -34,6 +34,7 @@ typedef struct service_code_cc {
 } service_code_cc_t;
 
 typedef struct service_code_sc {
+    uint8_t key_index;
     uint8_t check_digits[SC_CHECK_DIGIT_LEN];
     uint8_t check_value[SC_CHECK_VALUE_LEN];
     uint8_t manufacturer[SC_MANUF_LEN];
