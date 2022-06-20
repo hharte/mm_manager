@@ -173,20 +173,20 @@ int main(int argc, char *argv[]) {
     }
 
     /* Update CARD table */
-    pcard_table->c[0].carrier_ref  = 0x01;
-    pcard_table->c[1].carrier_ref  = 0x02;
-    pcard_table->c[2].carrier_ref  = 0x03;
-    pcard_table->c[3].carrier_ref  = 0x04;
-    pcard_table->c[4].carrier_ref  = 0x05;
-    pcard_table->c[5].carrier_ref  = 0x06;
-    pcard_table->c[6].carrier_ref  = 0x07;
-    pcard_table->c[7].carrier_ref  = 0x08;
-    pcard_table->c[8].carrier_ref  = 0x09;
-    pcard_table->c[9].carrier_ref  = 0x01;
-    pcard_table->c[10].carrier_ref = 0x02;
-    pcard_table->c[11].carrier_ref = 0x03;
-    pcard_table->c[12].carrier_ref = 0x04;
-    pcard_table->c[13].carrier_ref = 0x05;
+    pcard_table->c[0].carrier_ref  = 0x0;
+    pcard_table->c[1].carrier_ref  = 0x0;
+    pcard_table->c[2].carrier_ref  = 0x0;
+    pcard_table->c[3].carrier_ref  = 0x0;
+    pcard_table->c[4].carrier_ref  = 0x0;
+    pcard_table->c[5].carrier_ref  = 0x0;
+    pcard_table->c[6].carrier_ref  = 0x0;
+    pcard_table->c[7].carrier_ref  = 0x0;
+    pcard_table->c[8].carrier_ref  = 0x0;
+    pcard_table->c[9].carrier_ref  = 0x0;
+    pcard_table->c[10].carrier_ref = 0x0;
+    pcard_table->c[11].carrier_ref = 0x0;
+    pcard_table->c[12].carrier_ref = 0x0;
+    pcard_table->c[13].carrier_ref = 0x0;
 
 
     for (index = 0; index < CCARD_MAX_MTR1; index++) {
