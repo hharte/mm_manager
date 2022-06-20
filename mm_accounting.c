@@ -699,7 +699,8 @@ int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw
     printf("\t\t\t             Terminal Type: %02d (0x%02x)\n",
         context->terminal_type,
         context->terminal_type);
-    printf("\t\t\t     Feature Terminal Type: %02d (0x%02x)\n",
+    printf("\t\t\t     Feature Terminal Type: %s %02d (0x%02x)\n",
+        feature_term_type_to_str(dlog_mt_sw_version->term_type),
         dlog_mt_sw_version->term_type,
         dlog_mt_sw_version->term_type);
     printf("\t\t\t       Control ROM Edition: %s\n", control_rom_edition);

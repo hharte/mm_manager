@@ -247,8 +247,12 @@ typedef struct dlog_mt_maint_req {
 
 typedef struct dlog_mt_call_back_req {
     uint8_t  id;
-    uint16_t type;
-    uint8_t  callback_time[6];
+    uint8_t year;
+    uint8_t month;      /* 1 - 12 */
+    uint8_t day;
+    uint8_t hour;
+    uint8_t min;
+    uint8_t sec;
 } dlog_mt_call_back_req_t;
 
 typedef struct dlog_mt_ncc_term_params {
@@ -1262,6 +1266,7 @@ extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len)
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
 extern const char* error_inject_type_to_str(uint8_t type);
 extern const uint8_t term_type_to_mtr(uint8_t term_type);
+extern const char* feature_term_type_to_str(uint8_t type);
 
 /* mm_pcap */
 int mm_create_pcap(const char* capfilename, FILE** pcapstream);

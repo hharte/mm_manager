@@ -748,6 +748,22 @@ const uint8_t term_type_to_mtr(uint8_t term_type) {
     return term_type_mtr[term_type];
 }
 
+const char* feature_term_type_str_lut[5] = {
+    "Invalid  ",
+    "Card     ",
+    "Universal",
+    "Coin     ",
+    "Inmate   "
+};
+
+const char* feature_term_type_to_str(uint8_t type) {
+    if (type >= (sizeof(feature_term_type_str_lut) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return feature_term_type_str_lut[type];
+}
+
 #ifdef _WIN32
 char* basename(char* path) {
     char fname[20] = { 0 };
