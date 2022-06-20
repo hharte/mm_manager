@@ -76,12 +76,14 @@ uint8_t call_class_lut[] = { 0x01, 0x11, 0x41, 0x81, 0x00 };
 
 int main(int argc, char *argv[]) {
     FILE  *instream;
+    FILE  *ostream = NULL;
     int    callscrn_index;
     char   phone_number_str[20] = { 0 };
     int    i;
     int    callscrn_max_entries = 0;
     int    phone_num_len = 0;
     size_t size;
+    int    ret = 0;
 
     dlog_mt_call_screen_list_t *pcallscrn_table;
     dlog_mt_call_screen_universal_t* pcallscrnu_table;
@@ -89,8 +91,8 @@ int main(int argc, char *argv[]) {
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_callscrn mm_table_18.bin\n"
-               "\tmm_callscrn mm_table_5c.bin\n");
+               "\tmm_callscrn mm_table_18.bin [outputfile.bin]\n"
+               "\tmm_callscrn mm_table_5c.bin [outputfile.bin]\n");
         return -1;
     }
 
@@ -179,11 +181,31 @@ int main(int argc, char *argv[]) {
         printf("\n");
     }
 
+    printf("+-------------------------------------------------------------------------------------------+\n");
+
+    /* Modify CALLSCRN table */
+
+    if (argc > 2) {
+        if ((ostream = fopen(argv[2], "wb")) == NULL) {
+            printf("Error opening output file %s for write.\n", argv[2]);
+            return -ENOENT;
+        }
+    }
+
+    /* If output file was specified, write it. */
+    if (ostream != NULL) {
+        printf("\nWriting new table to %s\n", argv[2]);
+
+        if (fwrite(load_buffer, size, 1, ostream) != 1) {
+            printf("Error writing output file %s\n", argv[2]);
+            ret = -EIO;
+        }
+        fclose(ostream);
+    }
+
     if (pcallscrn_table != NULL) {
         free(pcallscrn_table);
     }
 
-    printf("+-------------------------------------------------------------------------------------------+\n");
-
-    return 0;
+    return ret;
 }
