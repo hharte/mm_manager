@@ -10,6 +10,7 @@
  * MTR 1.7 ROMs:
  * mm_table_cutter NT_NAA1S05.bin 12502 91
  * mm_table_cutter NT_FW_1.7_06CAA17_STM27C2001_32DIP.BIN 12453 91
+ * (Card-only): mm_table_cutter NT_FW_M06CBBX1_M27C2001_DIP32.BIN 12502 91
  * (Coin-only w/display): mm_table_cutter NAD4K02.bin 12453 91
  * (Coin-only no display): mm_table_cutter NAD4S02.bin 12453 91
  * (Desk) mm_table_cutter NAJ2S05.bin 12547 91
@@ -19,7 +20,8 @@
  * mm_table_cutter NT_NBA1F02.bin 13270 107
  *
  * MTR 1.20 ROM:
- * mm_table_cutter NT_FW_1.20_NPA1S01V1.0_STM27C2001_32DIP.bin 6090
+ * mm_table_cutter NT_FW_1.20_NPA1S01_V1.0_STM27C2001_32DIP.bin 6090 151
+ * mm_table_cutter NT_FW_1.20_NPE1S01_V1.0_M27C2001_DIP32_Coin_Basic.bin 6090 151
  *
  * MTR 2.12 ROM:
  * mm_table_cutter NT_FW_2.12_NQA1X01V1.3_U2_Rev2_CPC_STM29F040B_32PLCC.bin 10524 152
