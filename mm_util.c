@@ -748,6 +748,75 @@ const uint8_t term_type_to_mtr(uint8_t term_type) {
     return term_type_mtr[term_type];
 }
 
+const uint8_t term_type_model[TERM_TYPE_MAX + 1] = {
+    TERM_INVALID,
+    TERM_COIN_BASIC,    /* 1 */
+    TERM_COIN_BASIC,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,      /* 5 */
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_INMATE,
+    TERM_DESK,
+    TERM_MULTIPAY,      /* 10 */
+    TERM_DESK,
+    TERM_CARD,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_DESK,          /* 15 */
+    TERM_INMATE,
+    TERM_MULTIPAY,
+    TERM_COIN_BASIC,
+    TERM_COIN_BASIC,
+    TERM_MULTIPAY,      /* 20 */
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_CARD,
+    TERM_MULTIPAY,
+    TERM_DESK,          /* 25 */
+    TERM_MULTIPAY,
+    TERM_CARD,
+    TERM_MULTIPAY,
+    TERM_DESK,
+    TERM_MULTIPAY,      /* 30 */
+    TERM_MULTIPAY,
+    TERM_CARD,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_CARD,          /* 35 */
+    TERM_MULTIPAY,
+    TERM_CARD,
+    TERM_COIN_BASIC,
+    TERM_CARD,
+    TERM_MULTIPAY,      /* 40 */
+    TERM_MULTIPAY,
+    TERM_COIN_BASIC,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_DESK,          /* 45 */
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,      /* 50 */
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY,      /* 55 */
+    TERM_COIN_BASIC,
+    TERM_MULTIPAY,
+    TERM_CARD,
+    TERM_MULTIPAY,
+    TERM_MULTIPAY       /* 60 */
+};
+
+const uint8_t term_type_to_model(uint8_t term_type) {
+    if (term_type > 60) return MTR_UNKNOWN;
+    return term_type_model[term_type];
+}
+
 const char* feature_term_type_str_lut[5] = {
     "Invalid  ",
     "Card     ",
@@ -762,6 +831,44 @@ const char* feature_term_type_to_str(uint8_t type) {
     }
 
     return feature_term_type_str_lut[type];
+}
+
+const char* instsv_flags_bits_str[] = {
+    "INSTSV_PREDIAL_ENABLE",
+    "INSTSV_PREDIAL_ENABLE_1P",
+    "INSTSV_PREDIAL_ENABLE_IXL",
+    "INSTSV_PREDIAL_ENABLE_ALL",
+    "INSTSV_PREDIAL_ENABLE_PRI_NCC",
+    "INSTSV_PREDIAL_ENABLE_SEC_NCC",
+    "INSTSV_AMP_ENABLE",
+    "INSTSV_RESERVED_7"
+};
+
+void print_instsv_table(dlog_mt_install_params_t* instsv_table) {
+    char phone_number_string[21];
+
+    printf("             Access code: %s\n",
+        phone_num_to_string(phone_number_string, sizeof(phone_number_string),
+            instsv_table->access_code, sizeof(instsv_table->access_code)));
+    printf("         Key card number: %s\n",
+        phone_num_to_string(phone_number_string, sizeof(phone_number_string),
+            instsv_table->key_card_number, sizeof(instsv_table->key_card_number)));
+    printf("                   flags: 0x%02x\t", instsv_table->flags);
+    print_bits(instsv_table->flags, (char**)instsv_flags_bits_str);
+    printf("\n");
+    printf("         TX Packet Delay: 0x%02x (%dms)\n",
+        instsv_table->tx_packet_delay, instsv_table->tx_packet_delay * 10);
+    printf("           RX Packet Gap: 0x%02x (%dms)\n",
+        instsv_table->rx_packet_gap, instsv_table->rx_packet_gap * 10);
+    printf("       Retries until OOS: %d\n", instsv_table->retries_until_oos);
+    printf("      Coin service flags: 0x%02x\n", instsv_table->coin_service_flags);
+    printf("    Coinbox lock timeout: %d seconds\n", instsv_table->coinbox_lock_timeout);
+    printf("          Predial string: %s\n",
+        callscrn_num_to_string(phone_number_string, sizeof(phone_number_string),
+            instsv_table->predial_string, sizeof(instsv_table->predial_string)));
+    printf("Alternate Predial string: %s\n",
+        callscrn_num_to_string(phone_number_string, sizeof(phone_number_string),
+            instsv_table->predial_string_alt, sizeof(instsv_table->predial_string_alt)));
 }
 
 #ifdef _WIN32

@@ -38,6 +38,8 @@
 
 #define JAN12020 1577865600
 
+static int create_terminal_specific_directory(char* table_dir, char* terminal_id);
+
 /* Terminal Table Lists for various MTR versions. */
 uint8_t table_list_mtr_2x[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
@@ -223,7 +225,7 @@ uint8_t table_list_mtr17_intl[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:n:p:st:qe:u";
+const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:k:n:p:st:qe:u";
 #define DEFAULT_MODEM_RESET_STRING "ATZ"
 #define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
 
@@ -269,12 +271,11 @@ int main(int argc, char *argv[]) {
     char *modem_dev = NULL;
     int   ncc_index = 0;
     int   c;
-    uint8_t *instsv_table_buffer;
-    size_t   table_len = 0;
-    int  baudrate      = 19200;
-    char access_code_str[8];
-    int  quiet = 0;
-    int  status;
+    int   baudrate      = 19200;
+    char  access_code_str[8];
+    char  key_card_number_str[11];
+    int   quiet = 0;
+    int   status;
 
     time_t rawtime;
     struct tm ptm = { 0 };
@@ -305,6 +306,19 @@ int main(int argc, char *argv[]) {
     snprintf(mm_context->modem_reset_string, sizeof(mm_context->modem_reset_string), DEFAULT_MODEM_RESET_STRING);
     snprintf(mm_context->modem_init_string,  sizeof(mm_context->modem_init_string),  DEFAULT_MODEM_INIT_STRING);
 
+    mm_context->rx_packet_gap = 10;
+
+    mm_context->access_code[0] = 0x27;
+    mm_context->access_code[1] = 0x27;
+    mm_context->access_code[2] = 0x37;
+    mm_context->access_code[3] = 0x8e;
+
+    mm_context->key_card_number[0] = 0x40;
+    mm_context->key_card_number[1] = 0x12;
+    mm_context->key_card_number[2] = 0x88;
+    mm_context->key_card_number[3] = 0x88;
+    mm_context->key_card_number[4] = 0x88;
+
     /* Parse command line to get -q (quiet) option. */
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
         switch (c) {
@@ -332,27 +346,41 @@ int main(int argc, char *argv[]) {
                 break;
             case 'a':
             {
-                char instsv_fname[TABLE_PATH_MAX_LEN] = { 0 };
-                snprintf(instsv_fname, sizeof(instsv_fname), "%s/mm_table_1f.bin", mm_context->default_table_dir);
-
                 if (strnlen(optarg, 7) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
                     free(mm_context);
                     return -EINVAL;
                 }
 
-                if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
-                    fprintf(stderr, "Error reading install parameters from %s.\n", instsv_fname);
-                    free(mm_context);
-                    return -ENOENT;
+                /* Update Access Code */
+                for (int i = 0; i < ACCESS_CODE_LEN; i++) {
+                    if (i % 2 == 0) {
+                        mm_context->access_code[i >> 1] = (optarg[i] - '0') << 4;
+                    }
+                    else {
+                        mm_context->access_code[i >> 1] |= (optarg[i] - '0');
+                    }
                 }
-                memcpy(&mm_context->instsv, instsv_table_buffer, sizeof(dlog_mt_install_params_t));
-                free(instsv_table_buffer);
 
-                if (rewrite_instserv_parameters(optarg, &mm_context->instsv, instsv_fname)) {
-                    fprintf(stderr, "Error updating INSTSV parameters\n");
+                mm_context->access_code[3] |= 0x0e; /* Terminate the Access Code with 0xe */
+                break;
+            }
+            case 'k':
+            {
+                if (strnlen(optarg, 10) != 10) {
+                    fprintf(stderr, "Option -k takes a 10-digit key code.\n");
                     free(mm_context);
-                    return -EPERM;
+                    return -EINVAL;
+                }
+
+                /* Update Key Card Number */
+                for (int i = 0; i < KEY_CARD_LEN; i++) {
+                    if (i % 2 == 0) {
+                        mm_context->key_card_number[i >> 1] = (optarg[i] - '0') << 4;
+                    }
+                    else {
+                        mm_context->key_card_number[i >> 1] |= (optarg[i] - '0');
+                    }
                 }
                 break;
             }
@@ -458,18 +486,14 @@ int main(int argc, char *argv[]) {
     printf("Default Table directory: %s\n",                         mm_context->default_table_dir);
     printf("Terminal-specific Table directory: %s/<terminal_id>\n", mm_context->term_table_dir);
 
-    if (load_mm_table(mm_context, DLOG_MT_INSTALL_PARAMS, &instsv_table_buffer, &table_len)) {
-        fprintf(stderr, "Error reading install parameters from %s/mm_table_1f.bin.\n", mm_context->default_table_dir);
-        free(mm_context);
-        return -ENOENT;
-    }
-    memcpy(&mm_context->instsv, instsv_table_buffer, sizeof(dlog_mt_install_params_t));
-    free(instsv_table_buffer);
-
     printf("Using access code: %s\n",
-           phone_num_to_string(access_code_str, sizeof(access_code_str), mm_context->instsv.access_code,
-                               sizeof(mm_context->instsv.access_code)));
-    printf("Manager Inter-packet Tx gap: %dms.\n", mm_context->instsv.rx_packet_gap * 10);
+           phone_num_to_string(access_code_str, sizeof(access_code_str), mm_context->access_code,
+                               sizeof(mm_context->access_code)));
+    printf("Using key card number: %s\n",
+        phone_num_to_string(key_card_number_str, sizeof(key_card_number_str), mm_context->key_card_number,
+            sizeof(mm_context->key_card_number)));
+
+    printf("Manager Inter-packet Tx gap: %dms.\n", mm_context->rx_packet_gap * 10);
 
     if (strnlen(mm_context->ncc_number[0], sizeof(mm_context->ncc_number[0])) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context->ncc_number[0]);
@@ -1039,6 +1063,8 @@ int mm_download_tables(mm_context_t *context) {
     size_t   table_len;
     uint8_t *table_buffer;
     uint8_t *table_list = table_list_mtr_2x;
+    uint8_t  table_id;
+    uint8_t  term_model = term_type_to_model(context->terminal_type);
 
     switch (term_type_to_mtr(context->terminal_type)) {
     case MTR_2_X:
@@ -1068,13 +1094,28 @@ int mm_download_tables(mm_context_t *context) {
 
     send_mm_table(context, &table_data, 1);
 
-    for (table_index = 0; table_list[table_index] > 0; table_index++) {
+    for (table_index = 0; (table_id = table_list[table_index]) > 0; table_index++) {
         /* Abort table download if manager is shutting down. */
         if (manager_running == 0) break;
 
+        /* Skip DLOG_MT_CARD_TABLE, DLOG_MT_CARD_TABLE_EXP if the terminal is coin-only. */
+        if (term_model == TERM_COIN_BASIC) {
+            switch (table_id) {
+            case DLOG_MT_CARD_TABLE:
+            case DLOG_MT_CARD_TABLE_EXP:
+                continue;
+            default:
+                break;
+            }
+        }
+        else if (((term_model == TERM_CARD) || (term_model == TERM_DESK)) && (table_id == DLOG_MT_COIN_VAL_TABLE)) {
+            /* Skip DLOG_MT_COIN_VAL_TABLE for card-only terminals */
+            continue;
+        }
+
         /* If -s was specified, only download mandatory tables */
         if (context->minimal_table_set == 1) {
-            switch (table_list[table_index]) {
+            switch (table_id) {
             case DLOG_MT_NCC_TERM_PARAMS:
             case DLOG_MT_CARD_TABLE:
             case DLOG_MT_CARRIER_TABLE:
@@ -1099,7 +1140,10 @@ int mm_download_tables(mm_context_t *context) {
             }
         }
 
-        switch (table_list[table_index]) {
+        switch (table_id) {
+            case DLOG_MT_INSTALL_PARAMS:
+                generate_install_parameters(context, &table_buffer, &table_len);
+                break;
             case DLOG_MT_CALL_IN_PARMS:
                 generate_call_in_parameters(context, &table_buffer, &table_len);
                 break;
@@ -1139,13 +1183,13 @@ int mm_download_tables(mm_context_t *context) {
                 printf("\t");
                 /* For Craft Force Download, only download tables that are newer. */
                 if (context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL) {
-                    if (check_mm_table_is_newer(context, table_list[table_index]) != 0) {
+                    if (check_mm_table_is_newer(context, table_id) != 0) {
                         table_buffer = NULL;
                         continue;
                     }
                 }
 
-                status = load_mm_table(context, table_list[table_index], &table_buffer, &table_len);
+                status = load_mm_table(context, table_id, &table_buffer, &table_len);
 
                 /* If table can't be loaded, continue to the next. */
                 if (status != 0) {
@@ -1155,6 +1199,12 @@ int mm_download_tables(mm_context_t *context) {
                 }
                 break;
         }
+
+        /* Update DLOG_MT_FCONFIG_OPTS based on terminal type. */
+        if (table_id == DLOG_MT_FCONFIG_OPTS) {
+            ((dlog_mt_fconfig_opts_t*)table_buffer)->term_type = term_model & 0x0F;
+        }
+
         status = send_mm_table(context, table_buffer, table_len);
 
         if (status == 0) {
@@ -1190,6 +1240,8 @@ static int update_terminal_download_time(mm_context_t *context) {
     } else {
         return -EINVAL;
     }
+
+    create_terminal_specific_directory(context->term_table_dir, context->terminal_id);
 
     if (context->use_modem == 1) {
         time(&rawtime);
@@ -1353,6 +1405,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     char  fname[TABLE_PATH_MAX_LEN];
     uint32_t size;
     uint8_t *bufp;
+    uint8_t  term_model = term_type_to_model(context->terminal_type);
 
     if (context->terminal_id[0] != '\0') {
         snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, context->terminal_id, table_id);
@@ -1360,12 +1413,38 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
         snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
     }
 
+    /* Try to load terminal-specific table first. */
     if (!(stream = fopen(fname, "rb"))) {
-        snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
+
+        /* No terminal-specific table, try based on model. */
+        switch (term_model) {
+        case TERM_CARD:
+            snprintf(fname, sizeof(fname), "%s/card_only/mm_table_%02x.bin", context->term_table_dir, table_id);
+            break;
+        case TERM_DESK:
+            snprintf(fname, sizeof(fname), "%s/desk/mm_table_%02x.bin", context->term_table_dir, table_id);
+            break;
+        case TERM_COIN_BASIC:
+            snprintf(fname, sizeof(fname), "%s/coin/mm_table_%02x.bin", context->term_table_dir, table_id);
+            break;
+        case TERM_INMATE:
+            snprintf(fname, sizeof(fname), "%s/inmate/mm_table_%02x.bin", context->term_table_dir, table_id);
+            break;
+        case TERM_MULTIPAY:
+        default:
+            snprintf(fname, sizeof(fname), "%s/multipay/mm_table_%02x.bin", context->term_table_dir, table_id);
+            break;
+        }
 
         if (!(stream = fopen(fname, "rb"))) {
-            printf("Could not load table %d from %s.\n", table_id, fname);
-            return -1;
+            /* No model-specific table, fall back to default table directory. */
+            snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
+
+            if (!(stream = fopen(fname, "rb"))) {
+                printf("Could not load table %d from %s.\n", table_id, fname);
+                *buffer = NULL;
+                return -1;
+            }
         }
     }
 
@@ -1383,7 +1462,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     *buffer = (uint8_t *)calloc(size, sizeof(uint8_t));
     fflush(stdout);
 
-    if (*buffer == 0) {
+    if (*buffer == NULL) {
         fprintf(stderr, "%s: Error: failed to allocate %u bytes for table %d\n", __FUNCTION__, size, table_id);
         fclose(stream);
         return -ENOMEM;
@@ -1406,6 +1485,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
         if (*len > size) {
             fclose(stream);
             free(*buffer);
+            *buffer = NULL;
             return -1;
         }
     }
@@ -1418,41 +1498,35 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     return 0;
 }
 
-int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename) {
-    FILE *ostream = NULL;
-    uint8_t* pbuffer = (uint8_t *)pinstsv_table;
 
-    int i;
+void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t* len) {
+    dlog_mt_install_params_t* pinstall_params;
+    uint8_t* pbuffer;
 
-    if (strnlen(access_code, 8) != ACCESS_CODE_LEN) {
-        fprintf(stderr, "Error: Access Code must be 7-digits\n");
-        return -1;
+    *len = sizeof(dlog_mt_install_params_t);
+    pbuffer = (uint8_t*)calloc(1, *len);
+
+    if (pbuffer == NULL) {
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        mm_shutdown(context);
+        exit(-ENOMEM);
     }
 
-    // Rewrite table with our Access Code
-    for (i = 0; i < ACCESS_CODE_LEN; i++) {
-        if (i % 2 == 0) {
-            pinstsv_table->access_code[i >> 1] = (access_code[i] - '0') << 4;
-        } else {
-            pinstsv_table->access_code[i >> 1] |= (access_code[i] - '0');
-        }
-    }
-    pinstsv_table->access_code[3] |= 0x0e; /* Terminate the Access Code with 0xe */
+    pinstall_params = (dlog_mt_install_params_t*)pbuffer;
 
-    if (!(ostream = fopen(filename, "wb"))) {
-        printf("%s: Error opening %s\n", __FUNCTION__, filename);
-        return -ENOENT;
-    }
+    printf("\nGenerating Install Parameters (INSTSV) table:\n");
 
-    /* If output file was specified, write it. */
-    if (ostream != NULL) {
-        printf("Rewriting %s with access code: %s\n", filename, access_code);
+    pinstall_params->id = DLOG_MT_INSTALL_PARAMS;
 
-        fwrite((&pbuffer[1]), sizeof(dlog_mt_install_params_t) - 1, 1, ostream);
-        fclose(ostream);
-    }
+    memcpy(pinstall_params->access_code, context->access_code, sizeof(pinstall_params->access_code));
+    memcpy(pinstall_params->key_card_number, context->key_card_number, sizeof(pinstall_params->key_card_number));
+    pinstall_params->tx_packet_delay = 10;
+    pinstall_params->rx_packet_gap   = context->rx_packet_gap;
+    pinstall_params->coinbox_lock_timeout = 300;
 
-    return 0;
+    print_instsv_table(pinstall_params);
+
+    *buffer = pbuffer;
 }
 
 void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
@@ -1815,7 +1889,7 @@ void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *
     *buffer[0] = DLOG_MT_END_DATA;
 }
 
-int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
+static int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
     char dirname[80];
     int  status = 0;
 
@@ -1834,13 +1908,12 @@ int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
         return -ENOENT;
     }
 
-    printf("Created directory: %s\n", dirname);
     return status;
 }
 
 static void mm_display_help(const char *name, FILE *stream) {
     fprintf(stream,
-        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]\n",
+        "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]\n",
         name);
     fprintf(stream,
             "\t-v verbose (multiple v's increase verbosity.)\n"   \
@@ -1852,6 +1925,8 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
             "\t-m use serial modem (specify device with -f)\n" \
             "\t-p <pcapfile> - Save packets in a .pcap file.\n" \
+            "\t-a <access_code> - Craft 7-digit access code (default: CRASERV)\n" \
+            "\t-k <key_code> - Desk Terminal 10-digit akey card code (default: 4012888888)\n" \
             "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \
             "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
             "\t-q quiet - Don't display sign-on banner.\n"                                                                   \

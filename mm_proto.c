@@ -205,11 +205,11 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
         /* Insert Tx packet delay when using a modem, in 10ms increments. */
         if (context->use_modem == 1) {
 #ifdef _WIN32
-            Sleep(context->instsv.rx_packet_gap * 10);
+            Sleep(context->rx_packet_gap * 10);
 #else  /* ifdef _WIN32 */
             struct timespec tim;
             tim.tv_sec = 0;
-            tim.tv_nsec = context->instsv.rx_packet_gap * 10000000L;
+            tim.tv_nsec = context->rx_packet_gap * 10000000L;
             nanosleep(&tim, NULL);
 #endif /* _WIN32 */
         }

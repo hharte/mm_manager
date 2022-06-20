@@ -184,6 +184,13 @@
 
 #define TERM_TYPE_MAX   (60)
 
+#define TERM_INVALID    (0)
+#define TERM_CARD       (1)
+#define TERM_MULTIPAY   (2)
+#define TERM_COIN_BASIC (3)
+#define TERM_INMATE     (4)
+#define TERM_DESK       (0x10 | TERM_CARD)
+
 /* TTBLREQ (Terminal Table Request) pp. 2-651 */
 #define TTBLREQ_CRAFT_FORCE_DL      0x01    // Menu Item - Craft I/F Table Download
 #define TTBLREQ_CRAFT_INSTALL       0x02    // Install via Craft I/F
@@ -1030,6 +1037,7 @@ typedef struct dlog_mt_install_params {
 } dlog_mt_install_params_t;
 
 #define ACCESS_CODE_LEN                         (7)
+#define KEY_CARD_LEN                            (10)
 
 #define INSTSV_PREDIAL_STRING_ENABLE            (1 << 0)    /* Predial string enable. */
 #define INSTSV_PREDIAL_STRING_ENABLE_1P         (1 << 1)    /* Predial string enable for 1+ calls. */
@@ -1180,7 +1188,9 @@ typedef struct mm_context {
     uint8_t connected;
     uint8_t minimal_table_set;
     uint8_t terminal_upd_reason;
-    dlog_mt_install_params_t instsv;
+    uint8_t access_code[4];
+    uint8_t key_card_number[5];
+    uint8_t rx_packet_gap;
     cashbox_status_univ_t cashbox_status;
     void *database;
     uint8_t error_inject_type;
@@ -1197,6 +1207,7 @@ int send_mm_table(mm_context_t *context, uint8_t* payload, size_t len);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len);
 int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
+void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
 void generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
 void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
@@ -1266,6 +1277,8 @@ extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len)
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
 extern const char* error_inject_type_to_str(uint8_t type);
 extern const uint8_t term_type_to_mtr(uint8_t term_type);
+extern const uint8_t term_type_to_model(uint8_t term_type);
+
 extern const char* feature_term_type_to_str(uint8_t type);
 
 /* mm_pcap */
@@ -1285,6 +1298,7 @@ extern const char *stats_call_type_to_str(uint8_t type);
 extern const char *stats_to_str(uint8_t type);
 extern const char *TCALSTE_stats_to_str(uint8_t type);
 extern const char *TPERFST_stats_to_str(uint8_t type);
+extern void print_instsv_table(dlog_mt_install_params_t* instsv_table);
 
 #pragma pack(pop)
 
