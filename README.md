@@ -18,7 +18,7 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 
  
 
-The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.1 Control PCP (Surface-mount, 2.11 firmware.)  It partially works with other firmware versions, see table for limitations:
+The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.1 Control PCP (Surface-mount, 2.11 firmware.)  It partially works with other terminal types and firmware versions, see table for limitations:
 
 
 <table>
@@ -71,7 +71,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
   </tr>
   <tr>
-   <td>NKA1X02
+   <td><a href="https://github.com/muccc/millennium/tree/master/firmware/NKA1X02">NKA1X02</a>
    </td>
    <td>2.11
    </td>
@@ -127,11 +127,11 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>
    </td>
-   <td>Fully working
+   <td>Fully working except for chip cards
    </td>
   </tr>
   <tr>
-   <td>06CAA17
+   <td><a href="https://github.com/muccc/millennium/tree/master/firmware/M06CAA17">06CAA17</a>
    </td>
    <td>1.7
    </td>
@@ -139,7 +139,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>
    </td>
-   <td>Appears working, but Mandatory Table Alarm is present.
+   <td>Appears working except for chip cards, but Mandatory Table Alarm is present.
    </td>
   </tr>
   <tr>
@@ -151,7 +151,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>English / Japanese
    </td>
-   <td>Fully working
+   <td>Fully working except for chip cards
    </td>
   </tr>
   <tr>
@@ -179,11 +179,23 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
   </tr>
   <tr>
+   <td>NPE1S01
+   </td>
+   <td>1.20
+   </td>
+   <td>Coin Basic
+   </td>
+   <td>
+   </td>
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
    <td><a href="https://github.com/armeniki/Nortel-Millennium/blob/master/Firmware/MTR_1.7/Coin/NAD4K02.bin">NAD4K02</a>
    </td>
    <td>1.7
    </td>
-   <td>Coin
+   <td>Coin Basic
    </td>
    <td>
    </td>
@@ -195,7 +207,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>1.7
    </td>
-   <td>Coin
+   <td>Coin Basic
    </td>
    <td>
    </td>
@@ -211,7 +223,19 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>
    </td>
-   <td>?
+   <td>Fully working except for chip cards
+   </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/muccc/millennium/tree/master/firmware/M06CBBX1">06CBBX1</a>
+   </td>
+   <td>1.7
+   </td>
+   <td>Card-only
+   </td>
+   <td>English / Spanish
+   </td>
+   <td>Fully working except for chip cards
    </td>
   </tr>
   <tr>
@@ -234,13 +258,15 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
 
 
 
-1. Nortel Millennium Multi-Pay Terminal running firmware v1.20 or v2.20.  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to stock v1.20 or v2.20 firmware.
+1. Nortel Millennium Terminal running stock firmware (v1.20 or v2.20 is best, but other versions may work.)  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to [stock firmware](https://github.com/muccc/millennium/tree/master/firmware).  
 2. 24VDC @500mA Power Supply for Millennium Terminal
-3. Two phone lines (one for `mm_manager`, one for Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 1- to 15-digit number.
-4. 1200-baud or faster modem that supports [Bell 212A](https://en.wikipedia.org/wiki/Bell_212A) modulation.  I like the [Lenovo 56K USB](https://www.ebay.com/sch/i.html?&_nkw=lenovo+56k+usb+modem) modems, but any 56K modem with Conexant chipset should work.  Note for Linux users - Conexant soft-modems have never had a fully open-source driver, and the out-of-tree driver has not been maintained since kernel v2.4 - something like the US Robotics 5637 or another "real" modem where the device actually is responsible for encoding and decoding the data works well.
-5. T-Key such as the [Jonard JIC-719A](https://jonard.com/jic-719a-t-key-tool?v=248) to open the payphone.  I don’t recommend the flat, stamped T-keys as they are prone to bending.
-6. Keys for your terminal’s upper and lower locks, if locks are present.
-7. `mm_manager` software and a Windows, Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be available 24x7 so the terminal can call in when needed.
+3. [4-pin plug-in screw terminal block](https://www.amazon.com/gp/product/B07SWSLR61) to connect 24VDC power and Tip/Ring to the terminal.
+4. Two phone lines (one for `mm_manager`, one for the Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 1- to 15-digit number.
+5. 1200-baud or faster modem that supports [Bell 212A](https://en.wikipedia.org/wiki/Bell_212A) modulation.  I like the [Lenovo 56K USB](https://www.ebay.com/sch/i.html?&_nkw=lenovo+56k+usb+modem) modems, but any 56K modem with Conexant chipset should work.  Note for Linux users - Conexant soft-modems have never had a fully open-source driver, and the out-of-tree driver has not been maintained since kernel v2.4 - something like the US Robotics 5637 or another "real" modem where the device actually is responsible for encoding and decoding the data works well.
+6. `mm_manager` software and a Windows, Linux machine (Raspberry Pi works great) or MacOS machine.  This machine should be available 24x7 so the terminal can call in when needed.
+7. **_All terminals except desk:_** T-Key such as the [Jonard JIC-719A](https://jonard.com/jic-719a-t-key-tool?v=248) to open the payphone.  I don’t recommend the flat, stamped T-keys as they are prone to bending.
+8. **_All terminals except desk:_** Keys for your terminal’s upper and lower locks, if locks are present.
+9. **_Desk Terminal Only:_** A “Key Card” to enter the craft access menu.  This can be any credit card– best to use an expired one.  Specify the first 10-digits of the credit card number to `mm_manager` with the `-k` option.  The default key card number is 4012888888.  You can also program a magnetic stripe card with that number.
 
 
 # mm_manager Installation and Usage
@@ -271,21 +297,30 @@ Compile `mm_manager` with Microsoft Visual Studio 2019 or later with CMake, usin
 
 
 ```
-usage: mm_manager [-vhmq] [-f <filename>] [-i "modem init string"] [-l <logfile>] [-p <pcapfile] [-a <access_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]
-        -v verbose (multiple v's increase verbosity.)
-        -d default_table_dir - default table directory.
-        -e <error_inject_type> - Inject error on SIGBRK.
-        -f <filename> modem device or file
-        -h this help.
-        -i "modem init string" - Modem initialization string.
-        -l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
-        -m use serial modem (specify device with -f)
-        -p <pcapfile> - Save packets in a .pcap file.
-        -b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
-        -n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
-        -q quiet - Don't display sign-on banner.
-        -s small - Download only minimum required tables to terminal.
-        -t term_table_dir - terminal-specific table directory.
+usage: mm_manager [-vhmq] [-f <filename>] [-i "modem init string"]
+   [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>]
+   [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]
+   [-u <port>]
+
+-v verbose (multiple v's increase verbosity.)
+-d default_table_dir - default table directory.
+-e <error_inject_type> - Inject error on SIGBRK.
+-f <filename> modem device or file
+-h this help.
+-i "modem init string" - Modem initialization string.
+-l <logfile> - log bytes transmitted to and received from the 
+   terminal.  Useful for debugging.
+-m use serial modem (specify device with -f)
+-p <pcapfile> - Save packets in a .pcap file.
+-a <access_code> - Craft 7-digit access code (default: CRASERV)
+-k <key_code> - Desk Terminal 10-digit akey card code (default: 
+   4012888888)
+-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
+-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
+-q quiet - Don't display sign-on banner.
+-s small - Download only minimum required tables to terminal.
+-t term_table_dir - terminal-specific table directory.
+-u <port> - Send packets as UDP to <port>.
 ```
 
 
@@ -302,7 +337,7 @@ If you are using VoIP, make sure to use the u-law PCM codec, disable silence sup
 
 ### Power Supply
 
-The Nortel Millennium terminal requires 24VDC to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.  
+The Nortel Millennium terminal requires 24VDC at 500mA to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.  
 
 
 ### Other Terminal Installation Notes
@@ -316,7 +351,7 @@ If these sensors are not happy, the phone will alarm, and will go “Out of Serv
 
 Provisioning the Millennium Terminal is accomplished through the craft access menu on the terminal itself.  For this, you will need the terminal’s access code, and a PIN.  The default Access Code is 2727378 (CRASERV).
 
-With the upper housing of the phone locked, take the handset off the cradle and replace it.  Then key in 2727378 (CRASERV.)  You will be prompted for a PIN, use anything above 50000, like 55555.  Unlock the upper housing with a T-Key when prompted.  You do not need to open the upper housing.
+With the upper housing of the phone locked, take the handset off the cradle and replace it.  	Then key in 2727378 (CRASERV.)  You will be prompted for a PIN, use anything above 50000, like 55555.  Unlock the upper housing with a T-Key when prompted.  You do not need to open the upper housing.
 
 Generate NPA and LCD tables (see below,) unless you want to use the default tables included with mm_manager.
 
@@ -324,7 +359,7 @@ Start `mm_manager`:
 
 
 ```
-./mm_manager -m -n 18005551234 -f /dev/ttyACM0 -vv -l install.bytes
+./mm_manager -m -n 18005551234 -f /dev/ttyACM0 -vv -l install.dlog -p install.pcap
 ```
 
 
@@ -332,11 +367,13 @@ Where:
 
 	18005551234 should be replaced by the phone number of your Manager (1-15 digits).
 
-	/dev/ttyACM0 should be replaced by your modem device.
+	`/dev/ttyACM0` should be replaced by your modem device.  For Windows, it will be something like `\\.\COMx` where ‘`x`’ is the COM port number of your modem.
 
-	install.bytes is a log file that will contain all of the data received and sent by the manager.
+	install.dlog is a log file that contains all of the data received and sent by the manager.
 
-Follow on-screen prompts on the Terminal to install.
+	install.pcap is a packet capture that can be loaded into [Wireshark](https://github.com/hharte/mm_manager/tree/master/wireshark) for debugging.
+
+Follow the Terminal’s on-screen prompts to install.
 
 Key in this Terminal’s telephone number (10-digits) NPA-NXX-XXXX.
 
@@ -967,9 +1004,19 @@ Separate sequence numbers are counted for each of tx_seq and rx_seq.  ACKs shoul
 
 # Debugging
 
-`mm_manager` can log all bytes sent to or received from a Millennium terminal.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
+
+# Dialog Transcripts
+
+`mm_manager` can log all bytes sent to or received from a Millennium terminal using the `-l &lt;logfile.dlog>` option.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
 
 One useful trick is to parse the transcript with `mm_manager`, and save it to a file.  Then the code can be modified and improved and tested by re-running the transcript through `mm_manager` and comparing it with the previous run using a tool such as `tkdiff`.
+
+
+## Wireshark
+
+`mm_manager` can save all packets sent and received to a packet capture (.pcap) file for viewing in [Wireshark](https://www.wireshark.org/) using the `-p &lt;pcapfile.pcap>` option.  This .pcap file can be opened with [Wireshark](https://www.wireshark.org/), and dissected using the [Millennium LUA Dissector Plugin](https://github.com/hharte/mm_manager/blob/master/millennium.lua).
+
+In addition, mm_manager can send all packets via UDP to the localhost port 27273 (“CRASE”) so [Wireshark](https://www.wireshark.org/) can view them in real-time while communicating with a terminal.
 
 
 # Filing Bug Reports
@@ -979,10 +1026,11 @@ If you find a bug, please provide the following information when you report the 
 
 
 1. Please make sure you run `mm_manager` with the `-l &lt;filename>` option to generate the session transcript of all the data sent to and from the manager.  Please attach this file to your bug report.
-2. Please provide information about the type of Millennium phone you have and what ROM version it’s running.  Some of this information is displayed by `mm_manager` after it connects to the phone.
-3. Please provide details about the operating system you are using, what kind of modem you are using, and if you are using a serial modem, what type of serial port you are using (built-in PC serial port, USB serial port, etc.)
-4. Please provide details about the phone lines you are using: Are they VoIP, POTS, going through your own PBX, or going over the PSTN?  Analog and TDM switches are preferable to VoIP, if at all possible.
-5. Steps to reproduce the issue.
+2. Use mm_manager’s `-p &lt;pcapfile.pcap>` option to save a packet capture and attach this file to your bug report.
+3. Please provide information about the type of Millennium phone you have and what ROM version it’s running.  Some of this information is displayed by `mm_manager` after it connects to the phone.
+4. Please provide details about the operating system you are using, what kind of modem you are using, and if you are using a serial modem, what type of serial port you are using (built-in PC serial port, USB serial port, etc.)
+5. Please provide details about the phone lines you are using: Are they VoIP, POTS, going through your own PBX, or going over the PSTN?  Analog and TDM switches are preferable to VoIP, if at all possible.
+6. Steps to reproduce the issue.
 
 
 # Known Issues
@@ -990,7 +1038,8 @@ If you find a bug, please provide the following information when you report the 
 
 
 1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a few seconds for the modem to detect this condition and go back on-hook.  You may want to wait a few seconds after the test completes before proceeding with the installation.
-2. Lots of tables are not well understood.  Please help figure more out if you can.
+2. Some older firmware versions will fail to install on the first try.  They will usually install correctly on a retry.
+3. Lots of tables are not well understood.  Please help figure more out if you can.
 
 
 # Further Work Needed (Feel free to help!)
