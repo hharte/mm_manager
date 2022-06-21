@@ -1067,3 +1067,7 @@ If you find a bug, please provide the following information when you report the 
 [Millennium Database Design Report MSR 2.1](https://github.com/muccc/millennium/blob/master/documentation/manager/A0xxxxxx_00_02.pdf)
 
 [Millennium Multi-Pay Terminal Installation, Operation, and Maintenance Guide](https://github.com/muccc/millennium/blob/master/documentation/nortel_millennium_text.pdf)
+
+[Millennium Desk Terminal: Installing and Repairing Terminal Hardware](https://github.com/muccc/millennium/blob/master/documentation/desk_terminals/P0883900_00_01.pdf)
+
+[pyMM](https://github.com/pc-coholic/pyMM)
