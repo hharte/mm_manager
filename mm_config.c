@@ -17,6 +17,7 @@
 
 #include "./mm_manager.h"
 
+#define TERMTYP_CSV_FNAME    "config/control_rom_versions.csv"
 #define TELCO_ID_REGION_CODE "\"%c%c\",\"%c%c%c\""
 
 #ifdef MYSQL_DB
@@ -83,18 +84,21 @@ int mm_config_create_tables(void *db) {
         return -1;
     }
 
-    if (!(csvstream = fopen("config/control_rom_versions.csv", "r"))) {
-        fprintf(stderr, "Error opening input stream: %s\n", "fwvers.csv");
+    if (!(csvstream = fopen(TERMTYP_CSV_FNAME, "r"))) {
+        fprintf(stderr, "Error opening input stream: %s\n", TERMTYP_CSV_FNAME);
         return -EPERM;
     }
 
     while (!feof(csvstream)) {
+        char* tok;
         fgets(csvline, sizeof(csvline), csvstream);
         line++;
         if (line == 1) continue; /* Skip over CSV header */
 
         control_rom_edition = strtok(csvline, tokens);
-        terminal_type = atoi(strtok(NULL, tokens));
+        tok = strtok(NULL, tokens);
+        if (tok == NULL) break;
+        terminal_type = atoi(tok);
         description = strtok(NULL, tokens);
 
         mm_config_add_TERMTYP_entry(db, terminal_type, control_rom_edition, description);
