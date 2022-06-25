@@ -716,7 +716,7 @@ const uint8_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_1_9,
     MTR_2_X,
     MTR_2_X,    /* 35 */
-    MTR_2_X,
+    MTR_1_13,   /* NCA1X03, MTR 2.0 appears to use the same tables as 1.13. */
     MTR_1_13,
     MTR_2_X,
     MTR_2_X,
