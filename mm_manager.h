@@ -262,6 +262,7 @@ typedef struct dlog_mt_call_back_req {
     uint8_t sec;
 } dlog_mt_call_back_req_t;
 
+/* TERM - pp. 2-492 */
 typedef struct dlog_mt_ncc_term_params {
     uint8_t id;
     uint8_t terminal_id[5];
@@ -711,6 +712,7 @@ typedef struct dlog_mt_carrier_table_mtr1 {
     uint8_t spare[2];
 } dlog_mt_carrier_table_mtr1_t;
 
+/* RDLIST - (Repertory Dialer List) pp. 2-329 */
 typedef struct rdlist_table_entry {
     uint8_t  pad[3];
     uint8_t  phone_number[8];

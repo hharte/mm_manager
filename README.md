@@ -7,6 +7,7 @@
 
 [![Coverity](https://scan.coverity.com/projects/20341/badge.svg)](https://scan.coverity.com/projects/hharte-mm_manager)
 
+
 # Overview
 
 The Nortel Millennium payphones utilize a Manager to facilitate installation, reporting, call cost rating, and credit card processing.  This Millennium payphone calls into the Manager using a 1200-baud phone modem.  Unlike some other COCOT payphones, the Manager **_never calls the payphone_**.
@@ -95,6 +96,18 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
   </tr>
   <tr>
+   <td><a href="https://github.com/muccc/millennium/tree/master/firmware/NCA1X03">NCA1X03</a>
+   </td>
+   <td>2.0
+   </td>
+   <td>MP/MC/DJ
+   </td>
+   <td>
+   </td>
+   <td>Fully working except for chip cards
+   </td>
+  </tr>
+  <tr>
    <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NPA1S01/dump2/NT_FW_1.20_STM27C2001_32DIP">NPA1S01</a>
    </td>
    <td>1.20
@@ -128,6 +141,18 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    <td>
    </td>
    <td>Fully working except for chip cards
+   </td>
+  </tr>
+  <tr>
+   <td>NBJ1S03
+   </td>
+   <td>1.9
+   </td>
+   <td>Desk
+   </td>
+   <td>English / Spanish
+   </td>
+   <td>Fully working
    </td>
   </tr>
   <tr>
@@ -179,7 +204,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
   </tr>
   <tr>
-   <td>NPE1S01
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NPE1S01/NT_FW_1.20_NPE1S01_V1.0_M27C2001_DIP32_Coin_Basic.BIN">NPE1S01</a>
    </td>
    <td>1.20
    </td>
@@ -411,77 +436,27 @@ Some of the important tables for configuring a Millennium terminal include:
    </td>
   </tr>
   <tr>
-   <td>36
+   <td>10
    </td>
-   <td>0x24
+   <td>0xa
    </td>
-   <td>Time Sync Request
+   <td>Terminal Status
+   </td>
+   <td>10
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_term_status">TSTATUS</a> - pp. 2-636
+   </td>
+  </tr>
+  <tr>
+   <td>13
+   </td>
+   <td>0xd
+   </td>
+   <td>End of Data Message
    </td>
    <td>0
    </td>
-   <td>TTMSYNC
-   </td>
-  </tr>
-  <tr>
-   <td>20
-   </td>
-   <td>0x14
-   </td>
-   <td>Set Date / Time
-   </td>
-   <td>7
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>44
-   </td>
-   <td>0x2c
-   </td>
-   <td>Attention Request Table Update
-   </td>
-   <td>1
-   </td>
-   <td>TUPLOAD / TTBLREQ
-   </td>
-  </tr>
-  <tr>
-   <td>38
-   </td>
-   <td>0x26
-   </td>
-   <td>Cash Box Status Message
-   </td>
-   <td>62
-   </td>
-   <td>TCASHST (Terminal Cash Box Status)
-<p>
-TCOLLCT
-   </td>
-  </tr>
-  <tr>
-   <td>18
-   </td>
-   <td>0x12
-   </td>
-   <td>Terminal Table Data Update
-   </td>
-   <td>0
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>151
-   </td>
-   <td>97
-   </td>
-   <td>Set Based Rating International Table
-   </td>
-   <td>603
-   </td>
-   <td>RATE and RATEINT: Almost all 00’s
+   <td>Manager sends no data.
    </td>
   </tr>
   <tr>
@@ -497,139 +472,277 @@ TCOLLCT
    </td>
   </tr>
   <tr>
-   <td>150
+   <td>18
    </td>
-   <td>0x96
+   <td>0x12
    </td>
-   <td>Set Based Rating NPA Table
+   <td>Terminal Table Data Update
    </td>
-   <td>400
+   <td>0
    </td>
-   <td>See RATENPA, 200-999, 4-bits each
-   </td>
-  </tr>
-  <tr>
-   <td>138
-   </td>
-   <td>0x8a
-   </td>
-   <td>Double Compressed LCD Tables
-   </td>
-   <td>202
-   </td>
-   <td>LCD (Local Call Determination)
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_table_upd">TERMDAT</a> - pp. 2-528 
    </td>
   </tr>
   <tr>
-   <td>137
+   <td>20
    </td>
-   <td>0x89
+   <td>0x14
    </td>
-   <td>Double Compressed LCD Tables
+   <td>Date/Time Synchronization
    </td>
-   <td>202
+   <td>7
    </td>
-   <td>LCD (Local Call Determination)
-   </td>
-  </tr>
-  <tr>
-   <td>136
-   </td>
-   <td>0x88
-   </td>
-   <td>Double Compressed LCD Tables
-   </td>
-   <td>202
-   </td>
-   <td>LCD (Local Call Determination)
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_time_sync">Time Sync</a> 
    </td>
   </tr>
   <tr>
-   <td>135
+   <td>21
    </td>
-   <td>0x87
+   <td>0x15
    </td>
-   <td>Expanded Carrier Table (33 Entries)
+   <td>Terminal Access Parameters
    </td>
-   <td>1108
+   <td>47
    </td>
-   <td>CARRIER
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_ncc_term_parms">TERM</a> - pp. 2-492: Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.  
+   </td>
+  </tr>
+  <tr>
+   <td>26
+   </td>
+   <td>0x1a
+   </td>
+   <td>Feature Configuration – Universal
+   </td>
+   <td>71
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_fconfig_opts">FEATRU</a> - pp. 2-151
+   </td>
+  </tr>
+  <tr>
+   <td>29
+   </td>
+   <td>0x1d
+   </td>
+   <td>Advertising Prompts
+   </td>
+   <td>480
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_advert_prompts">ADMESS</a> - pp. 2-5
+   </td>
+  </tr>
+  <tr>
+   <td>30
+   </td>
+   <td>0x1e
+   </td>
+   <td>User Interface Parameters Universal
+   </td>
+   <td>67
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_user_if_parms">USERPRM</a> - pp. 2-669
+   </td>
+  </tr>
+  <tr>
+   <td>31
+   </td>
+   <td>0x1f
+   </td>
+   <td>Installation/Servicing Parameters
+   </td>
+   <td>36
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_install_parms">INSTSV</a> - pp. 2-235
+   </td>
+  </tr>
+  <tr>
+   <td>32
+   </td>
+   <td>0x20
+   </td>
+   <td>Communication Statistics and Configuration Parameters
+   </td>
+   <td>32
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_comm_stat_parms">COMMST</a> - pp. 2-86
+   </td>
+  </tr>
+  <tr>
+   <td>33
+   </td>
+   <td>0x21
+   </td>
+   <td>Modem Parameters
+   </td>
+   <td>35
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_modem_parms">MODEM</a> - pp. 2-279
+   </td>
+  </tr>
+  <tr>
+   <td>34
+   </td>
+   <td>0x22
+   </td>
+   <td>Call Statistics Parameters
+   </td>
+   <td>18
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_call_stats">CALLST</a> - pp. 2-36
+   </td>
+  </tr>
+  <tr>
+   <td>35
+   </td>
+   <td>0x23
+   </td>
+   <td>Time/Call-In Parameters
+   </td>
+   <td>20
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_call_in_parms">TERM</a> table, pp. 2-517 
+   </td>
+  </tr>
+  <tr>
+   <td>36
+   </td>
+   <td>0x24
+   </td>
+   <td>Time Synchronization Request
+   </td>
+   <td>0
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_time_sync_req">TTMSYNC</a>
+   </td>
+  </tr>
+  <tr>
+   <td>38
+   </td>
+   <td>0x26
+   </td>
+   <td>Terminal Cash Box Status
+   </td>
+   <td>62
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_cash_box_status">TCASHST</a> - pp. 2-420
+   </td>
+  </tr>
+  <tr>
+   <td>44
+   </td>
+   <td>0x2c
+   </td>
+   <td>Terminal Upload Attention
+   </td>
+   <td>1
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_atn_req_tab_upd">TUPLOAD</a> - pp. 2-656
 <p>
-9 + (33 x 33) + 10 
+TTBLREQ - pp. 2-651
    </td>
   </tr>
   <tr>
-   <td>134
+   <td>50
    </td>
-   <td>0x86
+   <td>0x32
    </td>
-   <td>Expanded Card Table (32 Entries)
+   <td>Coin Validation Parameters
    </td>
-   <td>1152
+   <td>104
    </td>
-   <td>HOTRNG 36 x 32
-   </td>
-  </tr>
-  <tr>
-   <td>93
-   </td>
-   <td>0x5d
-   </td>
-   <td>Smart Card Parameters Table
-   </td>
-   <td>224
-   </td>
-   <td>Hex data
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_coin_val_table">COINVL</a> - pp. 2-79
    </td>
   </tr>
   <tr>
-   <td>92B
+   <td>51
    </td>
-   <td>0x5c
+   <td>0x33
    </td>
-   <td>180 Number Call Screening List P2-277
+   <td>Cash Box
+<p>
+Collection
    </td>
-   <td>3060
+   <td>70
    </td>
-   <td>(17 x 180) Flags:
-<p>
-0x00=unused
-<p>
-0x01=Toll Free
-<p>
-0x41=Information
-<p>
-0x81=Operator
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_cash_box_collection">TCOLLCT</a> - pp. 2-
    </td>
   </tr>
   <tr>
-   <td>
+   <td>55
    </td>
-   <td>
+   <td>0x37
    </td>
-   <td>Japanese VFD Text
+   <td>Enhanced Repertory Dialer List
    </td>
-   <td>8000
+   <td>570
    </td>
-   <td>Japanese: V1.3 Only
-<p>
-0x7A001 offset in U2 ROM.
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_rep_dial_list">RDLIST</a> - pp. 2-329
    </td>
   </tr>
   <tr>
-   <td>86
+   <td>58
    </td>
-   <td>0x56
+   <td>0x3a
    </td>
-   <td>Expanded Visual Prompts Language B
+   <td>Service Level
    </td>
-   <td>8000
+   <td>25
    </td>
-   <td>Spanish: V1.3 Only
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_limserv_data">SERVLEV</a> - pp. 2-349
+   </td>
+  </tr>
+  <tr>
+   <td>60
+   </td>
+   <td>0x3c
+   </td>
+   <td>Terminal Software Version
+   </td>
+   <td>27
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_sw_version">TSWVERS</a> - pp. 2-647 
+   </td>
+  </tr>
+  <tr>
+   <td>62
+   </td>
+   <td>0x3e
+   </td>
+   <td>Dialing Rules
+   </td>
+   <td>352
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_num_plan_table">DIALRL</a> - pp. 2-107
 <p>
-Qty 400: 20-line VFD strings
+32 bytes: Fixed Format Data
 <p>
-0x77001 offset in U2 ROM.
+180 bytes: Numbering Plan Rules
+<p>
+140 bytes: Display Formatting
+   </td>
+  </tr>
+  <tr>
+   <td>72
+   </td>
+   <td>0x48
+   </td>
+   <td>Spare Table
+   </td>
+   <td>1000
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_spare_table">SPARE</a> - pp. 2-356 NOTE: This is a required table for V1.3 PCP, but not used on V1.0.
+   </td>
+  </tr>
+  <tr>
+   <td>73
+   </td>
+   <td>0x49
+   </td>
+   <td>Rate Table
+   </td>
+   <td>1191
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_rate_table">RATE</a> - pp. 2-321
    </td>
   </tr>
   <tr>
@@ -663,229 +776,137 @@ Qty 400: 20-line VFD strings
    </td>
   </tr>
   <tr>
-   <td>73
-   </td>
-   <td>0x49
-   </td>
-   <td>Rate Table
-   </td>
-   <td>1191
-   </td>
-   <td>RATE 
-   </td>
-  </tr>
-  <tr>
-   <td>72
-   </td>
-   <td>0x48
-   </td>
-   <td>Spare Table
-   </td>
-   <td>1000
-   </td>
-   <td>Almost all 00, except one block of hex data. NOTE: This is a required table for V1.3 PCP, but not used on V1.0.
-   </td>
-  </tr>
-  <tr>
-   <td>62
-   </td>
-   <td>0x3e
-   </td>
-   <td>Numbering Plan Table
-   </td>
-   <td>352
-   </td>
-   <td>More hex data
-   </td>
-  </tr>
-  <tr>
-   <td>60
-   </td>
-   <td>0x3c
-   </td>
-   <td>Terminal SW Version
-   </td>
-   <td>27
-   </td>
-   <td>TSWVERS
-   </td>
-  </tr>
-  <tr>
-   <td>58
-   </td>
-   <td>0x3a
-   </td>
-   <td>Service Level Table
-   </td>
-   <td>25
-   </td>
-   <td>All 00’s.
-   </td>
-  </tr>
-  <tr>
-   <td>55
-   </td>
-   <td>0x37
-   </td>
-   <td>Enhanced Repertory Dialer List
-   </td>
-   <td>570
-   </td>
-   <td>RDLIST 10 rows of 57 bytes
-   </td>
-  </tr>
-  <tr>
-   <td>50
-   </td>
-   <td>0x32
-   </td>
-   <td>Coin Validation Table
-   </td>
-   <td>104
-   </td>
-   <td>COINVL
-   </td>
-  </tr>
-  <tr>
-   <td>35
-   </td>
-   <td>0x23
-   </td>
-   <td>Time/Call-In Parameters
-   </td>
-   <td>20
+   <td>
    </td>
    <td>
    </td>
-  </tr>
-  <tr>
-   <td>34
+   <td>Japanese VFD Text
    </td>
-   <td>0x22
+   <td>8000
    </td>
-   <td>Call / Carrier Statistics Parameters
-   </td>
-   <td>18
-   </td>
-   <td>CALLST
-   </td>
-  </tr>
-  <tr>
-   <td>33
-   </td>
-   <td>0x21
-   </td>
-   <td>Modem Configuration Parameters
-   </td>
-   <td>35
-   </td>
-   <td>MODEM (Modem Parameters)
-   </td>
-  </tr>
-  <tr>
-   <td>32
-   </td>
-   <td>0x20
-   </td>
-   <td>Communication Statistics and Configuration Parameters
-   </td>
-   <td>32
-   </td>
-   <td>COMMST
-   </td>
-  </tr>
-  <tr>
-   <td>31
-   </td>
-   <td>0x1f
-   </td>
-   <td>Installation/Servicing Parameters
-   </td>
-   <td>36
-   </td>
-   <td>INSTSV Access Code In first 7 nibbles.
-   </td>
-  </tr>
-  <tr>
-   <td>30
-   </td>
-   <td>0x1e
-   </td>
-   <td>User Interface Parameters Universal
-   </td>
-   <td>67
-   </td>
-   <td>USERPRM (User Interface Parameters)
-   </td>
-  </tr>
-  <tr>
-   <td>29
-   </td>
-   <td>0x1d
-   </td>
-   <td>Advertising Prompts
+   <td>Japanese: V1.3 Only
 <p>
-seq, text, duration(2), effects 
+0x7A001 offset in U2 ROM.
    </td>
-   <td>480
+  </tr>
+  <tr>
+   <td>86
    </td>
-   <td>ADMESS 
+   <td>0x56
+   </td>
+   <td>Expanded Visual Prompts Language B
+   </td>
+   <td>8000
+   </td>
+   <td>Spanish: V1.3 Only
 <p>
-Text info about rates for local and anywhere in the US Calls. 20 entries.
+Qty 400: 20-line VFD strings
+<p>
+0x77001 offset in U2 ROM.
    </td>
   </tr>
   <tr>
-   <td>26
+   <td>92B
    </td>
-   <td>0x1a
+   <td>0x5c
    </td>
-   <td>Feature Configuration – Universal
+   <td>180 Number Call Screening List
    </td>
-   <td>71
+   <td>3060
    </td>
-   <td>FEATRU
-   </td>
-  </tr>
-  <tr>
-   <td>21
-   </td>
-   <td>0x15
-   </td>
-   <td>Terminal Access Parameters
-   </td>
-   <td>47
-   </td>
-   <td>TERM Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.  
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_call_screen_list">CALLSCRN</a> (Call Screening List) pp. 2-33, and FREE (Free Call) pp. 2-187
    </td>
   </tr>
   <tr>
-   <td>13
+   <td>93
    </td>
-   <td>0xd
+   <td>0x5d
    </td>
-   <td>End of Data Message
+   <td>Smart Card Parameters Table
    </td>
-   <td>0
+   <td>224
    </td>
-   <td>Manager sends no data.
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_scard_parm_table">SMCARD</a> - pp. 2-351
    </td>
   </tr>
   <tr>
-   <td>10
+   <td>134
    </td>
-   <td>0xa
+   <td>0x86
    </td>
-   <td>Terminal Status
+   <td>Expanded Card Table (32 Entries)
    </td>
-   <td>10
+   <td>1152
    </td>
-   <td>5 byte serial number, 5 byte TSTATUS register.
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_card_table">CARD</a> - pp. 2-57
+   </td>
+  </tr>
+  <tr>
+   <td>135
+   </td>
+   <td>0x87
+   </td>
+   <td>Expanded Carrier Table (33 Entries)
+   </td>
+   <td>1108
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_carrier_table">CARRIER</a> - pp. 2-69
+   </td>
+  </tr>
+  <tr>
+   <td>136-149
+   </td>
+   <td>0x88-0x95
+   </td>
+   <td>Double Compressed LCD Tables 1-14
+   </td>
+   <td>202
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_npa_nxx_table_1">LCD</a> (Local Call Determination) - pp. 2-248
+   </td>
+  </tr>
+  <tr>
+   <td>150
+   </td>
+   <td>0x96
+   </td>
+   <td>Set Based Rating NPA Table
+   </td>
+   <td>400
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_npa_sbr_table">RATENPA</a> - pp. 2-327
+   </td>
+  </tr>
+  <tr>
+   <td>151
+   </td>
+   <td>97
+   </td>
+   <td>Set Based Rating - International Table
+   </td>
+   <td>603
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_intl_sbr_table">RATEINT</a> - pp. 2-326
+   </td>
+  </tr>
+  <tr>
+   <td>154,155
+   </td>
+   <td>0x9a,0x9b
+   </td>
+   <td>Double Compressed LCD Tables 15,16
+   </td>
+   <td>202
+   </td>
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_npa_nxx_table_1">LCD</a> (Local Call Determination) - pp. 2-248
    </td>
   </tr>
 </table>
 
 
- 
+
+
+* Page number references are to [Millennium Database Design Report MSR 2.1](https://github.com/muccc/millennium/blob/master/documentation/manager/A0xxxxxx_00_02.pdf).
 
 
 ## Generating NPA and LCD tables
