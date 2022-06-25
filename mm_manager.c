@@ -38,7 +38,11 @@
 
 #define JAN12020 1577865600
 
+/* Function Prototypes */
 static int create_terminal_specific_directory(char* table_dir, char* terminal_id);
+static int update_terminal_download_time(mm_context_t* context);
+static int check_mm_table_is_newer(mm_context_t* context, uint8_t table_id);
+static void mm_display_help(const char* name, FILE* stream);
 
 /* Terminal Table Lists for various MTR versions. */
 uint8_t table_list_mtr_2x[] = {
@@ -596,8 +600,9 @@ int main(int argc, char *argv[]) {
         }
         localtime_r(&rawtime, &ptm);
 
-        printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Disconnected.\n\n",
-            ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+        printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Terminal %s: Disconnected.\n\n",
+            ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec,
+            mm_context->terminal_id);
         printf("Waiting for call from terminal...\n");
     }
 
@@ -750,7 +755,9 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
             case DLOG_MT_ATN_REQ_TAB_UPD: {
                 ppayload++;
                 context->terminal_upd_reason = *ppayload++;
-                printf("\t\tTerminal requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n", context->terminal_upd_reason,
+                printf("\t\tTerminal %s requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n",
+                       context->terminal_id,
+                       context->terminal_upd_reason,
                        context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
                        context->terminal_upd_reason & TTBLREQ_CRAFT_INSTALL  ? "Install, " : "",
                        context->terminal_upd_reason & TTBLREQ_LOST_MEMORY    ? "Lost Memory, " : "",
@@ -857,14 +864,16 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 break;
             }
             case DLOG_MT_CALL_IN: {
-                printf("\tDLOG_MT_CALL_IN\n");
+                printf("\tDLOG_MT_CALL_IN: Terminal: %s\n", context->terminal_id);
                 ppayload += sizeof(dlog_mt_call_in_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
+//                context->terminal_upd_reason |= TTBLREQ_CRAFT_FORCE_DL;
+//                table_download_pending = 1;
                 context->trans_data_in_progress = 1;
                 break;
             }
             case DLOG_MT_CALL_BACK: {
-                printf("\tDLOG_MT_CALL_BACK\n");
+                printf("\tDLOG_MT_CALL_BACK: Terminal: %s\n", context->terminal_id);
                 ppayload += sizeof(dlog_mt_call_back_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
@@ -976,7 +985,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 rate_response.id = DLOG_MT_RATE_RESPONSE;
                 rate_response.rate.type              = (uint8_t)mm_local;
                 rate_response.rate.initial_period    = 60;
-                rate_response.rate.initial_charge    = 125;
+                rate_response.rate.initial_charge    = ((phone_number[6] - '0') * 1000) + ((phone_number[7] - '0') * 100) + ((phone_number[8] - '0') * 10) + (phone_number[9] - '0');
                 rate_response.rate.additional_period = 120;
                 rate_response.rate.additional_charge = 35;
                 memcpy(pack_payload, &rate_response, sizeof(rate_response));
@@ -993,6 +1002,38 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 auth_response.resp_code = 0;
                 memcpy(pack_payload, &auth_response, sizeof(auth_response));
                 pack_payload += sizeof(auth_response);
+
+//#define REQUEST_CALL_BACK_DURING_CARD_AUTH
+#ifdef REQUEST_CALL_BACK_DURING_CARD_AUTH
+                {
+                    time_t rawtime = { 0 };
+                    struct tm ptm = { 0 };
+                    dlog_mt_call_back_req_t   call_back_req = { DLOG_MT_CALL_BACK_REQ, 0 };
+
+                    call_back_req.id = DLOG_MT_CALL_BACK_REQ;
+
+                    if (context->use_modem == 1) {
+                        /* When using the modem, fill the current time.  If not using the modem, use
+                         * a static time, so that results can be automatically checked.
+                         */
+                        time(&rawtime);
+                    }
+                    else {
+                        rawtime = JAN12020;
+                    }
+
+                    localtime_r(&rawtime, &ptm);
+                    call_back_req.year = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
+                    call_back_req.month = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
+                    call_back_req.day = (ptm.tm_mday & 0xff);    /* Fill current day (0-31) */
+                    call_back_req.hour = (ptm.tm_hour & 0xff);    /* Fill current hour (0-23) */
+                    call_back_req.min = ((ptm.tm_min + 1) & 0xff);     /* Fill current minute (0-59) */
+                    call_back_req.sec = (ptm.tm_sec & 0xff);     /* Fill current second (0-59) */
+
+                    memcpy(pack_payload, &call_back_req, sizeof(call_back_req));
+                    pack_payload += sizeof(dlog_mt_call_back_req_t);
+                }
+#endif /* REQUEST_CALL_BACK_DURING_CARD_AUTH */
                 break;
             }
             case DLOG_MT_END_DATA:

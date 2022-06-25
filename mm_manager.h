@@ -1215,9 +1215,6 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
 void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
 void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len);
-static int update_terminal_download_time(mm_context_t *context);
-static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id);
-static void mm_display_help(const char *name, FILE *stream);
 
 /* MM Protocol */
 extern pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
@@ -1226,7 +1223,7 @@ extern pkt_status_t send_mm_ack(mm_context_t *context, uint8_t flags);
 extern pkt_status_t wait_for_mm_ack(mm_context_t *context);
 extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
-/* modem functions: */
+/* modem functions */
 extern int init_modem(struct mm_serial_context *pserial_context, const char *modem_reset_string, const char *modem_init_string);
 extern int wait_for_modem_response(struct mm_serial_context *pserial_context, const char* match_str, int max_tries);
 extern int hangup_modem(struct mm_serial_context *pserial_context);

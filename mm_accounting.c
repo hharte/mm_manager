@@ -63,8 +63,8 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         sizeof(auth_request->card_number));
     call_type_to_string(auth_request->call_type, call_type_str, sizeof(call_type_str));
 
-    printf(
-        "\t\tCard Auth request: Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
+    printf("\t\tCard Auth request: Terminal: %s, Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
+        context->terminal_id,
         phone_number_string,
         auth_request->seq,
         card_number_string,
