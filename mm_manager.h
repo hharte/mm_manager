@@ -624,7 +624,9 @@ typedef struct rate_table_entry {
 #define RATE_TABLE_MAX_ENTRIES  128
 typedef struct dlog_mt_rate_table {
     uint8_t id;
-    uint8_t unknown[39];
+    uint8_t timestamp[6];
+    uint8_t telco_id;
+    uint8_t spare[32];
     rate_table_entry_t r[RATE_TABLE_MAX_ENTRIES];
 } dlog_mt_rate_table_t;
 

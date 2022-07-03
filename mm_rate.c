@@ -45,6 +45,7 @@ int main(int argc, char *argv[]) {
     int   rate_index;
     char  rate_str_initial[10];
     char  rate_str_additional[10];
+    char  timestamp_str[20];
     dlog_mt_rate_table_t *prate_table;
     uint8_t *load_buffer;
     int ret = 0;
@@ -78,9 +79,14 @@ int main(int argc, char *argv[]) {
         return -EIO;
     }
 
-    /* Dump unknown 39 bytes at the beginning of the RATE table */
-    printf("39 Unknown bytes in beginning of RATE table:\n");
-    dump_hex(prate_table->unknown, 39);
+    fclose(instream);
+
+    printf("Date: %s\n", timestamp_to_string(prate_table->timestamp, timestamp_str, sizeof(timestamp_str)));
+    printf("Telco ID: 0x%02x (%d)\n", prate_table->telco_id, prate_table->telco_id);
+
+    /* Dump spare 32 bytes at the beginning of the RATE table */
+    printf("Spare bytes:\n");
+    dump_hex(prate_table->spare, 32);
 
     printf("\n+------------+-------------------------+----------------+--------------+-------------------+-----------------+\n" \
            "| Index      | Type                    | Initial Period | Initial Rate | Additional Period | Additional Rate |\n"   \
@@ -119,6 +125,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\n+------------------------------------------------------------------------------------------------------------+\n");
+
+    /* Modify RATE table */
 
     if (argc == 3) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
