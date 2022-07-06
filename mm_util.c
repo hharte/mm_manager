@@ -679,7 +679,7 @@ const char* error_inject_type_to_str(uint8_t type) {
     return error_inject_type_str[type];
 }
 
-const uint8_t term_type_mtr[TERM_TYPE_MAX + 1] = {
+const uint16_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_UNKNOWN,
     MTR_2_X,    /* 1 */
     MTR_2_X,
@@ -707,7 +707,7 @@ const uint8_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_1_7,
     MTR_1_7,    /* 25 */
     MTR_1_7,
-    MTR_1_9,
+    MTR_1_9C,
     MTR_1_9,
     MTR_1_9,
     MTR_1_9,    /* 30 */
@@ -743,7 +743,7 @@ const uint8_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_2_X     /* 60 */
 };
 
-const uint8_t term_type_to_mtr(uint8_t term_type) {
+const uint16_t term_type_to_mtr(uint8_t term_type) {
     if (term_type > 60) return MTR_UNKNOWN;
     return term_type_mtr[term_type];
 }

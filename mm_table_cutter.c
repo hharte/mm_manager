@@ -18,6 +18,7 @@
  * MTR 1.9 ROMs:
  * mm_table_cutter NT_Millennium_Demo_SST39SF020A-70-4C-PHE.bin 14499 107
  * mm_table_cutter NT_NBA1F02.bin 13270 107
+ * mm_table_cutter NT_FW_NBE1J01_M27C2001_DIP32_Card_Only.BIN 13109 93
  *
  * MTR 1.20 ROM:
  * mm_table_cutter NT_FW_1.20_NPA1S01_V1.0_STM27C2001_32DIP.bin 6090 151

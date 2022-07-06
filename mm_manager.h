@@ -172,15 +172,16 @@
 #define DLOG_MT_DISCOUNT_TABLE      0x98    // 152: Discount Table
 
 #define MTR_UNKNOWN     (0)
-#define MTR_1_6         (106)
-#define MTR_1_7         (107)
-#define MTR_1_7_INTL    (108)
-#define MTR_1_9         (109)
-#define MTR_1_10        (110)
-#define MTR_1_11        (111)
-#define MTR_1_13        (113)
-#define MTR_1_20        (120)
-#define MTR_2_X         (200)
+#define MTR_1_6         (1060)
+#define MTR_1_7         (1070)
+#define MTR_1_7_INTL    (1080)
+#define MTR_1_9C        (1085)  /* MTR 1.9 Card-only */
+#define MTR_1_9         (1090)
+#define MTR_1_10        (1100)
+#define MTR_1_11        (1110)
+#define MTR_1_13        (1130)
+#define MTR_1_20        (1200)
+#define MTR_2_X         (2000)
 
 #define TERM_TYPE_MAX   (60)
 
@@ -1277,7 +1278,7 @@ extern char *timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t
 extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len);
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
 extern const char* error_inject_type_to_str(uint8_t type);
-extern const uint8_t term_type_to_mtr(uint8_t term_type);
+extern const uint16_t term_type_to_mtr(uint8_t term_type);
 extern const uint8_t term_type_to_model(uint8_t term_type);
 
 extern const char* feature_term_type_to_str(uint8_t type);

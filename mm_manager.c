@@ -164,6 +164,38 @@ uint8_t table_list_mtr19[] = {
     0                         /* End of table list */
 };
 
+uint8_t table_list_mtr19c[] = { /* MTR 1.9 Card-only, NBE1J01 */
+    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
+    DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
+    DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
+    DLOG_MT_FCONFIG_OPTS,       /* Required */
+    DLOG_MT_VIS_PROMPTS_L1,
+    DLOG_MT_VIS_PROMPTS_L2,
+    DLOG_MT_ADVERT_PROMPTS,
+    DLOG_MT_USER_IF_PARMS,
+    DLOG_MT_INSTALL_PARAMS,     /* Required */
+    DLOG_MT_COMM_STAT_PARMS,
+    DLOG_MT_MODEM_PARMS,
+    DLOG_MT_CALL_STAT_PARMS,
+    DLOG_MT_CALL_IN_PARMS,
+    DLOG_MT_COIN_VAL_TABLE,     /* Required */
+    DLOG_MT_REP_DIAL_LIST,
+    DLOG_MT_LIMSERV_DATA,
+    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
+    DLOG_MT_RATE_TABLE,         /* Required */
+    DLOG_MT_CALLSCRN_EXP,
+    DLOG_MT_SCARD_PARM_TABLE,
+    DLOG_MT_LCD_TABLE_1,        /* MTR 1.7 Length: 819 */
+    DLOG_MT_LCD_TABLE_2,
+    DLOG_MT_LCD_TABLE_3,
+    DLOG_MT_LCD_TABLE_4,
+    DLOG_MT_LCD_TABLE_5,
+    DLOG_MT_LCD_TABLE_6,
+    DLOG_MT_LCD_TABLE_7,
+    DLOG_MT_END_DATA,
+    0                         /* End of table list */
+};
+
 uint8_t table_list_mtr17[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
@@ -1119,6 +1151,9 @@ int mm_download_tables(mm_context_t *context) {
     case MTR_1_10:
     case MTR_1_9:
         table_list = table_list_mtr19;
+        break;
+    case MTR_1_9C:
+        table_list = table_list_mtr19c;
         break;
     case MTR_1_7_INTL:
         table_list = table_list_mtr17_intl;
