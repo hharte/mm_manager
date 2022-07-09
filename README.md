@@ -940,6 +940,35 @@ To generate LCD tables for Ottawa, Canada, use `generate_lcd.py`:
 
 
 
+## Terminal-Specific Tables
+
+`mm_manager` has the ability to support multiple terminals with different provisioning. `mm_manager` searches for configuration tables as follows:
+
+
+
+1. `tables/NPANXXXXXX` - where `NPANXXXXXX` is the 10-digit Terminal ID (phone number.)
+2. `tables/<model-specific-dir>` - where `<model-specific-dir>` is one of:
+
+	`multipay, card_only, desk, coin, inmate`.
+
+
+
+3. `tables/default` - will be used as a last resort if tables cannot be found in the previous directories.
+
+`mm_manager` stores the last table update date/time in the terminal-specific directory.  This allows for quicker iteration during testing by using "force download" in the terminal’s craft interface.  This will download only the table that changed and a few tables that are generated within `mm_manager` itself.
+
+
+### Terminal-specific Table Example
+
+Two multipay terminals with different Advertising messages, and otherwise configured the same:
+
+`tables/4085359990/mm_table_1d.bin` - Advertising messages for terminal ID 4085359990
+
+`tables/4085359995/mm_table_1d.bin` - Advertising messages for terminal ID 4085359995
+
+`tables/default/` -  All of the default tables are in this directory (including `mm_table_1d.bin`)
+
+
 # Low-Level Protocol
 
 The low-level protocol sent over the modem is a stream of bytes framed within START and END bytes.
@@ -1028,14 +1057,14 @@ Separate sequence numbers are counted for each of tx_seq and rx_seq.  ACKs shoul
 
 # Dialog Transcripts
 
-`mm_manager` can log all bytes sent to or received from a Millennium terminal using the `-l &lt;logfile.dlog>` option.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
+`mm_manager` can log all bytes sent to or received from a Millennium terminal using the `-l <logfile.dlog>` option.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
 
 One useful trick is to parse the transcript with `mm_manager`, and save it to a file.  Then the code can be modified and improved and tested by re-running the transcript through `mm_manager` and comparing it with the previous run using a tool such as `tkdiff`.
 
 
 ## Wireshark
 
-`mm_manager` can save all packets sent and received to a packet capture (.pcap) file for viewing in [Wireshark](https://www.wireshark.org/) using the `-p &lt;pcapfile.pcap>` option.  This .pcap file can be opened with [Wireshark](https://www.wireshark.org/), and dissected using the [Millennium LUA Dissector Plugin](https://github.com/hharte/mm_manager/blob/master/millennium.lua).
+`mm_manager` can save all packets sent and received to a packet capture (.pcap) file for viewing in [Wireshark](https://www.wireshark.org/) using the `-p <pcapfile.pcap>` option.  This .pcap file can be opened with [Wireshark](https://www.wireshark.org/), and dissected using the [Millennium LUA Dissector Plugin](https://github.com/hharte/mm_manager/blob/master/millennium.lua).
 
 In addition, mm_manager can send all packets via UDP to the localhost port 27273 (“CRASE”) so [Wireshark](https://www.wireshark.org/) can view them in real-time while communicating with a terminal.
 
@@ -1046,8 +1075,8 @@ If you find a bug, please provide the following information when you report the 
 
 
 
-1. Please make sure you run `mm_manager` with the `-l &lt;filename>` option to generate the session transcript of all the data sent to and from the manager.  Please attach this file to your bug report.
-2. Use mm_manager’s `-p &lt;pcapfile.pcap>` option to save a packet capture and attach this file to your bug report.
+1. Please make sure you run `mm_manager` with the `-l <filename>` option to generate the session transcript of all the data sent to and from the manager.  Please attach this file to your bug report.
+2. Use mm_manager’s `-p <pcapfile.pcap>` option to save a packet capture and attach this file to your bug report.
 3. Please provide information about the type of Millennium phone you have and what ROM version it’s running.  Some of this information is displayed by `mm_manager` after it connects to the phone.
 4. Please provide details about the operating system you are using, what kind of modem you are using, and if you are using a serial modem, what type of serial port you are using (built-in PC serial port, USB serial port, etc.)
 5. Please provide details about the phone lines you are using: Are they VoIP, POTS, going through your own PBX, or going over the PSTN?  Analog and TDM switches are preferable to VoIP, if at all possible.
