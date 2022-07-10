@@ -164,38 +164,6 @@ uint8_t table_list_mtr19[] = {
     0                         /* End of table list */
 };
 
-uint8_t table_list_mtr19c[] = { /* MTR 1.9 Card-only, NBE1J01 */
-    DLOG_MT_NCC_TERM_PARAMS,    /* Required */
-    DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
-    DLOG_MT_CARRIER_TABLE,      /* MTR 1.7, 1.9 Length: 678 */
-    DLOG_MT_FCONFIG_OPTS,       /* Required */
-    DLOG_MT_VIS_PROMPTS_L1,
-    DLOG_MT_VIS_PROMPTS_L2,
-    DLOG_MT_ADVERT_PROMPTS,
-    DLOG_MT_USER_IF_PARMS,
-    DLOG_MT_INSTALL_PARAMS,     /* Required */
-    DLOG_MT_COMM_STAT_PARMS,
-    DLOG_MT_MODEM_PARMS,
-    DLOG_MT_CALL_STAT_PARMS,
-    DLOG_MT_CALL_IN_PARMS,
-    DLOG_MT_COIN_VAL_TABLE,     /* Required */
-    DLOG_MT_REP_DIAL_LIST,
-    DLOG_MT_LIMSERV_DATA,
-    DLOG_MT_NUM_PLAN_TABLE,     /* Required */
-    DLOG_MT_RATE_TABLE,         /* Required */
-    DLOG_MT_CALLSCRN_EXP,
-    DLOG_MT_SCARD_PARM_TABLE,
-    DLOG_MT_LCD_TABLE_1,        /* MTR 1.7 Length: 819 */
-    DLOG_MT_LCD_TABLE_2,
-    DLOG_MT_LCD_TABLE_3,
-    DLOG_MT_LCD_TABLE_4,
-    DLOG_MT_LCD_TABLE_5,
-    DLOG_MT_LCD_TABLE_6,
-    DLOG_MT_LCD_TABLE_7,
-    DLOG_MT_END_DATA,
-    0                         /* End of table list */
-};
-
 uint8_t table_list_mtr17[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
     DLOG_MT_CARD_TABLE,         /* MTR 1.7, 1.9 Length: 661 */
@@ -997,29 +965,40 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
             }
             case DLOG_MT_RATE_REQUEST: {
                 char phone_number[21]                        = { 0 };
+                char call_type_str[38]                       = { 0 };
                 dlog_mt_rate_response_t rate_response        = { 0 };
-                dlog_mt_rate_request_t *dlog_mt_rate_request = (dlog_mt_rate_request_t *)ppayload;
+                dlog_mt_rate_request_t *rate_request = (dlog_mt_rate_request_t *)ppayload;
                 ppayload += sizeof(dlog_mt_rate_request_t);
 
-                phone_num_to_string(phone_number, sizeof(phone_number), dlog_mt_rate_request->phone_number,
-                                    sizeof(dlog_mt_rate_request->phone_number));
-                printf("\t\tRate request: %s: Phone number: %s, seq=%d, %d,%d,%d,%d,%d,%d.\n",
-                       timestamp_to_string(dlog_mt_rate_request->timestamp, timestamp_str, sizeof(timestamp_str)),
+                phone_num_to_string(phone_number, sizeof(phone_number), rate_request->phone_number,
+                                    sizeof(rate_request->phone_number));
+                call_type_to_string(rate_request->call_type, call_type_str, sizeof(call_type_str));
+
+                printf("\t\tRate request: %s: Phone number: %s, pad=%d, telco_id=%d, %d,%s,%d,rate_type=%d,%d,%d.\n",
+                       timestamp_to_string(rate_request->timestamp, timestamp_str, sizeof(timestamp_str)),
                        phone_number,
-                       dlog_mt_rate_request->seq,
-                       dlog_mt_rate_request->pad[0],
-                       dlog_mt_rate_request->pad[1],
-                       dlog_mt_rate_request->pad[2],
-                       dlog_mt_rate_request->pad[3],
-                       dlog_mt_rate_request->pad[4],
-                       dlog_mt_rate_request->pad[5]);
+                       rate_request->pad,
+                       rate_request->telco_id,
+                       rate_request->pad2,
+                       call_type_str,
+                       rate_request->pad3,
+                       rate_request->rate_type,
+                       rate_request->pad4[0],
+                       rate_request->pad4[1]);
 
                 rate_response.id = DLOG_MT_RATE_RESPONSE;
-                rate_response.rate.type              = (uint8_t)mm_local;
+                rate_response.rate.type = (uint8_t)mm_inter_lata;
                 rate_response.rate.initial_period    = 60;
                 rate_response.rate.initial_charge    = ((phone_number[6] - '0') * 1000) + ((phone_number[7] - '0') * 100) + ((phone_number[8] - '0') * 10) + (phone_number[9] - '0');
-                rate_response.rate.additional_period = 120;
-                rate_response.rate.additional_charge = 35;
+                rate_response.rate.additional_period = 0x00;
+                rate_response.rate.additional_charge = 0x00;
+
+                printf("\t\t\tRate response: Initial period: %d, Initial charge: %d, Additional Period: %d, Additional Charge: %d\n",
+                    rate_response.rate.initial_period,
+                    rate_response.rate.initial_charge,
+                    rate_response.rate.additional_period,
+                    rate_response.rate.additional_charge);
+
                 memcpy(pack_payload, &rate_response, sizeof(rate_response));
                 pack_payload += sizeof(rate_response);
                 break;
@@ -1151,9 +1130,6 @@ int mm_download_tables(mm_context_t *context) {
     case MTR_1_10:
     case MTR_1_9:
         table_list = table_list_mtr19;
-        break;
-    case MTR_1_9C:
-        table_list = table_list_mtr19c;
         break;
     case MTR_1_7_INTL:
         table_list = table_list_mtr17_intl;

@@ -707,7 +707,7 @@ const uint16_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_1_7,
     MTR_1_7,    /* 25 */
     MTR_1_7,
-    MTR_1_9C,
+    MTR_1_9,    /* 27: MTR 1.9 Card-only */
     MTR_1_9,
     MTR_1_9,
     MTR_1_9,    /* 30 */

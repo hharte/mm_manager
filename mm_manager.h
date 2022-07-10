@@ -175,7 +175,6 @@
 #define MTR_1_6         (1060)
 #define MTR_1_7         (1070)
 #define MTR_1_7_INTL    (1080)
-#define MTR_1_9C        (1085)  /* MTR 1.9 Card-only */
 #define MTR_1_9         (1090)
 #define MTR_1_10        (1100)
 #define MTR_1_11        (1110)
@@ -634,17 +633,30 @@ typedef struct dlog_mt_rate_table {
 /* DLOG_MT_RATE_REQUEST */
 typedef struct dlog_mt_rate_request {
     uint8_t  id;
-    uint16_t seq;
+    uint8_t  telco_id;
+    uint8_t  pad;
     uint8_t  phone_number[10];
     uint8_t  timestamp[6];
-    uint8_t  pad[6];
+    uint8_t  pad2;
+    uint8_t  call_type;                      /* See CALLTYP (Call Type) pp. 2-41 */
+    uint8_t  pad3;
+    uint8_t  rate_type;
+    uint8_t  pad4[2] ;
 } dlog_mt_rate_request_t;
 
-/* DLOG_MT_RATE_RESPONSE  (25 bytes) */
+/* DLOG_MT_RATE_RESPONSE  (26 bytes) */
 typedef struct dlog_mt_rate_response {
     uint8_t id;
     rate_table_entry_t rate;
-    uint8_t pad2[16];
+    uint16_t rate2;
+    uint16_t rate3;
+    uint16_t rate4;
+    uint16_t rate5;
+    uint16_t rate6;
+    uint16_t rate7;
+    uint16_t rate8;
+    uint16_t rate9;
+
 } dlog_mt_rate_response_t;
 
 /* DLOG_MT_FUNF_CARD_AUTH - see: TAUTH (Terminal Card Authorization) pp. 2-370 */
@@ -779,6 +791,12 @@ typedef struct dlog_mt_call_screen_universal {
     uint8_t id;
     call_screen_universal_entry_t entry[CALLSCRNU_TABLE_MAX];
 } dlog_mt_call_screen_universal_t;
+
+#define CALLSCRNE_TABLE_MAX                      85
+typedef struct dlog_mt_call_screen_enhanced {
+    uint8_t id;
+    call_screen_universal_entry_t entry[CALLSCRNE_TABLE_MAX];
+} dlog_mt_call_screen_enhanced_t;
 
 
 #define CS_FREE_DENY_IND            (1 << 0)

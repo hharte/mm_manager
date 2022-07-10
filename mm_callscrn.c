@@ -18,6 +18,7 @@
 #include "./mm_manager.h"
 
 #define CALLSCRNU_TABLE_LEN     (sizeof(dlog_mt_call_screen_universal_t))
+#define CALLSCRNE_TABLE_LEN     (sizeof(dlog_mt_call_screen_enhanced_t))
 #define CALLSCRN_TABLE_LEN      (sizeof(dlog_mt_call_screen_list_t))
 
 const char *callscrn_free_flags_str[] = {
@@ -92,6 +93,7 @@ int main(int argc, char *argv[]) {
     if (argc <= 1) {
         printf("Usage:\n" \
                "\tmm_callscrn mm_table_18.bin [outputfile.bin]\n"
+               "\tmm_callscrn mm_table_3b.bin [outputfile.bin]\n"
                "\tmm_callscrn mm_table_5c.bin [outputfile.bin]\n");
         return -1;
     }
@@ -120,6 +122,11 @@ int main(int argc, char *argv[]) {
     case CALLSCRNU_TABLE_LEN:
         printf("Call Screen Universal (60-entry) table.\n");
         callscrn_max_entries = CALLSCRNU_TABLE_MAX;
+        phone_num_len = 8;
+        break;
+    case CALLSCRNE_TABLE_LEN:
+        printf("Call Screen Enhanced (85-entry) table.\n");
+        callscrn_max_entries = CALLSCRNE_TABLE_MAX;
         phone_num_len = 8;
         break;
     case CALLSCRN_TABLE_LEN:

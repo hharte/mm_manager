@@ -129,11 +129,16 @@ int main(int argc, char *argv[]) {
     psmcard_table->des_key[2] = 0x7F7F7F7F7F7F7F7FULL;
     psmcard_table->des_key[3] = 0xFEFEFEFEFEFEFEFEULL;
 
-    psmcard_table->mult_max_unit[0] = htons(680 << 2 | 0x01);   // 20
-    psmcard_table->mult_max_unit[1] = htons(680 << 2 | 0x01);   // 60
-    psmcard_table->mult_max_unit[2] = htons(680 << 2 | 0x01);   // 105
-    psmcard_table->mult_max_unit[3] = htons(680 << 2 | 0x01);   // 220
-    psmcard_table->mult_max_unit[4] = htons(680 << 2 | 0x01);   // 440
+    psmcard_table->mult_max_unit[0] = htons(20  << 2 | 0x01);   // 20
+    psmcard_table->mult_max_unit[1] = htons(60  << 2 | 0x01);   // 60
+    psmcard_table->mult_max_unit[2] = htons(105 << 2 | 0x01);   // 105
+    psmcard_table->mult_max_unit[3] = htons(220 << 2 | 0x01);   // 220
+    psmcard_table->mult_max_unit[4] = htons(440 << 2 | 0x01);   // 440
+    psmcard_table->mult_max_unit[5] = htons(680 << 2 | 0x01);   // 680
+    psmcard_table->mult_max_unit[6] = htons(0   << 2 | 0x01);   // 0
+    psmcard_table->mult_max_unit[7] = htons(100 << 2 | 0x01);   // 100
+    psmcard_table->mult_max_unit[8] = htons(200 << 2 | 0x01);   // 200
+    psmcard_table->mult_max_unit[9] = htons(400 << 2 | 0x01);   // 400
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
