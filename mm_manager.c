@@ -1984,6 +1984,6 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-q quiet - Don't display sign-on banner.\n"                                                                   \
             "\t-s small - Download only minimum required tables to terminal.\n"                                              \
             "\t-t term_table_dir - terminal-specific table directory.\n" \
-            "\t-u <port> - Send packets as UDP to <port>.");
+            "\t-u <port> - Send packets as UDP to <port>.\n");
     return;
 }
