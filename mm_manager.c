@@ -307,8 +307,8 @@ int main(int argc, char *argv[]) {
 
     snprintf(mm_context->default_table_dir,  sizeof(mm_context->default_table_dir),  "tables/default");
     snprintf(mm_context->term_table_dir,     sizeof(mm_context->term_table_dir),     "tables");
-    snprintf(mm_context->modem_reset_string, sizeof(mm_context->modem_reset_string), DEFAULT_MODEM_RESET_STRING);
-    snprintf(mm_context->modem_init_string,  sizeof(mm_context->modem_init_string),  DEFAULT_MODEM_INIT_STRING);
+    snprintf(mm_context->modem_reset_string, sizeof(mm_context->modem_reset_string), "%s", DEFAULT_MODEM_RESET_STRING);
+    snprintf(mm_context->modem_init_string,  sizeof(mm_context->modem_init_string), "%s",  DEFAULT_MODEM_INIT_STRING);
 
     mm_context->rx_packet_gap = 10;
 
