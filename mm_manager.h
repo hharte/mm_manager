@@ -52,6 +52,14 @@
 #define ERROR_INJECT_CRC_DLOG_RX    (3)
 #define ERROR_INJECT_CRC_ACK_RX     (4)
 
+#ifndef TRUE
+#define TRUE                        (1)
+#endif
+
+#ifndef FALSE
+#define FALSE                       (0)
+#endif
+
 /* TERMSCH (Terminal Schedule) pp. 2-533
  * Renamed per https://wiki.millennium.management/dlog:start
  */
@@ -1214,6 +1222,7 @@ typedef struct mm_context {
     uint8_t access_code[4];
     uint8_t key_card_number[5];
     uint8_t rx_packet_gap;
+    uint8_t complete_download;
     cashbox_status_univ_t cashbox_status;
     void *database;
     uint8_t error_inject_type;

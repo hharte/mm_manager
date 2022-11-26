@@ -229,7 +229,7 @@ uint8_t table_list_mtr17_intl[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "rvmb:c:d:l:f:hi:a:k:n:p:st:qe:u";
+const char cmdline_options[] = "a:b:cd:e:f:hi:k:l:mn:p:qst:uv";
 #define DEFAULT_MODEM_RESET_STRING "ATZ"
 #define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
 
@@ -323,6 +323,8 @@ int main(int argc, char *argv[]) {
     mm_context->key_card_number[3] = 0x88;
     mm_context->key_card_number[4] = 0x88;
 
+    mm_context->complete_download = FALSE;
+
     /* Parse command line to get -q (quiet) option. */
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
         switch (c) {
@@ -335,7 +337,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (quiet == 0) {
-        printf("mm_manager v0.7 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
+        printf("mm_manager v0.8 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
     }
 
     /* Parse command line again to get the rest of the options. */
@@ -343,11 +345,6 @@ int main(int argc, char *argv[]) {
 
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
         switch (c) {
-            case 'h':
-                mm_display_help(basename(argv[0]), stdout);
-                free(mm_context);
-                return 0;
-                break;
             case 'a':
             {
                 if (strnlen(optarg, 7) != 7) {
@@ -369,6 +366,41 @@ int main(int argc, char *argv[]) {
                 mm_context->access_code[3] |= 0x0e; /* Terminate the Access Code with 0xe */
                 break;
             }
+            case 'b':
+                baudrate = atoi(optarg);
+                break;
+            case 'c':
+                fprintf(stdout, "NOTE: Complete set of tables will be downloaded for every download request.\n");
+                mm_context->complete_download = TRUE;
+                break;
+            case 'd':
+                snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "%s", optarg);
+                break;
+            case 'e':
+                mm_context->error_inject_type = atoi(optarg);
+                if (mm_context->error_inject_type < 5) {
+                    printf("SIGBRK will inject %s.\n", error_inject_type_to_str(mm_context->error_inject_type));
+                }
+                else {
+                    fprintf(stderr, "Error: -e <inject_error_type> must be one of:\n");
+                    for (int i = 0; i < 5; i++) {
+                        fprintf(stderr, "\t%d - %s\n", i, error_inject_type_to_str(i));
+                    }
+                    free(mm_context);
+                    return -EINVAL;
+                }
+                break;
+            case 'f':
+                modem_dev = optarg;
+                break;
+            case 'h':
+                mm_display_help(basename(argv[0]), stdout);
+                free(mm_context);
+                return 0;
+                break;
+            case 'i':
+                snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), "%s", optarg);
+                break;
             case 'k':
             {
                 if (strnlen(optarg, 10) != 10) {
@@ -388,12 +420,6 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             }
-            case 'v':
-                mm_context->debuglevel++;
-                break;
-            case 'f':
-                modem_dev = optarg;
-                break;
             case 'l':
                 if (!(mm_context->logstream = fopen(optarg, "w"))) {
                     fprintf(stderr, "mm_manager: Can't write log file '%s': %s\n", optarg, strerror(errno));
@@ -403,19 +429,6 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 mm_context->use_modem = 1;
-                break;
-            case 'p':
-                if (mm_create_pcap(optarg, &mm_context->pcapstream) != 0) {
-                    fprintf(stderr, "mm_manager: Can't write packet capture file '%s': %s\n", optarg, strerror(errno));
-                    free(mm_context);
-                    return -ENOENT;
-                }
-                break;
-            case 'i':
-                snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), "%s", optarg);
-                break;
-            case 'b':
-                baudrate = atoi(optarg);
                 break;
             case 'n':
                 if (ncc_index > 1) {
@@ -428,30 +441,24 @@ int main(int argc, char *argv[]) {
                     fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
                     free(mm_context);
                     return -EINVAL;
-                } else {
+                }
+                else {
                     snprintf(mm_context->ncc_number[ncc_index], sizeof(mm_context->ncc_number[0]), "%s", optarg);
                     ncc_index++;
                 }
                 break;
+            case 'p':
+                if (mm_create_pcap(optarg, &mm_context->pcapstream) != 0) {
+                    fprintf(stderr, "mm_manager: Can't write packet capture file '%s': %s\n", optarg, strerror(errno));
+                    free(mm_context);
+                    return -ENOENT;
+                }
+                break;
+            case 'q':
+                break;
             case 's':
                 printf("NOTE: Using minimum required table list for download.\n");
                 mm_context->minimal_table_set = 1;
-                break;
-            case 'd':
-                snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "%s", optarg);
-                break;
-            case 'e':
-                mm_context->error_inject_type = atoi(optarg);
-                if (mm_context->error_inject_type < 5) {
-                    printf("SIGBRK will inject %s.\n", error_inject_type_to_str(mm_context->error_inject_type));
-                } else {
-                    fprintf(stderr, "Error: -e <inject_error_type> must be one of:\n");
-                    for (int i = 0; i < 5; i++) {
-                        fprintf(stderr, "\t%d - %s\n", i, error_inject_type_to_str(i));
-                    }
-                    free(mm_context);
-                    return -EINVAL;
-                }
                 break;
             case 't':
                 snprintf(mm_context->term_table_dir,    sizeof(mm_context->term_table_dir),    "%s", optarg);
@@ -465,11 +472,12 @@ int main(int argc, char *argv[]) {
                 }
                 mm_context->send_udp = 1;
                 break;
-            case 'q':
+            case 'v':
+                mm_context->debuglevel++;
                 break;
             case '?':
             default:
-                if ((optopt == 'c') || (optopt == 'f') || (optopt == 'l') || (optopt == 'a') || (optopt == 'n') || (optopt == 'b')) {
+                if ((optopt == 'f') || (optopt == 'l') || (optopt == 'a') || (optopt == 'n') || (optopt == 'b')) {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 } else {
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
@@ -1233,8 +1241,14 @@ int mm_download_tables(mm_context_t *context) {
             }
             default:
                 printf("\t");
-                /* For Craft Force Download, only download tables that are newer. */
-                if (context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL) {
+                /* For Craft Force Download, only download tables that are newer,
+                 * unless the terminal lost its memory or the the "-c" option was
+                 * selected.
+                 */
+                if ((context->complete_download == FALSE) &&
+                    (context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL) &&
+                    !(context->terminal_upd_reason & TTBLREQ_LOST_MEMORY) &&
+                    !(context->terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL)) {
                     if (check_mm_table_is_newer(context, table_id) != 0) {
                         table_buffer = NULL;
                         continue;
@@ -1968,22 +1982,24 @@ static void mm_display_help(const char *name, FILE *stream) {
         "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]\n",
         name);
     fprintf(stream,
-            "\t-v verbose (multiple v's increase verbosity.)\n"   \
-            "\t-d default_table_dir - default table directory.\n" \
-            "\t-e <error_inject_type> - Inject error on SIGBRK.\n" \
-            "\t-f <filename> modem device or file\n"              \
-            "\t-h this help.\n"                                   \
-            "\t-i \"modem init string\" - Modem initialization string.\n" \
-            "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n"             \
-            "\t-m use serial modem (specify device with -f)\n" \
-            "\t-p <pcapfile> - Save packets in a .pcap file.\n" \
             "\t-a <access_code> - Craft 7-digit access code (default: CRASERV)\n" \
+            "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n" \
+            "\t-c - Always download complete table set.\n" \
+            "\t-d <default_table_dir> - default table directory.\n" \
+            "\t-e <error_inject_type> - Inject error on SIGBRK.\n" \
+            "\t-f <filename> modem device or file\n" \
+            "\t-h this help.\n" \
+            "\t-i \"modem init string\" - Modem initialization string.\n" \
             "\t-k <key_code> - Desk Terminal 10-digit akey card code (default: 4012888888)\n" \
-            "\t-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.\n"                                               \
+            "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n" \
+            "\t-m use serial modem (specify device with -f)\n" \
             "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
-            "\t-q quiet - Don't display sign-on banner.\n"                                                                   \
-            "\t-s small - Download only minimum required tables to terminal.\n"                                              \
-            "\t-t term_table_dir - terminal-specific table directory.\n" \
-            "\t-u <port> - Send packets as UDP to <port>.\n");
+            "\t-p <pcapfile> - Save packets in a .pcap file.\n" \
+            "\t-q - Don't display sign-on banner.\n" \
+            "\t-s - Download only minimum required tables to terminal.\n" \
+            "\t-t <term_table_dir> - terminal-specific table directory.\n" \
+            "\t-u <port> - Send packets as UDP to <port>.\n" \
+            "\t-v verbose (multiple v's increase verbosity.\n");
     return;
 }
+// "a:b:cd:e:f:hi:k:l:mn:p:qrst:uv";
