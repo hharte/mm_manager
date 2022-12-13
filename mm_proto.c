@@ -50,6 +50,13 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     pkt_status_t status  = PKT_SUCCESS;
     uint8_t timeout      = 0;
 
+    if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
+        context->connected = 0;
+        fprintf(stderr, "%s: Carrier lost, bailing.\n", __FUNCTION__);
+        pkt->payload_len = 0;
+        return PKT_ERROR_NO_CARRIER;
+    }
+
     if (context->connected == 0) {
         fprintf(stderr, "%s: Attempt to receive packet while disconnected, bailing.\n", __FUNCTION__);
         return PKT_ERROR_DISCONNECT;
@@ -72,6 +79,13 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 return PKT_ERROR_DISCONNECT;
             }
             putchar('.');
+            if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
+                context->connected = 0;
+                fprintf(stderr, "%s: Carrier lost, bailing.\n", __FUNCTION__);
+                pkt->payload_len = 0;
+                return PKT_ERROR_NO_CARRIER;
+            }
+
             fflush(stdout);
             timeout++;
 

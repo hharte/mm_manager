@@ -132,3 +132,28 @@ int platform_serial_set_dtr(int fd, int set) {
 
     return 0;
 }
+
+int platform_serial_get_modem_status(int fd) {
+    int status = 0;
+    int retstatus = 0;
+
+    ioctl(fd, TIOCMGET, &status);
+
+    if (status & TIOCM_CTS) {
+        retstatus |= 0x0010;
+    }
+
+    if (status & TIOCM_DSR) {
+        retstatus |= 0x0020;
+    }
+
+    if (status & TIOCM_RNG) {
+        retstatus |= 0x0040;
+    }
+
+    if (status & TIOCM_CAR) {
+        retstatus |= 0x0080;
+    }
+
+    return retstatus;
+}

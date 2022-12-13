@@ -149,3 +149,11 @@ int serial_set_dtr(mm_serial_context_t *pserial_context, int set) {
     }
     return status;
 }
+
+int serial_get_modem_status(mm_serial_context_t* pserial_context) {
+    int status = -1;
+    if (pserial_context->bytestream == NULL) {
+        status = platform_serial_get_modem_status(pserial_context->fd);
+    }
+    return status;
+}

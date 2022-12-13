@@ -138,3 +138,15 @@ int platform_serial_set_dtr(int fd, int set) {
 
     return 0;
 }
+
+int platform_serial_get_modem_status(int fd) {
+    HANDLE hComm = hHandleTable[fd];
+    DWORD dwModemStat;
+
+    if (!GetCommModemStatus(hComm, &dwModemStat)) {
+        fprintf(stderr, "%s: GetCommModemStatus() failed.\n", __FUNCTION__);
+        return -1;
+    }
+
+    return (dwModemStat & 0xFFFF);
+}

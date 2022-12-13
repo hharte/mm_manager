@@ -37,6 +37,7 @@
 #define PKT_ERROR_TIMEOUT           (1 << 4)
 #define PKT_ERROR_NACK              (1 << 6)
 #define PKT_ERROR_EOF               (1 << 7)
+#define PKT_ERROR_NO_CARRIER        (1 << 8)
 
 #define PKT_TIMEOUT_MAX             (10)    // Maximum time to wait for modem character
 #define PKT_MAX_RETRIES             (5)     // Maximum number of time to retry an errored packet
