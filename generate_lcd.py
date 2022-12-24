@@ -12,14 +12,14 @@
 # All NPA-NXX in  Canada: wget http://www.cnac.ca/data/COCodeStatus_ALL.zip
 #
 # usage: generate_lcd.py [-h] [--debug DEBUG] [--country COUNTRY] [--state STATE]
-#                        [--npa NPA] [--nxx NXX] [--datafile DATAFILE]
+#                        [--npa NPA] [--datafile DATAFILE]
 #                        --ratecenters RATECENTERS [RATECENTERS ...]
 #
 # For example, to generate LCD tables for the San Jose, California, USA rate center:
-# python3 generate_lcd.py --state CA --npa 408 --nxx 535 --ratecenters "SNJS NORTH" "SNJS WEST" "SNJS SOUTH" CAMPBELL SARATOGA SUNNYVALE "LOS GATOS"
+# python3 generate_lcd.py --state CA --npa 408 --ratecenters "SNJS NORTH" "SNJS WEST" "SNJS SOUTH" CAMPBELL SARATOGA SUNNYVALE "LOS GATOS"
 #
 # To generate LCD tables for Ottawa, Canada:
-# python3 generate_lcd.py --country CA --npa 613 --nxx 535 --ratecenters Ottawa-Hull
+# python3 generate_lcd.py --country CA --npa 613 --ratecenters Ottawa-Hull
 
 import argparse
 import array
@@ -31,7 +31,6 @@ parser.add_argument("--debug", help="display debug output")
 parser.add_argument("--country", help="Country 'US' or 'CA'", default='US')
 parser.add_argument("--state", help="State (only for Country 'US')", default='CA')
 parser.add_argument("--npa", help="Terminal's NPA", default='408')
-parser.add_argument("--nxx", help="Terminal's NXX", default='535')
 parser.add_argument("--datafile", help="NPA-NXX source data file")
 parser.add_argument("--ratecenters", nargs='+', help='List of rate centers', required=True)
 
@@ -39,7 +38,7 @@ args = parser.parse_args()
 
 print("LCD Table Generator for the Nortel Millennium Payphone")
 print("(c) 2020-2022, Howard M. Harte\n")
-print("Terminal NPA-NXX: " + args.npa + "-" +args.nxx)
+print("Terminal NPA: " + args.npa)
 
 if args.country == 'US':
     source_filename = 'allutlzd.txt'
@@ -125,7 +124,7 @@ for key, row in df1.iterrows():
         flag = 3 # UA is invalid
     npa_dict[npanxx] = flag
 
-status = generate_lcd_tables(npa_dict, lcd_npas, args.npa, args.nxx)
+status = generate_lcd_tables(npa_dict, lcd_npas, args.npa)
 
 if status == 0:
     print("Successfully completed generating LCD tables.")

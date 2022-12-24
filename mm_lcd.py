@@ -60,7 +60,7 @@
 
 import array
 
-def generate_lcd(table, i, npanxx_dict, my_npa, my_nxx):
+def generate_lcd(table, i, npanxx_dict, my_npa):
 
     fname = "mm_table_" + hex(table)[2:4] + ".bin"
 
@@ -125,7 +125,7 @@ def generate_lcd(table, i, npanxx_dict, my_npa, my_nxx):
 
     return
 
-def generate_lcd_tables(npanxx_dict, lcd_npas, my_npa, my_nxx):
+def generate_lcd_tables(npanxx_dict, lcd_npas, my_npa):
     # Generate Double-Compressed LCD Tables
     # Start with table 136 (0x88)
     #
@@ -142,7 +142,7 @@ def generate_lcd_tables(npanxx_dict, lcd_npas, my_npa, my_nxx):
             status = -1
             break
 
-        generate_lcd(table, i, npanxx_dict, my_npa, my_nxx)
+        generate_lcd(table, i, npanxx_dict, my_npa)
 
         # Proceed to next table
         table = table + 1
@@ -159,18 +159,18 @@ def generate_lcd_tables(npanxx_dict, lcd_npas, my_npa, my_nxx):
     print("Generating MTR 1.9 (Compressed) tables:")
     # Loop through list of LCD NPAs for which we need to generate tables.
     for i in lcd_npas:
-        if table > 115:
+        if table > 108:
             print("Error: maximum of 7 Compressed LCD tables reached.")
             status = -1
             break
 
-        generate_lcd(table, i, npanxx_dict, my_npa, my_nxx)
+        generate_lcd(table, i, npanxx_dict, my_npa)
 
         # Proceed to next table
         table = table + 1
 
-    if table > 115:
-        print("* * * WARNING: "  + str(my_npa) + "-" + str(my_nxx) + " has more than 15 NPAs and cannot be supported by MTR 1.9.")
+    if table > 108:
+        print("* * * WARNING: "  + str(my_npa) + " has more than 7 NPAs and cannot be supported by MTR 1.9.")
 
     # Generate Uncompressed LCD Tables
     # Uncompressed tables start with table 74 (0x4a)
@@ -186,7 +186,7 @@ def generate_lcd_tables(npanxx_dict, lcd_npas, my_npa, my_nxx):
             status = -1
             break
 
-        generate_lcd(table, i, npanxx_dict, my_npa, my_nxx)
+        generate_lcd(table, i, npanxx_dict, my_npa)
 
         # Proceed to next table
         table = table + 1
@@ -195,6 +195,6 @@ def generate_lcd_tables(npanxx_dict, lcd_npas, my_npa, my_nxx):
             table = 90
 
     if table > 92:
-        print("* * * WARNING: "  + str(my_npa) + "-" + str(my_nxx) + " has more than 10 NPAs and cannot be supported by MTR 1.7.")
+        print("* * * WARNING: "  + str(my_npa) + " has more than 10 NPAs and cannot be supported by MTR 1.7.")
 
     return status

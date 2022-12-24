@@ -150,7 +150,7 @@ for i in sorted (npa_dict):
 
 if args.debug: print("NPAs for these rate centers: " + str(lcd_npas))
 
-status = generate_lcd_tables(npanxx_dict, lcd_npas, my_npa, my_nxx)
+status = generate_lcd_tables(npanxx_dict, lcd_npas, my_npa)
 
 if status == 0:
     print("Successfully completed generating LCD tables.")
