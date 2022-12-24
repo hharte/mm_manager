@@ -15,9 +15,9 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 
 # Compatibility
 
-`mm_manager` runs on Windows, Linux, and MacOS X.  
+`mm_manager` runs on Windows, Linux, and MacOS X.
 
- 
+
 
 The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.1 Control PCP (Surface-mount, 2.11 firmware.)  It partially works with other terminal types and firmware versions, see table for limitations:
 
@@ -104,7 +104,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>
    </td>
-   <td>Fully working except for chip cards
+   <td>Fully working
    </td>
   </tr>
   <tr>
@@ -153,6 +153,18 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    <td>English / Spanish
    </td>
    <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td>NBE1J01
+   </td>
+   <td>1.9
+   </td>
+   <td>Card-only
+   </td>
+   <td>English / Japanese
+   </td>
+   <td>Provisions but can’t rate calls.
    </td>
   </tr>
   <tr>
@@ -283,7 +295,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
 
 
 
-1. Nortel Millennium Terminal running stock firmware (v1.20 or v2.20 is best, but other versions may work.)  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to [stock firmware](https://github.com/muccc/millennium/tree/master/firmware).  
+1. Nortel Millennium Terminal running stock firmware (v1.20 or v2.20 is best, but other versions may work.)  **_Some Millennium Terminals purchased from online phone stores may have been re-programmed with “demo” firmware that does not need a Manager_**.  If you have one of these phones, you’ll have to program the phone back to [stock firmware](https://github.com/muccc/millennium/tree/master/firmware).
 2. 24VDC @500mA Power Supply for Millennium Terminal
 3. [4-pin plug-in screw terminal block](https://www.amazon.com/gp/product/B07SWSLR61) to connect 24VDC power and Tip/Ring to the terminal.
 4. Two phone lines (one for `mm_manager`, one for the Millennium terminal.)  They can be real POTS lines, or lines from your own PBX, but the Millennium should be able to dial the manager with a 1- to 15-digit number.
@@ -322,30 +334,25 @@ Compile `mm_manager` with Microsoft Visual Studio 2019 or later with CMake, usin
 
 
 ```
-usage: mm_manager [-vhmq] [-f <filename>] [-i "modem init string"]
-   [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>]
-   [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>]
-   [-u <port>]
-
--v verbose (multiple v's increase verbosity.)
--d default_table_dir - default table directory.
--e <error_inject_type> - Inject error on SIGBRK.
--f <filename> modem device or file
--h this help.
--i "modem init string" - Modem initialization string.
--l <logfile> - log bytes transmitted to and received from the 
-   terminal.  Useful for debugging.
--m use serial modem (specify device with -f)
--p <pcapfile> - Save packets in a .pcap file.
--a <access_code> - Craft 7-digit access code (default: CRASERV)
--k <key_code> - Desk Terminal 10-digit akey card code (default: 
-   4012888888)
--b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
--n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
--q quiet - Don't display sign-on banner.
--s small - Download only minimum required tables to terminal.
--t term_table_dir - terminal-specific table directory.
--u <port> - Send packets as UDP to <port>.
+usage: mm_manager [-vhmq] [-f <filename>] [-i "modem init string"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]
+	-a <access_code> - Craft 7-digit access code (default: CRASERV)
+	-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
+	-c - Always download complete table set.
+	-d <default_table_dir> - default table directory.
+	-e <error_inject_type> - Inject error on SIGBRK.
+	-f <filename> modem device or file
+	-h this help.
+	-i "modem init string" - Modem initialization string.
+	-k <key_code> - Desk Terminal 10-digit akey card code (default: 4012888888)
+	-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
+	-m use serial modem (specify device with -f)
+	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
+	-p <pcapfile> - Save packets in a .pcap file.
+	-q - Don't display sign-on banner.
+	-s - Download only minimum required tables to terminal.
+	-t <term_table_dir> - terminal-specific table directory.
+	-u <port> - Send packets as UDP to <port>.
+	-v verbose (multiple v's increase verbosity.
 ```
 
 
@@ -362,14 +369,14 @@ If you are using VoIP, make sure to use the u-law PCM codec, disable silence sup
 
 ### Power Supply
 
-The Nortel Millennium terminal requires 24VDC at 500mA to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.  
+The Nortel Millennium terminal requires 24VDC at 500mA to supply power to the phone.  Only limited functionality is provided for emergency service when this power is not present.
 
 
 ### Other Terminal Installation Notes
 
 The Millennium Terminal is an advanced payphone that contains a multitude of sensors to determine if the phone is installed and operating properly.  This includes sensors to make sure that a coin box is installed, and also a sensor to ensure the coin vault door is in place.  If your Millennium does not have a coin box, please obtain one.  The coin boxes are standard Western Electric / Northern Electric Single Slot, readily available.  In a pinch, the coin box sensor switch can be taped in the closed position.  The same goes for the coin vault door.  The coin vault door must be in place and locked.  If your phone is missing the coin vault lock, as is quite common for these phones purchased on the second-hand market, please obtain the correct lock, or tape the switch closed.
 
-If these sensors are not happy, the phone will alarm, and will go “Out of Service.” 
+If these sensors are not happy, the phone will alarm, and will go “Out of Service.”
 
 
 # Millennium Terminal Provisioning
@@ -406,7 +413,7 @@ Key in this Terminal’s 10-digit serial number (1234567890 is fine.)
 
 Key in the Manager’s phone number (I use 1-800-555-1234, which I intercept in the Asterisk dialplan and send to the modem connected to the computer running `mm_manager`.)
 
- 
+
 
 
 # Configuration Tables
@@ -480,7 +487,7 @@ Some of the important tables for configuring a Millennium terminal include:
    </td>
    <td>0
    </td>
-   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_table_upd">TERMDAT</a> - pp. 2-528 
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_table_upd">TERMDAT</a> - pp. 2-528
    </td>
   </tr>
   <tr>
@@ -492,7 +499,7 @@ Some of the important tables for configuring a Millennium terminal include:
    </td>
    <td>7
    </td>
-   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_time_sync">Time Sync</a> 
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_time_sync">Time Sync</a>
    </td>
   </tr>
   <tr>
@@ -504,7 +511,7 @@ Some of the important tables for configuring a Millennium terminal include:
    </td>
    <td>47
    </td>
-   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_ncc_term_parms">TERM</a> - pp. 2-492: Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.  
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_ncc_term_parms">TERM</a> - pp. 2-492: Contains our number and  primary/sec NCC#, call in start date, time, interval, CDR threshold.
    </td>
   </tr>
   <tr>
@@ -600,7 +607,7 @@ Some of the important tables for configuring a Millennium terminal include:
    </td>
    <td>20
    </td>
-   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_call_in_parms">TERM</a> table, pp. 2-517 
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_call_in_parms">TERM</a> table, pp. 2-517
    </td>
   </tr>
   <tr>
@@ -700,7 +707,7 @@ Collection
    </td>
    <td>27
    </td>
-   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_sw_version">TSWVERS</a> - pp. 2-647 
+   <td><a href="https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_sw_version">TSWVERS</a> - pp. 2-647
    </td>
   </tr>
   <tr>
@@ -770,7 +777,7 @@ Collection
    </td>
    <td>English: V1.3 Only
 <p>
-Qty 400: 20-line VFD strings 
+Qty 400: 20-line VFD strings
 <p>
 0x71B5A offset in U2 ROM.
    </td>
@@ -931,11 +938,11 @@ For example, to generate LCD tables for San Jose, California, USA for a terminal
 ```
 
 
-To generate LCD tables for Ottawa, Canada, use `generate_lcd.py`:
+To generate LCD tables for Ottawa, Canada, use `generate_lcd_lir.py`:
 
 
 ```
-./generate_lcd.py --country CA --npa 613 --ratecenters Ottawa-Hull
+./generate_lcd_lir.py --npa 613 --nxx 562
 ```
 
 
@@ -984,7 +991,7 @@ The low-level protocol sent over the modem is a stream of bytes framed within ST
    </td>
    <td>DATA
    </td>
-   <td>CRC-16 
+   <td>CRC-16
    </td>
    <td>END
    </td>
@@ -1055,7 +1062,7 @@ Separate sequence numbers are counted for each of tx_seq and rx_seq.  ACKs shoul
 # Debugging
 
 
-# Dialog Transcripts
+## Dialog Transcripts
 
 `mm_manager` can log all bytes sent to or received from a Millennium terminal using the `-l <logfile.dlog>` option.  This can be used to record a transcript of the session, that can be “played back” to `mm_manager` by specifying this file to the -f option, without supplying -m (modem.)  This allows quick iteration when debugging and testing `mm_manager`, as a real Millennium terminal is not needed.
 
@@ -1064,7 +1071,7 @@ One useful trick is to parse the transcript with `mm_manager`, and save it to a 
 
 ## Wireshark
 
-`mm_manager` can save all packets sent and received to a packet capture (.pcap) file for viewing in [Wireshark](https://www.wireshark.org/) using the `-p <pcapfile.pcap>` option.  This .pcap file can be opened with [Wireshark](https://www.wireshark.org/), and dissected using the [Millennium LUA Dissector Plugin](https://github.com/hharte/mm_manager/blob/master/millennium.lua).
+`mm_manager` can save all packets sent and received to a packet capture (.pcap) file for viewing in [Wireshark](https://www.wireshark.org/) using the `-p <pcapfile.pcap>` option.  This .pcap file can be opened with [Wireshark](https://www.wireshark.org/), and dissected using the [Millennium LUA Dissector Plugin](https://github.com/hharte/mm_manager/blob/main/wireshark/README.md).
 
 In addition, mm_manager can send all packets via UDP to the localhost port 27273 (“CRASE”) so [Wireshark](https://www.wireshark.org/) can view them in real-time while communicating with a terminal.
 
@@ -1087,7 +1094,7 @@ If you find a bug, please provide the following information when you report the 
 
 
 
-1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a few seconds for the modem to detect this condition and go back on-hook.  You may want to wait a few seconds after the test completes before proceeding with the installation.
+1. When installing a Millennium Terminal, the answer supervision test will call the Manager, and disconnect.   It may take a few seconds for mm_manager’s modem to detect this condition and go back on-hook.  You may want to wait a few seconds after the test completes before proceeding with the installation.
 2. Some older firmware versions will fail to install on the first try.  They will usually install correctly on a retry.
 3. Lots of tables are not well understood.  Please help figure more out if you can.
 
