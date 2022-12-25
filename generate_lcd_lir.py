@@ -32,7 +32,7 @@ import pandas
 import requests
 import time
 import xmltodict
-from mm_lcd import *
+from mm_lcd import generate_lcd_tables
 
 from os import path
 
@@ -43,6 +43,7 @@ def is_file_older_than_x_days(file, days=1):
         return True
     else:
         return False
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--npa", help="Terminal's NPA", required=True)
@@ -89,7 +90,7 @@ if args.debug:
 r = requests.get("https://localcallingguide.com/xmlprefix.php?npa=" + str(my_npa) + "&nxx=" + str(my_nxx)).text
 try:
     data = xmltodict.parse(r)['root']['prefixdata'][0]
-except:
+except (KeyError):
     data = xmltodict.parse(r)['root']['prefixdata']
 
 local_exch = data['exch']
@@ -101,7 +102,7 @@ print("Exchange: " + local_exch + " lir: " + lir)
 npa_dict = {}
 npanxx_dict = {}
 
-if path.exists(lircsvname) and is_file_older_than_x_days(lircsvname, days=lir_age_max) == False:
+if path.exists(lircsvname) and is_file_older_than_x_days(lircsvname, days=lir_age_max) is False:
 
     print(lircsvname + " exists and is not older than " + str(lir_age_max) + " days, skipping generation")
 
@@ -137,7 +138,7 @@ else:
                 npanxx = npa + "-" + str(cur2['nxx'])
                 npa_dict[npa] = 0
                 npanxx_dict[npanxx] = 2
-            except:
+            except (TypeError):
                 print("Error parsing " + exch)
 
     with open(lircsvname, 'w', newline='') as g:
@@ -159,7 +160,7 @@ for cur2 in data2['prefix']:
         npanxx = npa + "-" + str(cur2['nxx'])
         npa_dict[npa] = 0
         npanxx_dict[npanxx] = 0
-    except:
+    except (TypeError):
         print("Error parsing " + exch)
 
 lcd_npas = list()

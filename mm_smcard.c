@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
     if (argc > 2) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
             printf("Error opening output file %s for write.\n", argv[2]);
+            free(psmcard_table);
             return -ENOENT;
         }
     }
@@ -152,9 +153,7 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    if (psmcard_table != NULL) {
-        free(psmcard_table);
-    }
+    free(psmcard_table);
 
     return ret;
 }

@@ -522,7 +522,6 @@ int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* per
 
 int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_term_status) {
     char sql[1536] = { 0 };
-    char received_time_str[16] = { 0 };
     uint8_t  serial_number[11] = { 0 };
     uint64_t term_status_word;
     uint64_t last_status_word = 0LL;
@@ -551,6 +550,8 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
     last_status_word = mm_sql_read_uint64(context->database, sql);
 
     if (term_status_word != last_status_word) {
+        char received_time_str[16] = { 0 };
+
         snprintf(sql, sizeof(sql), "INSERT INTO TSTATUS ( "
             "TERMINAL_ID,"
             "RECEIVED_DATE, RECEIVED_TIME,"

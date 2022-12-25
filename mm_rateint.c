@@ -138,9 +138,7 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    if (prate_table != NULL) {
-        free(prate_table);
-    }
+    free(prate_table);
 
     return ret;
 }

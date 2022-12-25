@@ -76,24 +76,16 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    /* If output file was specified, write it. */
-    if (ostream != NULL) {
-        printf("\nWriting new table to %s\n", argv[2]);
+    printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(pcard_table_mtr1, sizeof(dlog_mt_card_table_mtr1_t), 1, ostream) != 1) {
-            printf("Error writing output file %s\n", argv[2]);
-            ret = -EIO;
-        }
-        fclose(ostream);
+    if (fwrite(pcard_table_mtr1, sizeof(dlog_mt_card_table_mtr1_t), 1, ostream) != 1) {
+        printf("Error writing output file %s\n", argv[2]);
+        ret = -EIO;
     }
 
-    if (pcard_table_mtr2 != NULL) {
-        free(pcard_table_mtr2);
-    }
-
-    if (pcard_table_mtr1 != NULL) {
-        free(pcard_table_mtr1);
-    }
+    fclose(ostream);
+    free(pcard_table_mtr2);
+    free(pcard_table_mtr1);
 
     return ret;
 }

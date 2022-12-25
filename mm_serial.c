@@ -64,9 +64,6 @@ int init_serial(mm_serial_context_t *pserial_context, int baudrate) {
 
 ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t count, int inject_error) {
     ssize_t bytes_read = -1;
-    char testbuf[80];
-    char* bytep;
-    char databyte;
 
     if (pserial_context->bytestream == NULL) {
         bytes_read = platform_read_serial(pserial_context->fd, buf, count);
@@ -85,8 +82,10 @@ ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t coun
                 exit(0);
             }
             else {
+                char* bytep;
+                char testbuf[80];
+
                 if (fgets(testbuf, 80, pserial_context->bytestream) == NULL) {
-                    fprintf(stderr, "%s: Error reading bytestream\n", __func__);
                     break;
                 }
 
@@ -96,8 +95,7 @@ ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t coun
                     if (sscanf(bytep, "RX: %x", &filebyte) != 1) {
                         fprintf(stderr, "%s: Error parsing bytestream\n", __func__);
                     }
-                    databyte = filebyte & 0xFF;
-                    ((uint8_t*)buf)[i] = databyte;
+                    ((uint8_t*)buf)[i] = filebyte & 0xFF;;
                 }
             }
         }

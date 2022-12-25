@@ -325,9 +325,7 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    if (pcarrier_table != NULL) {
-        free(pcarrier_table);
-    }
+    free(pcarrier_table);
 
     return ret;
 }

@@ -100,7 +100,7 @@ int mm_sql_read_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen) 
 
     size_t blob_len = sqlite3_column_bytes(res, 0);
     if (blob_len > buflen) {
-        fprintf(stderr, "%s: buffer length %zd is not large enough for table of %zd bytes.\n", __func__, buflen, blob_len);
+        fprintf(stderr, "%s: buffer length %zu is not large enough for table of %zu bytes.\n", __func__, buflen, blob_len);
         return 0;
     }
 

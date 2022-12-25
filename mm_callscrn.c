@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         phone_num_len = 9;
         break;
     default:
-        printf("Invalid Call Screening table, len=%zd.\n", size);
+        printf("Invalid Call Screening table, len=%zu.\n", size);
         free(pcallscrn_table);
         fclose(instream);
         return -EIO;

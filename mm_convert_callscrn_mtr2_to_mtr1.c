@@ -79,26 +79,18 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    /* If output file was specified, write it. */
-    if (ostream != NULL) {
-        printf("\nWriting new table to %s\n", argv[2]);
+    printf("\nWriting new table to %s\n", argv[2]);
 
-        save_buffer = ((uint8_t*)pcallscrnu_table) + 1;
+    save_buffer = ((uint8_t*)pcallscrnu_table) + 1;
 
-        if (fwrite(save_buffer, sizeof(dlog_mt_call_screen_universal_t) - 1, 1, ostream) != 1) {
-            printf("Error writing output file %s\n", argv[2]);
-            ret = -EIO;
-        }
-        fclose(ostream);
+    if (fwrite(save_buffer, sizeof(dlog_mt_call_screen_universal_t) - 1, 1, ostream) != 1) {
+        printf("Error writing output file %s\n", argv[2]);
+        ret = -EIO;
     }
 
-    if (pcallscrn_table != NULL) {
-        free(pcallscrn_table);
-    }
-
-    if (pcallscrnu_table != NULL) {
-        free(pcallscrnu_table);
-    }
+    fclose(ostream);
+    free(pcallscrn_table);
+    free(pcallscrnu_table);
 
     return ret;
 }

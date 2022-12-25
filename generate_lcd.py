@@ -22,9 +22,8 @@
 # python3 generate_lcd.py --country CA --npa 613 --ratecenters Ottawa-Hull
 
 import argparse
-import array
 import pandas
-from mm_lcd import *
+from mm_lcd import generate_lcd_tables
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", help="display debug output")
@@ -89,6 +88,7 @@ if args.debug: print(sc[['NPA', 'NXX', 'RateCenter']])
 def prepRateForRegex(r):
     return r'^' + r + '$'
 
+
 rate_centers = map(prepRateForRegex,args.ratecenters)
 
 rc = sc[sc['RateCenter'].str.match('|'.join(rate_centers))]
@@ -100,11 +100,11 @@ npas = rc['NPA'].unique()
 lcd_npas = list()
 
 # Convert list of NPAs to array, starting with Terminal's own NPA.
-for i in range(len(npas)):
-    if(npas[i] == args.npa):
-        lcd_npas.insert(0, npas[i])
+for i, npa in enumerate(npas):
+    if npa == args.npa:
+        lcd_npas.insert(0, npa)
     else:
-        lcd_npas.append(npas[i])
+        lcd_npas.append(npa)
 
 print("Rate Centers: " + str(args.ratecenters))
 print("NPAs for these rate centers: " + str(lcd_npas))

@@ -107,7 +107,7 @@ extern uint8_t string_to_bcd_a(char *number_string, uint8_t *buffer, uint8_t buf
 
     memset(buffer, 0, buff_len);
 
-    for (i = 0; (i < (strlen(number_string)) && (i < (buff_len * 2))); i++) {
+    for (i = 0; i < (strnlen(number_string, (uint8_t)(buff_len * 2))); i++) {
         if (i % 2 == 0) {
             if (number_string[i] == '0') {
                 buffer[(i >> 1)] = 0xa0;
@@ -215,8 +215,8 @@ const char *pmt_type_str[16] = {
 char* call_type_to_string(uint8_t call_type, char *string_buf, size_t string_buf_len) {
     size_t len_call_type, len_pmt_type;
 
-    len_call_type = strlen(call_type_str[call_type & 0x0f]);
-    len_pmt_type  = strlen(pmt_type_str[call_type >> 4]);
+    len_call_type = strnlen(call_type_str[call_type & 0x0f], 20);
+    len_pmt_type  = strnlen(pmt_type_str[call_type >> 4], 17);
 
     if ((len_call_type + len_pmt_type + 1) > string_buf_len) {
         return NULL;
