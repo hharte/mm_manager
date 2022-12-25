@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     FILE  *ostream = NULL;
     int    callscrn_index;
     char   phone_number_str[20] = { 0 };
-    int    i;
+    size_t i;
     int    callscrn_max_entries = 0;
     int    phone_num_len = 0;
     size_t size;

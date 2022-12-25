@@ -8,6 +8,7 @@
  *
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
            "+--------------------------+\n");
 
     for (index = 0; index < SC_DES_KEY_MAX; index++) {
-        printf("|  %2d | 0x%016llx |\n",
+        printf("|  %2d | 0x%016" PRIx64 " |\n",
                index,
                psmcard_table->des_key[index]);
     }

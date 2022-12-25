@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
                 (pcarrier_table->carrier[carrier_index].call_entry == 0)) {
                 continue;
             }
-            snprintf(display_prompt_string, sizeof(display_prompt_string) - 1, "                    ");
+            snprintf(display_prompt_string, sizeof(display_prompt_string), "                    ");
         }
 
         carrier_num = ntohs(pcarrier_table->carrier[carrier_index].carrier_num);

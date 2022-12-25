@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
     fclose(instream);
 
-    for (int i = 0; i < sizeof(dlog_mt_npa_sbr_table_t) - 1; i++) {
+    for (size_t i = 0; i < sizeof(dlog_mt_npa_sbr_table_t) - 1; i++) {
         uint8_t c;
         uint8_t flags0, flags1;
 

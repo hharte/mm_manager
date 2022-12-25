@@ -28,6 +28,9 @@
 #define SQL_IGNORE      ""
 #endif /* MYSQL */
 
+/* Declare function prototypes */
+int mm_config_add_TERMTYP_entry(void *db, uint8_t terminal_type, const char *control_rom_edition, const char *description);
+
 uint8_t mm_config_get_term_type_from_control_rom_edition(void* db, const char* control_rom_edition) {
     char sql[256] = { 0 };
     char db_control_rom_edition[8];

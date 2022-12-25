@@ -1306,8 +1306,8 @@ extern char *timestamp_to_db_string(uint8_t *timestamp, char *string_buf, size_t
 extern char *received_time_to_db_string(char *string_buf, size_t string_buf_len);
 extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32_t seconds);
 extern const char* error_inject_type_to_str(uint8_t type);
-extern const uint16_t term_type_to_mtr(uint8_t term_type);
-extern const uint8_t term_type_to_model(uint8_t term_type);
+extern uint16_t term_type_to_mtr(uint8_t term_type);
+extern uint8_t term_type_to_model(uint8_t term_type);
 
 extern const char* feature_term_type_to_str(uint8_t type);
 
