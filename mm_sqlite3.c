@@ -22,7 +22,7 @@ int mm_sql_exec(void *db, const char *sql) {
     rc = sqlite3_exec((sqlite3 *)db, sql, NULL, 0, NULL);
 
     if (rc != SQLITE_OK && rc != SQLITE_CONSTRAINT) {
-        fprintf(stderr, "%s: Failed to execute: \nSQL: '%s'\nError: %s", __FUNCTION__, sql, sqlite3_errmsg((sqlite3 *)db));
+        fprintf(stderr, "%s: Failed to execute: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3 *)db));
         return -1;
     }
 
@@ -34,7 +34,7 @@ uint8_t mm_sql_read_uint8(void* db, const char* sql) {
     int rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, 0);
 
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __FUNCTION__, sql, sqlite3_errmsg((sqlite3*)(db)));
+        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3*)(db)));
         return 0xFF;
     }
 
@@ -48,7 +48,7 @@ uint64_t mm_sql_read_uint64(void* db, const char* sql) {
     int rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, 0);
 
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __FUNCTION__, sql, sqlite3_errmsg((sqlite3 *)(db)));
+        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3 *)(db)));
         return 0xFFFFFFFFFFFFFFFFLL;
     }
 
@@ -92,7 +92,7 @@ int mm_sql_read_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen) 
     rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, NULL);
 
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __FUNCTION__, sql, sqlite3_errmsg((sqlite3*)(db)));
+        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3*)(db)));
         return rc;
     }
 
@@ -100,7 +100,7 @@ int mm_sql_read_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen) 
 
     size_t blob_len = sqlite3_column_bytes(res, 0);
     if (blob_len > buflen) {
-        fprintf(stderr, "%s: buffer length %zd is not large enough for table of %zd bytes.\n", __FUNCTION__, buflen, blob_len);
+        fprintf(stderr, "%s: buffer length %zd is not large enough for table of %zd bytes.\n", __func__, buflen, blob_len);
         return 0;
     }
 
@@ -126,7 +126,7 @@ int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t
     rc = sqlite3_prepare_v2((sqlite3 *)db, sql, -1, &res, 0);
 
     if (rc != SQLITE_OK && rc != SQLITE_CONSTRAINT) {
-        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __FUNCTION__, sql, sqlite3_errmsg((sqlite3 *)db));
+        fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3 *)db));
         return 1;
     }
 
@@ -139,21 +139,21 @@ int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t
     db_time_str = sqlite3_column_text(res, 1);
 
     if (db_date_str != NULL && db_time_str != NULL) {
-        if (3 != sscanf((const char*)db_date_str, "%4hd%2hhd%2hhd",
+        if (3 != sscanf((const char*)db_date_str, "%4hu%2hhu%2hhu",
             &cashbox_year,
             &cashbox_status->timestamp[1],
             &cashbox_status->timestamp[2])) {
 
-            fprintf(stderr, "%s: Error parsing date string from database.\n", __FUNCTION__);
+            fprintf(stderr, "%s: Error parsing date string from database.\n", __func__);
         }
         cashbox_status->timestamp[0] = cashbox_year - 1900;
 
-        if (3 != sscanf((const char*)db_time_str, "%2hhd%2hhd%2hhd",
+        if (3 != sscanf((const char*)db_time_str, "%2hhu%2hhu%2hhu",
             &cashbox_status->timestamp[3],
             &cashbox_status->timestamp[4],
             &cashbox_status->timestamp[5])) {
 
-            fprintf(stderr, "%s: Error parsing time string from database.\n", __FUNCTION__);
+            fprintf(stderr, "%s: Error parsing time string from database.\n", __func__);
         }
 
         cashbox_status->status = sqlite3_column_int(res, 2);

@@ -18,7 +18,7 @@
 #define MM_UDP_PORT 27273	/* UDP port to send Millennium packets */
 
 int mm_create_udp(const char* ip_addr, uint16_t port);
-int mm_udp_send_pkt(int direction, mm_packet_t* pkt, uint32_t ts_sec, uint32_t ts_usec);
+int mm_udp_send_pkt(int direction, mm_packet_t* pkt);
 int mm_close_udp(void);
 
 #endif /* MM_UDP_H_ */

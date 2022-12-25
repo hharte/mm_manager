@@ -32,7 +32,7 @@ int mm_create_udp(const char* ip_addr, uint16_t port) {
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
-        fprintf(stderr, "%s: WSAStartup() Failed. Error Code : %d", __FUNCTION__, WSAGetLastError());
+        fprintf(stderr, "%s: WSAStartup() Failed. Error Code : %d", __func__, WSAGetLastError());
         return -1;
     }
 #endif /* _WIN32 */
@@ -41,9 +41,9 @@ int mm_create_udp(const char* ip_addr, uint16_t port) {
     if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
     {
 #ifdef _WIN32
-        fprintf(stderr, "%s: Failed to create socket: %d\n", __FUNCTION__, WSAGetLastError());
+        fprintf(stderr, "%s: Failed to create socket: %d\n", __func__, WSAGetLastError());
 #else
-        fprintf(stderr, "%s: Failed to create socket: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: Failed to create socket: %s\n", __func__, strerror(errno));
 #endif /* _WIN32 */
         mm_close_udp();
         return -2;
@@ -63,9 +63,9 @@ int mm_create_udp(const char* ip_addr, uint16_t port) {
     if( bind(sock , (struct sockaddr*)&si_src, sizeof(si_src) ) == SOCKET_ERROR)
     {
 #ifdef _WIN32
-        fprintf(stderr, "%s: Failed to bind socket: %d\n", __FUNCTION__, WSAGetLastError());
+        fprintf(stderr, "%s: Failed to bind socket: %d\n", __func__, WSAGetLastError());
 #else
-        fprintf(stderr, "%s: Failed to bind socket: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: Failed to bind socket: %s\n", __func__, strerror(errno));
 #endif /* _WIN32 */
         mm_close_udp();
         return -3;
@@ -74,16 +74,16 @@ int mm_create_udp(const char* ip_addr, uint16_t port) {
     return 0;
 }
 
-int mm_udp_send_pkt(int direction, mm_packet_t *pkt, uint32_t ts_sec, uint32_t ts_usec) {
+int mm_udp_send_pkt(int direction, mm_packet_t *pkt) {
     pkt->hdr.start |= (direction == TX) ? 0x80 : 0;
 
     /* Send payload over UDP to 127.0.0.1:27273 to facilitate live Wireshark capture. */
     if (sendto(sock, (const char *)&pkt->hdr.start, (size_t)pkt->hdr.pktlen + 1, 0, (struct sockaddr *)&si_dst, sizeof(si_dst)) == SOCKET_ERROR)
     {
 #ifdef _WIN32
-        fprintf(stderr, "%s: sendto() failed: %d\n", __FUNCTION__, WSAGetLastError());
+        fprintf(stderr, "%s: sendto() failed: %d\n", __func__, WSAGetLastError());
 #else
-        fprintf(stderr, "%s: sendto() failed: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: sendto() failed: %s\n", __func__, strerror(errno));
 #endif /* _WIN32 */
     }
     pkt->hdr.start &= 0x7F;

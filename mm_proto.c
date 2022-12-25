@@ -52,13 +52,13 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
 
     if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
         context->connected = 0;
-        fprintf(stderr, "%s: Carrier lost, bailing.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
         pkt->payload_len = 0;
         return PKT_ERROR_NO_CARRIER;
     }
 
     if (context->connected == 0) {
-        fprintf(stderr, "%s: Attempt to receive packet while disconnected, bailing.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Attempt to receive packet while disconnected, bailing.\n", __func__);
         return PKT_ERROR_DISCONNECT;
     }
 
@@ -81,7 +81,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
             putchar('.');
             if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
                 context->connected = 0;
-                fprintf(stderr, "%s: Carrier lost, bailing.\n", __FUNCTION__);
+                fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
                 pkt->payload_len = 0;
                 return PKT_ERROR_NO_CARRIER;
             }
@@ -90,7 +90,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
             timeout++;
 
             if (timeout > PKT_TIMEOUT_MAX) {
-                printf("%s: Timeout waiting for packet error.\n", __FUNCTION__);
+                printf("%s: Timeout waiting for packet error.\n", __func__);
                 status |= PKT_ERROR_TIMEOUT;
                 return status;
             }
@@ -136,7 +136,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 pkt->calculated_crc = crc16(0, &pkt->hdr.start, (size_t)pkt->payload_len + 3);
 
                 if (pkt->trailer.crc != pkt->calculated_crc) {
-                    printf("%s: CRC Error!\n", __FUNCTION__);
+                    printf("%s: CRC Error!\n", __func__);
                     status |= PKT_ERROR_CRC;
                 }
                 break;
@@ -144,7 +144,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 if (databyte == STOP_BYTE) {
                     l2_state = L2_STATE_SEARCH_FOR_START;
                 } else {
-                    printf("%s: Framing Error!\n", __FUNCTION__);
+                    printf("%s: Framing Error!\n", __func__);
                     status |= PKT_ERROR_FRAMING;
                 }
                 pkt->trailer.end = databyte;
@@ -158,7 +158,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
 
     mm_add_pcap_rec(context->pcapstream, RX, pkt, 0, 0);
     if (context->send_udp) {
-        mm_udp_send_pkt(RX, pkt, 0, 0);
+        mm_udp_send_pkt(RX, pkt);
     }
 
     if (pkt->hdr.flags & FLAG_RETRY) {
@@ -168,11 +168,11 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
 
     if (pkt->hdr.flags & FLAG_DISCONNECT) {
         if (context->debuglevel > 0) print_mm_packet(RX, pkt);
-        printf("%s: Received disconnect status %s from terminal.\n", __FUNCTION__,
+        printf("%s: Received disconnect status %s from terminal.\n", __func__,
                pkt->hdr.flags & FLAG_STATUS ? "Failure" : "OK");
         context->tx_seq = 0;
 
-        printf("%s: Hanging up modem.\n", __FUNCTION__);
+        printf("%s: Hanging up modem.\n", __func__);
         hangup_modem(context->serial_context);
         context->connected = 0;
         status |= PKT_ERROR_DISCONNECT;
@@ -197,7 +197,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
  * Returns PKT_SUCCESS on success, otherwise PKT_ERROR_ code flags.
  */
 pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len, uint8_t flags) {
-    mm_packet_t pkt = {0};
+    mm_packet_t pkt = { 0 };
     pkt_status_t status = PKT_SUCCESS;
     int retries;
 
@@ -274,7 +274,7 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
 
         mm_add_pcap_rec(context->pcapstream, TX, &pkt, 0, 0);
         if (context->send_udp) {
-            mm_udp_send_pkt(TX, &pkt, 0, 0);
+            mm_udp_send_pkt(TX, &pkt);
         }
 
         if (context->debuglevel > 0) {
@@ -299,11 +299,11 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
             break;
         }
 
-        printf("%s: Received NACK, retrying %d.\n", __FUNCTION__, retries);
+        printf("%s: Received NACK, retrying %d.\n", __func__, retries);
     }
 
     if (retries == PKT_MAX_RETRIES) {
-        printf("%s: Error: Gave up after %d retries.\n", __FUNCTION__, retries);
+        printf("%s: Error: Gave up after %d retries.\n", __func__, retries);
     }
 
     if (payload != NULL) {
@@ -342,7 +342,7 @@ pkt_status_t wait_for_mm_ack(mm_context_t *context) {
         }
         return PKT_SUCCESS;
     }
-    fprintf(stderr, "%s: Error, did not receive an ACK packet, status=0x%02x\n", __FUNCTION__, status);
+    fprintf(stderr, "%s: Error, did not receive an ACK packet, status=0x%02x\n", __func__, status);
     return status;
 }
 

@@ -30,7 +30,7 @@ mm_serial_context_t* open_serial(const char *modem_dev, FILE *logstream, FILE *b
     pserial_context = (mm_serial_context_t *)calloc(1, sizeof(mm_serial_context_t));
 
     if (pserial_context == NULL) {
-        fprintf(stderr, "%s: Error allocating memory.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Error allocating memory.\n", __func__);
         exit(-ENOMEM);
     }
 
@@ -79,19 +79,22 @@ ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t coun
     else {
         for (size_t i = 0; i < count; i++) {
             if (feof(pserial_context->bytestream)) {
-                printf("%s: Terminating due to EOF.\n", __FUNCTION__);
+                printf("%s: Terminating due to EOF.\n", __func__);
                 fflush(stdout);
                 fclose(pserial_context->bytestream);
                 exit(0);
             }
             else {
-                fgets(testbuf, 80, pserial_context->bytestream);
+                if (fgets(testbuf, 80, pserial_context->bytestream) == NULL) {
+                    fprintf(stderr, "%s: Error reading bytestream\n", __func__);
+                    break;
+                }
 
                 /* Data that came from the Millennium Terminal. */
                 if ((bytep = strstr(testbuf, "RX: ")) != NULL) {
                     uint32_t filebyte;
                     if (sscanf(bytep, "RX: %x", &filebyte) != 1) {
-                        fprintf(stderr, "%s: Error parsing bytestream\n", __FUNCTION__);
+                        fprintf(stderr, "%s: Error parsing bytestream\n", __func__);
                     }
                     databyte = filebyte & 0xFF;
                     ((uint8_t*)buf)[i] = databyte;

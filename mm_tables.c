@@ -53,7 +53,7 @@ int mm_table_save(mm_context_t* context, uint8_t table_id, uint64_t version_time
     rc = mm_sql_write_blob(context->database, sql, buffer, buflen);
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Error writing table %d, version %" PRIu64 "\n", __FUNCTION__, table_id, version_timestamp);
+        fprintf(stderr, "%s: Error writing table %d, version %" PRIu64 "\n", __func__, table_id, version_timestamp);
     }
 
     return rc;
@@ -71,7 +71,7 @@ int mm_table_create_tables(void *db) {
         "UNIQUE(TABLE_ID,VERSION_TIMESTAMP));");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TERMDAT.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TERMDAT.\n", __func__);
         return -1;
     }
 

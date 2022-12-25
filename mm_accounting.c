@@ -514,7 +514,7 @@ int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* per
         timestamp_to_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
     for (size_t i = 0; i < ((sizeof(perf_stats->stats) / sizeof(uint16_t))); i++) {
-        if (perf_stats->stats[i] > 0) printf("[%2zu] %27s: %5d\n", i, TPERFST_stats_to_str(i), perf_stats->stats[i]);
+        if (perf_stats->stats[i] > 0) printf("[%2zu] %27s: %5d\n", i, TPERFST_stats_to_str((uint8_t)i), perf_stats->stats[i]);
     }
 
     return 0;
@@ -653,7 +653,7 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
             context->region_code[0], context->region_code[1], context->region_code[2]);
 
         if (mm_sql_exec(context->database, sql) != 0) {
-            fprintf(stderr, "%s: Failed to save TSTATUS.", __FUNCTION__);
+            fprintf(stderr, "%s: Failed to save TSTATUS.", __func__);
             return 1;
         }
     }
@@ -750,7 +750,7 @@ int mm_acct_create_tables(void *db) {
         "UNIQUE(TERMINAL_ID,START_DATE,START_TIME,ALARM_ID));");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TALARM.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TALARM.\n", __func__);
         return -1;
     }
 
@@ -779,7 +779,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TAUTH.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TAUTH.\n", __func__);
         return -1;
     }
 
@@ -805,7 +805,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TCDR.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TCDR.\n", __func__);
         return -1;
     }
 
@@ -853,7 +853,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TALARM.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TALARM.\n", __func__);
         return -1;
     }
 
@@ -880,7 +880,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TCASHST.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TCASHST.\n", __func__);
         return -1;
     }
 
@@ -908,7 +908,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TCASHST.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TCASHST.\n", __func__);
         return -1;
     }
 
@@ -923,7 +923,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TOPCODE.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TOPCODE.\n", __func__);
         return -1;
     }
 
@@ -984,7 +984,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TPERFST.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TPERFST.\n", __func__);
         return -1;
     }
 
@@ -1039,7 +1039,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TSTATUS.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TSTATUS.\n", __func__);
         return -1;
     }
 
@@ -1062,7 +1062,7 @@ int mm_acct_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TSWVERS.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TSWVERS.\n", __func__);
         return -1;
     }
 

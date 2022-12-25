@@ -83,18 +83,21 @@ int mm_config_create_tables(void *db) {
         ");");
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Failed to create table TERMTYP.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Failed to create table TERMTYP.\n", __func__);
         return -1;
     }
 
     if (!(csvstream = fopen(TERMTYP_CSV_FNAME, "r"))) {
-        fprintf(stderr, "Error opening input stream: %s\n", TERMTYP_CSV_FNAME);
+        fprintf(stderr, "Error opening csv stream: %s\n", TERMTYP_CSV_FNAME);
         return -EPERM;
     }
 
     while (!feof(csvstream)) {
         char* tok;
-        fgets(csvline, sizeof(csvline), csvstream);
+        if (fgets(csvline, sizeof(csvline), csvstream) == NULL) {
+            fprintf(stderr, "Error reading csv stream, line=%d", line);
+            break;
+        }
         line++;
         if (line == 1) continue; /* Skip over CSV header */
 

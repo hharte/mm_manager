@@ -72,7 +72,7 @@ int platform_init_serial(int fd, int baudrate) {
             break;
         default:
             printf("%s: Invalid baud rate: %d, defaulting to 1200.\n",
-                   __FUNCTION__, baudrate);
+                   __func__, baudrate);
             speed = B1200;
             break;
     }

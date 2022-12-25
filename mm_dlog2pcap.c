@@ -89,7 +89,10 @@ int  main(int argc, char *argv[]) {
 
     while (!feof(instream)) {
         line++;
-        fgets(buf, 80, instream);
+        if (fgets(buf, 80, instream) == NULL) {
+            fprintf(stderr, "Error reading input stream, line=%d", line);
+            break;
+        }
 
         /* TX/RX in file are from Terminal's perspective. */
         count = sscanf(buf, "%u-%u UART: %cX: %2x", &start_time, &stop_time, &direction, &databyte);
@@ -189,7 +192,7 @@ uint8_t mm_parse_byte(mm_parser_t* context, uint8_t databyte, uint32_t line) {
         context->pkt.calculated_crc = crc16(0, &context->pkt.hdr.start, (size_t)context->pkt.payload_len + 3);
 
         if (context->pkt.trailer.crc != context->pkt.calculated_crc) {
-            printf("%s: CRC Error in line %u!\n", __FUNCTION__, line);
+            printf("%s: CRC Error in line %u!\n", __func__, line);
             context->status |= PKT_ERROR_CRC;
         }
         break;
@@ -198,7 +201,7 @@ uint8_t mm_parse_byte(mm_parser_t* context, uint8_t databyte, uint32_t line) {
             context->l2_state = L2_STATE_SEARCH_FOR_START;
         }
         else {
-            printf("%s: Framing Error in line %u!\n", __FUNCTION__, line);
+            printf("%s: Framing Error in line %u!\n", __func__, line);
             context->status |= PKT_ERROR_FRAMING;
         }
         context->pkt.trailer.end = databyte;

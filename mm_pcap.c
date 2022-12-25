@@ -29,7 +29,7 @@ int mm_create_pcap(const char* capfilename, FILE **pcapstream) {
     pcap_hdr.network       = 147; // LINKTYPE_USER0
 
     if (fwrite(&pcap_hdr, sizeof(mm_pcap_hdr_t), 1, *pcapstream) != 1) {
-        fprintf(stderr, "%s: Error writing.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Error writing.\n", __func__);
         fclose(*pcapstream);
         *pcapstream = NULL;
         return -1;
@@ -64,14 +64,14 @@ int mm_add_pcap_rec(FILE* pcapstream, int direction, mm_packet_t *pkt, uint32_t 
 
     /* Write PCAP record header */
     if (fwrite(&pcap_rec, sizeof(mm_pcaprec_hdr_t), 1, pcapstream) != 1) {
-        fprintf(stderr, "%s: Error writing.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Error writing.\n", __func__);
         return -1;
     }
     pkt->hdr.start |= (direction == TX) ? 0x80 : 0;
 
     /* Write Payload */
     if (fwrite(&pkt->hdr.start, (size_t)pkt->hdr.pktlen + 1, 1, pcapstream) != 1) {
-        fprintf(stderr, "%s: Error writing.\n", __FUNCTION__);
+        fprintf(stderr, "%s: Error writing.\n", __func__);
         pkt->hdr.start &= 0x7F;
         return -1;
     }

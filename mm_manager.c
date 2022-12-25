@@ -652,7 +652,7 @@ int mm_shutdown(mm_context_t* context) {
 }
 static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint8_t length) {
     if ((size_t)context->cdr_ack_buffer_len + length > sizeof(context->cdr_ack_buffer)) {
-        printf("ERROR: %s: cdr_ack_buffer_len exceeded.\n", __FUNCTION__);
+        printf("ERROR: %s: cdr_ack_buffer_len exceeded.\n", __func__);
         return -EOVERFLOW;
     }
 
@@ -684,7 +684,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
             send_mm_ack(context, FLAG_NACK);  /* Retry unless the terminal disconnected. */
             status = wait_for_mm_ack(context);
             if (status != PKT_ERROR_NACK) {
-                fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
+                fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __func__, status);
             }
         }
         return 0;
@@ -1150,7 +1150,7 @@ int mm_download_tables(mm_context_t *context) {
         table_list = table_list_mtr17;
         break;
     default:
-        fprintf(stderr, "%s: Error: Unknown terminal type %d, defaulting to MTR 1.7\n", __FUNCTION__, context->terminal_type);
+        fprintf(stderr, "%s: Error: Unknown terminal type %d, defaulting to MTR 1.7\n", __func__, context->terminal_type);
         table_list = table_list_mtr17;
         break;
     }
@@ -1235,7 +1235,7 @@ int mm_download_tables(mm_context_t *context) {
                 pcashbox_status = (cashbox_status_univ_t *)calloc(1, sizeof(cashbox_status_univ_t));
                 table_buffer = (uint8_t*)pcashbox_status;
                 if (table_buffer == NULL) {
-                    fprintf(stderr, "%s: Error: failed to allocate %zu bytes.\n", __FUNCTION__, sizeof(cashbox_status_univ_t));
+                    fprintf(stderr, "%s: Error: failed to allocate %zu bytes.\n", __func__, sizeof(cashbox_status_univ_t));
                     return -ENOMEM;
                 }
                 mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);
@@ -1286,7 +1286,7 @@ int mm_download_tables(mm_context_t *context) {
         table_buffer = NULL;
 
         if (context->connected == 0) {
-            printf("%s: Download failed.\n", __FUNCTION__);
+            printf("%s: Download failed.\n", __func__);
             return status;
         }
     }
@@ -1322,7 +1322,7 @@ static int update_terminal_download_time(mm_context_t *context) {
     strftime(date, 99, "%Y-%m-%d %H:%M:%S", &ptm);
 
     if (!(stream = fopen(fname, "a+"))) {
-        fprintf(stderr, "%s: Error: Could not open '%s'.\n", __FUNCTION__, fname);
+        fprintf(stderr, "%s: Error: Could not open '%s'.\n", __func__, fname);
         return -ENOENT;
     }
 
@@ -1396,13 +1396,13 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
                     return 0;
                 } else {
                     printf("%s: Error: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
-                        __FUNCTION__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
+                        __func__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
                     return -1;
                 }
             }
         } else {
             printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",
-                __FUNCTION__, table_id, table_id, status);
+                __func__, table_id, table_id, status);
 
             if (context->debuglevel > 2) print_mm_packet(RX, pkt);
 
@@ -1410,7 +1410,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
                 send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
                 status = wait_for_mm_ack(context);
                 if (status != PKT_ERROR_NACK) {
-                    fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __FUNCTION__, status);
+                    fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __func__, status);
                 }
                 if (context->connected) {
                     send_mm_ack(context, FLAG_ACK);  /* Retry unless the terminal disconnected. */
@@ -1532,7 +1532,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
     fflush(stdout);
 
     if (*buffer == NULL) {
-        fprintf(stderr, "%s: Error: failed to allocate %u bytes for table %d\n", __FUNCTION__, size, table_id);
+        fprintf(stderr, "%s: Error: failed to allocate %u bytes for table %d\n", __func__, size, table_id);
         fclose(stream);
         return -ENOMEM;
     }
@@ -1576,7 +1576,7 @@ void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1606,7 +1606,7 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     pncc_term_params = (dlog_mt_ncc_term_params_t *)(uint8_t*)calloc(1, *len);
 
     if (pncc_term_params == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1644,7 +1644,7 @@ void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffe
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1685,7 +1685,7 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1762,7 +1762,7 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1818,7 +1818,7 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1868,7 +1868,7 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
     pbuffer = (uint8_t*)calloc(1, *len);
 
     if (pbuffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1950,7 +1950,7 @@ void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *
     *len    = 1;
     *buffer = (uint8_t *)calloc(1, *len);
     if (*buffer == NULL) {
-        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __FUNCTION__, *len);
+        fprintf(stderr, "%s: Error allocating %zu bytes of memory\n", __func__, *len);
         mm_shutdown(context);
         exit(-ENOMEM);
     }
@@ -1973,7 +1973,7 @@ static int create_terminal_specific_directory(char *table_dir, char *terminal_id
 #endif /* ifdef _WIN32 */
 
     if ((status != 0) && (errno != EEXIST)) {
-        fprintf(stderr, "%s: Failed to create directory: %s\n", __FUNCTION__, dirname);
+        fprintf(stderr, "%s: Failed to create directory: %s\n", __func__, dirname);
         return -ENOENT;
     }
 

@@ -6,9 +6,17 @@ project ("mm_manager")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set the C standard to C11
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+if (MSVC)
+    # Treat warnings as errors
+    add_compile_options(/WX)
+else()
+    # Set the C standard to C11
+    set(CMAKE_C_STANDARD 11)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+
+    # Enforce additional checking
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
 
 execute_process(COMMAND git describe --dirty --always --tags
                 OUTPUT_VARIABLE GIT_REV
