@@ -43,6 +43,9 @@ static int create_terminal_specific_directory(char* table_dir, char* terminal_id
 static int update_terminal_download_time(mm_context_t* context);
 static int check_mm_table_is_newer(mm_context_t* context, uint8_t table_id);
 static void mm_display_help(const char* name, FILE* stream);
+#ifndef _WIN32
+void signal_handler(int sig);
+#endif
 
 /* Terminal Table Lists for various MTR versions. */
 uint8_t table_list_mtr_2x[] = {
@@ -740,13 +743,13 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 localtime_r(&rawtime, &ptm);
 
-                time_sync_response->year  = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
-                time_sync_response->month = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
-                time_sync_response->day   = (ptm.tm_mday & 0xff);    /* Fill current day (0-31) */
-                time_sync_response->hour  = (ptm.tm_hour & 0xff);    /* Fill current hour (0-23) */
-                time_sync_response->min   = (ptm.tm_min & 0xff);     /* Fill current minute (0-59) */
-                time_sync_response->sec   = (ptm.tm_sec & 0xff);     /* Fill current second (0-59) */
-                time_sync_response->wday  = (ptm.tm_wday + 1);       /* Day of week, 1=Sunday ... 7=Saturday */
+                time_sync_response->year  = (ptm.tm_year & 0xff);      /* Fill current years since 1900 */
+                time_sync_response->month = ((ptm.tm_mon + 1) & 0xff); /* Fill current month (1-12) */
+                time_sync_response->day   = (ptm.tm_mday & 0xff);      /* Fill current day (0-31) */
+                time_sync_response->hour  = (ptm.tm_hour & 0xff);      /* Fill current hour (0-23) */
+                time_sync_response->min   = (ptm.tm_min & 0xff);       /* Fill current minute (0-59) */
+                time_sync_response->sec   = (ptm.tm_sec & 0xff);       /* Fill current second (0-59) */
+                time_sync_response->wday  = (ptm.tm_wday + 1);         /* Day of week, 1=Sunday ... 7=Saturday */
 
                 printf("\t\tCurrent day/time: %04d-%02d-%02d / %2d:%02d:%02d\n",
                     time_sync_response->year + 1900,
@@ -1012,7 +1015,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 break;
             }
             case DLOG_MT_FUNF_CARD_AUTH: {
-                dlog_mt_auth_resp_code_t  auth_response = { DLOG_MT_AUTH_RESP_CODE, 0 };
+                dlog_mt_auth_resp_code_t  auth_response = { DLOG_MT_AUTH_RESP_CODE, 0 , { 0 }};
                 dlog_mt_funf_card_auth_t *auth_request  = (dlog_mt_funf_card_auth_t *)ppayload;
                 ppayload += sizeof(dlog_mt_funf_card_auth_t);
 
@@ -1296,7 +1299,7 @@ int mm_download_tables(mm_context_t *context) {
 
 static int update_terminal_download_time(mm_context_t *context) {
     FILE *stream;
-    char  fname[TABLE_PATH_MAX_LEN];
+    char  fname[TABLE_PATH_MAX_LEN + 1];
     char  date[100];
     time_t rawtime;
     struct tm ptm = { 0 };
@@ -1361,7 +1364,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
 }
 
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
-    mm_packet_t  packet = { { 0 } };
+    mm_packet_t  packet = { 0 };
     mm_packet_t *pkt    = &packet;
     int status;
     int retries = 2;
@@ -1423,7 +1426,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
 
 static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id) {
     char  fname[TABLE_PATH_MAX_LEN];
-    char  download_time_fname[TABLE_PATH_MAX_LEN];
+    char  download_time_fname[TABLE_PATH_MAX_LEN + 1];
     struct stat table_mtime_attr;
     struct stat last_download_time_attr;
 
@@ -1716,24 +1719,24 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
         call_in_hour -= 12;
     }
 
-    pcall_in_params->call_in_start_date[0]   = (ptm.tm_year & 0xff);     /* Call-in start YY */
-    pcall_in_params->call_in_start_date[1]   = (ptm.tm_mon + 1 & 0xff);  /* Call in start MM */
-    pcall_in_params->call_in_start_date[2]   = (ptm.tm_mday & 0xff);     /* Call in start DD */
-    pcall_in_params->call_in_start_time[0]   = call_in_hour;             /* Call-in start HH */
-    pcall_in_params->call_in_start_time[1]   = (ptm.tm_min & 0xff);      /* Call-in start MM */
-    pcall_in_params->call_in_start_time[2]   = (ptm.tm_sec & 0xff);      /* Call-in start SS */
-    pcall_in_params->call_in_interval[0]     = 0;                        /* Call-in inteval DD */
-    pcall_in_params->call_in_interval[1]     = 12;                       /* Call-in inteval HH */
-    pcall_in_params->call_in_interval[2]     = 0;                        /* Call-in inteval MM */
-    pcall_in_params->call_back_retry_time[0] = 59;                       /* Call-back retry time MM */
-    pcall_in_params->call_back_retry_time[1] = 0;                        /* Call-back retry time SS */
-    pcall_in_params->cdr_threshold           = 4;                        /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
-    pcall_in_params->unknown_timestamp[0]    = (ptm.tm_year + 1 & 0xff); /* Unknown timestamp YY (2020) */
-    pcall_in_params->unknown_timestamp[1]    = (ptm.tm_mon + 1 & 0xff);  /* Unknown timestamp MM */
-    pcall_in_params->unknown_timestamp[2]    = (ptm.tm_mday & 0xff);     /* Unknown timestamp */
-    pcall_in_params->unknown_timestamp[3]    = 2;                        /* Unknown timestamp */
-    pcall_in_params->unknown_timestamp[4]    = 0;                        /* Unknown timestamp */
-    pcall_in_params->unknown_timestamp[5]    = 0;                        /* Unknown timestamp */
+    pcall_in_params->call_in_start_date[0]   = (ptm.tm_year & 0xff);       /* Call-in start YY */
+    pcall_in_params->call_in_start_date[1]   = ((ptm.tm_mon + 1) & 0xff);  /* Call in start MM */
+    pcall_in_params->call_in_start_date[2]   = (ptm.tm_mday & 0xff);       /* Call in start DD */
+    pcall_in_params->call_in_start_time[0]   = call_in_hour;               /* Call-in start HH */
+    pcall_in_params->call_in_start_time[1]   = (ptm.tm_min & 0xff);        /* Call-in start MM */
+    pcall_in_params->call_in_start_time[2]   = (ptm.tm_sec & 0xff);        /* Call-in start SS */
+    pcall_in_params->call_in_interval[0]     = 0;                          /* Call-in inteval DD */
+    pcall_in_params->call_in_interval[1]     = 12;                         /* Call-in inteval HH */
+    pcall_in_params->call_in_interval[2]     = 0;                          /* Call-in inteval MM */
+    pcall_in_params->call_back_retry_time[0] = 59;                         /* Call-back retry time MM */
+    pcall_in_params->call_back_retry_time[1] = 0;                          /* Call-back retry time SS */
+    pcall_in_params->cdr_threshold           = 4;                          /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
+    pcall_in_params->unknown_timestamp[0]    = ((ptm.tm_year + 1) & 0xff); /* Unknown timestamp YY (2020) */
+    pcall_in_params->unknown_timestamp[1]    = ((ptm.tm_mon + 1) & 0xff);  /* Unknown timestamp MM */
+    pcall_in_params->unknown_timestamp[2]    = (ptm.tm_mday & 0xff);       /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[3]    = 2;                          /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[4]    = 0;                          /* Unknown timestamp */
+    pcall_in_params->unknown_timestamp[5]    = 0;                          /* Unknown timestamp */
     pcall_in_params->unknown[0]              = 16;
     pcall_in_params->unknown[1]              = 14;
 
@@ -1956,7 +1959,7 @@ void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *
 }
 
 static int create_terminal_specific_directory(char *table_dir, char *terminal_id) {
-    char dirname[80];
+    char dirname[268];
     int  status = 0;
 
     errno = 0;

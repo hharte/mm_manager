@@ -8,6 +8,7 @@
  * Copyright (c) 2022, Howard M. Harte
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +30,7 @@ size_t mm_table_load(mm_context_t *context, uint8_t table_id, uint64_t version_t
     char sql[512] = { 0 };
     size_t blob_len;
 
-    snprintf(sql, sizeof(sql), "SELECT TABLE_DATA from TERMDAT where (TABLE_ID = %d and VERSION_TIMESTAMP = %llu);",
+    snprintf(sql, sizeof(sql), "SELECT TABLE_DATA from TERMDAT where (TABLE_ID = %d and VERSION_TIMESTAMP = %" PRIu64 ");",
         table_id, version_timestamp);
 
     blob_len = mm_sql_read_blob(context->database, sql, buffer, buflen);
@@ -42,7 +43,7 @@ int mm_table_save(mm_context_t* context, uint8_t table_id, uint64_t version_time
     int rc;
 
     snprintf(sql, sizeof(sql), "REPLACE INTO TERMDAT (TABLE_ID, VERSION_TIMESTAMP, DATA_LENGTH, TABLE_DATA)"
-        "VALUES ( %d, %llu, %zd, ?);",
+        "VALUES ( %d, %" PRIu64 ", %zd, ?);",
         table_id,
         version_timestamp,
         buflen);
@@ -52,7 +53,7 @@ int mm_table_save(mm_context_t* context, uint8_t table_id, uint64_t version_time
     rc = mm_sql_write_blob(context->database, sql, buffer, buflen);
 
     if (rc != 0) {
-        fprintf(stderr, "%s: Error writing table %d, version %llu\n", __FUNCTION__, table_id, version_timestamp);
+        fprintf(stderr, "%s: Error writing table %d, version %" PRIu64 "\n", __FUNCTION__, table_id, version_timestamp);
     }
 
     return rc;

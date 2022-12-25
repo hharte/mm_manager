@@ -197,7 +197,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
  * Returns PKT_SUCCESS on success, otherwise PKT_ERROR_ code flags.
  */
 pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len, uint8_t flags) {
-    mm_packet_t pkt = {{0}};
+    mm_packet_t pkt = {0};
     pkt_status_t status = PKT_SUCCESS;
     int retries;
 

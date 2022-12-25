@@ -10,6 +10,7 @@
  * Copyright (c) 2022, Howard M. Harte
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -512,8 +513,8 @@ int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* per
         timestamp_to_string(perf_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
         timestamp_to_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)));
 
-    for (int i = 0; i < ((sizeof(perf_stats->stats) / sizeof(uint16_t))); i++) {
-        if (perf_stats->stats[i] > 0) printf("[%2d] %27s: %5d\n", i, TPERFST_stats_to_str(i), perf_stats->stats[i]);
+    for (size_t i = 0; i < ((sizeof(perf_stats->stats) / sizeof(uint16_t))); i++) {
+        if (perf_stats->stats[i] > 0) printf("[%2zu] %27s: %5d\n", i, TPERFST_stats_to_str(i), perf_stats->stats[i]);
     }
 
     return 0;
@@ -540,7 +541,7 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
     term_status_word |= (uint64_t)(dlog_mt_term_status->status[3]) << 24;
     term_status_word |= (uint64_t)(dlog_mt_term_status->status[4]) << 32;
 
-    printf("\t\tTerminal serial number %s, Terminal Status Word: 0x%010llx\n",
+    printf("\t\tTerminal serial number %s, Terminal Status Word: 0x%010" PRIx64 "\n",
         serial_number, term_status_word);
 
     /* Retrieve the most recent terminal status, and update only if changed. */
@@ -597,7 +598,7 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
             "CODE_SERVER_ABORTED,"
             "TELCO_ID, REGION_CODE"
             ") VALUES ( "
-            "\"%s\",%s,\"%s\",%llu,"
+            "\"%s\",%s,\"%s\",%" PRIu64 ","
             "%d,%d,%d,%d,%d,%d,%d,%d,"
             "%d,%d,%d,%d,%d,%d,%d,%d,"
             "%d,%d,%d,%d,%d,%d,%d,%d,"

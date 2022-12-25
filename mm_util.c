@@ -743,7 +743,7 @@ const uint16_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_2_X     /* 60 */
 };
 
-const uint16_t term_type_to_mtr(uint8_t term_type) {
+uint16_t term_type_to_mtr(uint8_t term_type) {
     if (term_type > 60) return MTR_UNKNOWN;
     return term_type_mtr[term_type];
 }
@@ -812,7 +812,7 @@ const uint8_t term_type_model[TERM_TYPE_MAX + 1] = {
     TERM_MULTIPAY       /* 60 */
 };
 
-const uint8_t term_type_to_model(uint8_t term_type) {
+uint8_t term_type_to_model(uint8_t term_type) {
     if (term_type > 60) return MTR_UNKNOWN;
     return term_type_model[term_type];
 }

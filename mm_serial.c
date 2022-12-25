@@ -77,7 +77,7 @@ ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t coun
         }
     }
     else {
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             if (feof(pserial_context->bytestream)) {
                 printf("%s: Terminating due to EOF.\n", __FUNCTION__);
                 fflush(stdout);
@@ -102,7 +102,7 @@ ssize_t read_serial(mm_serial_context_t *pserial_context, void *buf, size_t coun
     }
 
     if (pserial_context->logstream != NULL) {
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             fprintf(pserial_context->logstream, "UART: RX: %02X\n", ((uint8_t*)buf)[i]);
         }
     }
@@ -113,7 +113,7 @@ ssize_t write_serial(mm_serial_context_t *pserial_context, const void *buf, size
     ssize_t bytes_written = count;
 
     if (pserial_context->logstream != NULL) {
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             fprintf(pserial_context->logstream, "UART: TX: %02X\n", ((uint8_t*)buf)[i]);
         }
     }

@@ -16,6 +16,8 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 
+#include "mm_serial.h"
+
 /*
  * Open serial port specified in modem_dev.
  *
