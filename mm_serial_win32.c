@@ -61,6 +61,7 @@ int platform_init_serial(int fd, int baudrate) {
 
     if (GetCommState(hComm, &myDCB)) {
         myDCB.BaudRate = baudrate;
+        myDCB.fDtrControl = 1;
 
         if (SetCommState(hComm, &myDCB)) {
             COMMTIMEOUTS cto;
