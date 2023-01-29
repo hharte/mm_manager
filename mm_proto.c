@@ -50,11 +50,14 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     pkt_status_t status  = PKT_SUCCESS;
     uint8_t timeout      = 0;
 
-    if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
-        context->connected = 0;
-        fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
-        pkt->payload_len = 0;
-        return PKT_ERROR_NO_CARRIER;
+    if (context->monitor_carrier) {
+        if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
+            context->connected = 0;
+            fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
+            pkt->payload_len = 0;
+            hangup_modem(context->serial_context);
+            return PKT_ERROR_NO_CARRIER;
+        }
     }
 
     if (context->connected == 0) {
@@ -79,11 +82,14 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 return PKT_ERROR_DISCONNECT;
             }
             putchar('.');
-            if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
-                context->connected = 0;
-                fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
-                pkt->payload_len = 0;
-                return PKT_ERROR_NO_CARRIER;
+            if (context->monitor_carrier) {
+                if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
+                    context->connected = 0;
+                    fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
+                    pkt->payload_len = 0;
+                    hangup_modem(context->serial_context);
+                    return PKT_ERROR_NO_CARRIER;
+                }
             }
 
             fflush(stdout);
@@ -197,7 +203,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
  * Returns PKT_SUCCESS on success, otherwise PKT_ERROR_ code flags.
  */
 pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len, uint8_t flags) {
-    mm_packet_t pkt = { 0 };
+    mm_packet_t pkt;
     pkt_status_t status = PKT_SUCCESS;
     int retries;
 
@@ -228,6 +234,7 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
 #endif /* _WIN32 */
         }
 
+        memset(&pkt, 0, sizeof(pkt));
         pkt.hdr.start = START_BYTE;
 
         if (payload != NULL) {

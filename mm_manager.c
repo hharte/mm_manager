@@ -232,7 +232,7 @@ uint8_t table_list_mtr17_intl[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "a:b:cd:e:f:hi:k:l:mn:p:qst:uv";
+const char cmdline_options[] = "a:b:cd:e:f:hi:k:l:mn:p:qst:uvw";
 #define DEFAULT_MODEM_RESET_STRING "ATZ"
 #define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
 
@@ -327,6 +327,7 @@ int main(int argc, char *argv[]) {
     mm_context->key_card_number[4] = 0x88;
 
     mm_context->complete_download = FALSE;
+    mm_context->monitor_carrier = TRUE;
 
     /* Parse command line to get -q (quiet) option. */
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
@@ -340,7 +341,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (quiet == 0) {
-        printf("mm_manager v0.8 [%s] - (c) 2020-2022, Howard M. Harte\n\n", VERSION);
+        printf("mm_manager v0.8 [%s] - (c) 2020-2023, Howard M. Harte\n\n", VERSION);
     }
 
     /* Parse command line again to get the rest of the options. */
@@ -477,6 +478,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'v':
                 mm_context->debuglevel++;
+                break;
+            case 'w':   /* Don't monitor carrier detect signal from modem. */
+                mm_context->monitor_carrier = FALSE;
                 break;
             case '?':
             default:
@@ -1364,7 +1368,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
 }
 
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
-    mm_packet_t  packet = { 0 };
+    mm_packet_t  packet;
     mm_packet_t *pkt    = &packet;
     int status;
     int retries = 2;
@@ -1372,6 +1376,7 @@ int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
     if (context->debuglevel > 1) printf("Waiting for ACK for table %d (0x%02x)\n", table_id, table_id);
 
     while (retries > 0) {
+        memset(pkt, 0, sizeof(mm_packet_t));
         status = receive_mm_packet(context, pkt);
 
         if ((status == PKT_SUCCESS) || (status == PKT_ERROR_RETRY)) {
@@ -2002,7 +2007,8 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-s - Download only minimum required tables to terminal.\n" \
             "\t-t <term_table_dir> - terminal-specific table directory.\n" \
             "\t-u <port> - Send packets as UDP to <port>.\n" \
-            "\t-v verbose (multiple v's increase verbosity.\n");
+            "\t-v verbose (multiple v's increase verbosity.\n" \
+            "\t-w - don't monitor the modem for carrier loss.\n");
     return;
 }
-// "a:b:cd:e:f:hi:k:l:mn:p:qrst:uv";
+// "a:b:cd:e:f:hi:k:l:mn:p:qrst:uvw";

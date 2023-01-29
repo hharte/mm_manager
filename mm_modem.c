@@ -88,9 +88,9 @@ int hangup_modem(mm_serial_context_t *pserial_context) {
     serial_set_dtr(pserial_context, 0);
 #ifdef _WIN32
     Sleep(1000);
-#else  /* ifdef _WIN32 */
+#else
     sleep(1);
-#endif /* ifdef _WIN32 */
+#endif /* _WIN32 */
     serial_set_dtr(pserial_context, 1);
     return 0;
 #else
