@@ -50,11 +50,13 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
     pkt_status_t status  = PKT_SUCCESS;
     uint8_t timeout      = 0;
 
+    pkt->payload_len = 0;
+    memset(pkt, 0, sizeof(mm_packet_t));
+
     if (context->monitor_carrier) {
         if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
             context->connected = 0;
             fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
-            pkt->payload_len = 0;
             hangup_modem(context->serial_context);
             return PKT_ERROR_NO_CARRIER;
         }
@@ -86,7 +88,6 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
                 if ((serial_get_modem_status(context->serial_context) & (MS_RING_ON | MS_RLSD_ON)) == 0) {
                     context->connected = 0;
                     fprintf(stderr, "%s: Carrier lost, bailing.\n", __func__);
-                    pkt->payload_len = 0;
                     hangup_modem(context->serial_context);
                     return PKT_ERROR_NO_CARRIER;
                 }
