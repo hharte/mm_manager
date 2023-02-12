@@ -6,7 +6,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  */
 
@@ -148,6 +148,8 @@ int main(int argc, char *argv[]) {
         fclose(instream);
         return -EIO;
     }
+
+    fclose(instream);
 
     printf("+-------------------------------------------------------------------------------------------+\n" \
            "| Call Entry | FCF  |CALLTYP|Carrier|Flags2| Phone Number       | Class | Class Description |\n" \

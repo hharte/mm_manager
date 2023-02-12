@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  * The International Set-based rating able is an array of 603 bytes.
  * The first three bytes define the default flags and rate entry for
@@ -74,6 +74,8 @@ int main(int argc, char *argv[]) {
         fclose(instream);
         return -EIO;
     }
+
+    fclose(instream);
 
     /* Display International SBR table common information. */
     printf("International Flags: 0x%02x (%d)\n", prate_table->flags,              prate_table->flags);
