@@ -18,7 +18,6 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 `mm_manager` runs on Windows, Linux, and MacOS X.
 
 
-
 The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.1 Control PCP (Surface-mount, 2.11 firmware.)  It partially works with other terminal types and firmware versions, see table for limitations:
 
 
@@ -144,7 +143,7 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
   </tr>
   <tr>
-   <td>NBJ1S03
+   <td><a href="https://github.com/muccc/millennium/blob/master/firmware/NBJ1S03/NBJ1S03.bin">NBJ1S03</a>
    </td>
    <td>1.9
    </td>
@@ -335,24 +334,26 @@ Compile `mm_manager` with Microsoft Visual Studio 2019 or later with CMake, usin
 
 ```
 usage: mm_manager [-vhmq] [-f <filename>] [-i "modem init string"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]
-	-a <access_code> - Craft 7-digit access code (default: CRASERV)
-	-b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
-	-c - Always download complete table set.
-	-d <default_table_dir> - default table directory.
-	-e <error_inject_type> - Inject error on SIGBRK.
-	-f <filename> modem device or file
-	-h this help.
-	-i "modem init string" - Modem initialization string.
-	-k <key_code> - Desk Terminal 10-digit akey card code (default: 4012888888)
-	-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
-	-m use serial modem (specify device with -f)
-	-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
-	-p <pcapfile> - Save packets in a .pcap file.
-	-q - Don't display sign-on banner.
-	-s - Download only minimum required tables to terminal.
-	-t <term_table_dir> - terminal-specific table directory.
-	-u <port> - Send packets as UDP to <port>.
-	-v verbose (multiple v's increase verbosity.
+        -a <access_code> - Craft 7-digit access code (default: CRASERV)
+        -b <baudrate> - Modem baud rate, in bps.  Defaults to 19200.
+        -c - Always download complete table set.
+        -d <default_table_dir> - default table directory.
+        -e <error_inject_type> - Inject error on SIGBRK.
+        -f <filename> modem device or file
+        -h this help.
+        -i "modem init string" - Modem initialization string.
+        -k <key_code> - Desk Terminal 10-digit key card code (default: 4012888888)
+        -l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.
+        -m use serial modem (specify device with -f)
+        -n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.
+        -p <pcapfile> - Save packets in a .pcap file.
+        -q - Don't display sign-on banner.
+        -r - Rating test mode: Amount charged determined by last 4 digits of dialed number.
+        -s - Download only minimum required tables to terminal.
+        -t <term_table_dir> - terminal-specific table directory.
+        -u <port> - Send packets as UDP to <port>.
+        -v verbose (multiple v's increase verbosity.
+        -w - don't monitor the modem for carrier loss.
 ```
 
 
@@ -974,6 +975,140 @@ Two multipay terminals with different Advertising messages, and otherwise config
 `tables/4085359995/mm_table_1d.bin` - Advertising messages for terminal ID 4085359995
 
 `tables/default/` -  All of the default tables are in this directory (including `mm_table_1d.bin`)
+
+
+# mm_manager Utilities
+
+
+<table>
+  <tr>
+   <td>Utility
+   </td>
+   <td>Description
+   </td>
+  </tr>
+  <tr>
+   <td>mm_admess
+   </td>
+   <td>Dump Advertising Messages table
+   </td>
+  </tr>
+  <tr>
+   <td>mm_areacode
+   </td>
+   <td>Dump Set-based rating (NPA) table, MTR 1.20, 2.x
+   </td>
+  </tr>
+  <tr>
+   <td>mm_callscrn
+   </td>
+   <td>Dump Call Screening List
+   </td>
+  </tr>
+  <tr>
+   <td>mm_card
+   </td>
+   <td>Dump Credit Card / Smart Card table MTR 1.20, 2.x
+   </td>
+  </tr>
+  <tr>
+   <td>mm_card_mtr1
+   </td>
+   <td>Dump Credit Card / Smart Card table MTR 1.7, 1.9
+   </td>
+  </tr>
+  <tr>
+   <td>mm_carrier.exe
+   </td>
+   <td>Dump Carrier table MTR 1.20, 2.x
+   </td>
+  </tr>
+  <tr>
+   <td>mm_carrier_mtr1
+   </td>
+   <td>Dump Carrier table MTR 1.7, 1.9
+   </td>
+  </tr>
+  <tr>
+   <td>mm_coinvl
+   </td>
+   <td>Dump Coin Validator table
+   </td>
+  </tr>
+  <tr>
+   <td>mm_convert_callscrn_mtr2_to_mtr1
+   </td>
+   <td>Convert MTR 1.20/2.x Call Screening List to MTR 1.7, 1.9.
+   </td>
+  </tr>
+  <tr>
+   <td>mm_convert_card_mtr2_to_mtr1
+   </td>
+   <td>Convert MTR 1.20/2.x Card Table to MTR 1.7, 1.9.
+   </td>
+  </tr>
+  <tr>
+   <td>mm_dlog2pcap
+   </td>
+   <td>Convert mm_manager dialog output to pcap format for visualization with WireShark.
+   </td>
+  </tr>
+  <tr>
+   <td>mm_featru
+   </td>
+   <td>Dump Feature Configuration Options table
+   </td>
+  </tr>
+  <tr>
+   <td>mm_instsv
+   </td>
+   <td>Dump Installation / Servicing table
+   </td>
+  </tr>
+  <tr>
+   <td>mm_lcd
+   </td>
+   <td>Dump LCD tables (supports uncompressed, compressed, and double-compressed tables)
+   </td>
+  </tr>
+  <tr>
+   <td>mm_luhn
+   </td>
+   <td>Generate / Check magnetic card Luhn check digit
+   </td>
+  </tr>
+  <tr>
+   <td>mm_rate
+   </td>
+   <td>Dump Rate table
+   </td>
+  </tr>
+  <tr>
+   <td>mm_rateint
+   </td>
+   <td>Dump International Set-based rating table (MTR 1.20. 2.x)
+   </td>
+  </tr>
+  <tr>
+   <td>mm_rdlist
+   </td>
+   <td>Dump Repertory Dialer list
+   </td>
+  </tr>
+  <tr>
+   <td>mm_smcard
+   </td>
+   <td>Dump Smart Card (TeleCard) table
+   </td>
+  </tr>
+  <tr>
+   <td>mm_table_cutter
+   </td>
+   <td>Extract ROM tables from firmware binaries
+   </td>
+  </tr>
+</table>
+
 
 
 # Low-Level Protocol
