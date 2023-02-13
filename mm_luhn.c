@@ -15,7 +15,7 @@
 
 int main(int argc, char* argv[]) {
     int luhn_check = -1;
-    int i = 0;
+    size_t i = 0;
     int sum = 0;
 
     if (argc > 1) {

@@ -181,7 +181,7 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
         print_bits(cdr->rate_type, (char**)str_tcdr_rate_flags);
         printf("\n\t\t\tDLOG_MT_CALL_DETAILS Flags: 0x%02x: ", cdr->flags);
         print_bits(cdr->flags, (char**)str_tcdr_flags);
-        printf("\n\t\t\tDLOG_MT_CALL_DETAILS Auth code: %llu\n", cdr->auth_code);
+        printf("\n\t\t\tDLOG_MT_CALL_DETAILS Auth code: %" PRIu64 "\n", cdr->auth_code);
     }
 
     snprintf(sql, sizeof(sql), "INSERT " SQL_IGNORE "INTO TCDR ( TERMINAL_ID,RECEIVED_DATE,RECEIVED_TIME,SEQ,START_DATE,START_TIME,CALL_DURATION,CD_CALL_TYPE,CD_CALL_TYPE_STR,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE,TELCO_ID,REGION_CODE) VALUES ( " \

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>  /* String function definitions */
+#include <inttypes.h>
 #ifndef _WIN32
 # include <unistd.h> /* UNIX standard function definitions */
 # include <libgen.h>
@@ -1056,7 +1057,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 auth_response.resp_code = 0;
                 auth_response.auth_code = rawtime;
 
-                printf("\t\tSending auth response: Response code: 0x%02x, Authorization code: %llu\n",
+                printf("\t\tSending auth response: Response code: 0x%02x, Authorization code: %" PRIu64 "\n",
                     auth_response.resp_code,
                     auth_response.auth_code);
 
@@ -2033,7 +2034,7 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-f <filename> modem device or file\n" \
             "\t-h this help.\n" \
             "\t-i \"modem init string\" - Modem initialization string.\n" \
-            "\t-k <key_code> - Desk Terminal 10-digit akey card code (default: 4012888888)\n" \
+            "\t-k <key_code> - Desk Terminal 10-digit key card code (default: 4012888888)\n" \
             "\t-l <logfile> - log bytes transmitted to and received from the terminal.  Useful for debugging.\n" \
             "\t-m use serial modem (specify device with -f)\n" \
             "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
