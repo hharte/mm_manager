@@ -232,7 +232,7 @@ uint8_t table_list_mtr17_intl[] = {
     0                         /* End of table list */
 };
 
-const char cmdline_options[] = "a:b:cd:e:f:hi:k:l:mn:p:qst:uvw";
+const char cmdline_options[] = "a:b:cd:e:f:hi:k:l:mn:p:qrst:uvw";
 #define DEFAULT_MODEM_RESET_STRING "ATZ"
 #define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
 
@@ -459,6 +459,10 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case 'q':
+                break;
+            case 'r':
+                printf("NOTE: Rating test mode enabled.\n");
+                mm_context->rating_test_mode = 1;
                 break;
             case 's':
                 printf("NOTE: Using minimum required table list for download.\n");
@@ -1004,10 +1008,19 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 rate_response.id = DLOG_MT_RATE_RESPONSE;
                 rate_response.rate.type = (uint8_t)mm_inter_lata;
-                rate_response.rate.initial_period    = 60;
-                rate_response.rate.initial_charge    = ((phone_number[6] - '0') * 1000) + ((phone_number[7] - '0') * 100) + ((phone_number[8] - '0') * 10) + (phone_number[9] - '0');
-                rate_response.rate.additional_period = 0x00;
-                rate_response.rate.additional_charge = 0x00;
+
+                if (context->rating_test_mode) {
+                    rate_response.rate.initial_period = 60;
+                    rate_response.rate.initial_charge = ((phone_number[6] - '0') * 1000) + ((phone_number[7] - '0') * 100) + ((phone_number[8] - '0') * 10) + (phone_number[9] - '0');
+                    rate_response.rate.additional_period = 0x00;
+                    rate_response.rate.additional_charge = 0x00;
+                }
+                else {
+                    rate_response.rate.initial_period = 240;
+                    rate_response.rate.initial_charge = 100;
+                    rate_response.rate.additional_period = 60;
+                    rate_response.rate.additional_charge = 25;
+                }
 
                 printf("\t\tRate response: Rate type: %d (%s), Initial period: %d, Initial charge: %d, Additional Period: %d, Additional Charge: %d\n",
                     rate_response.rate.type,
@@ -2007,6 +2020,7 @@ static int create_terminal_specific_directory(char *table_dir, char *terminal_id
 }
 
 static void mm_display_help(const char *name, FILE *stream) {
+    /* "a:b:cd:e:f:hi:k:l:mn:p:qrst:uvw" */
     fprintf(stream,
         "usage: %s [-vhmq] [-f <filename>] [-i \"modem init string\"] [-l <logfile>] [-p <pcapfile>] [-a <access_code>] [-k <key_code>] [-n <ncc_number>] [-d <default_table_dir] [-t <term_table_dir>] [-u <port>]\n",
         name);
@@ -2025,6 +2039,7 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-n <Primary NCC Number> [-n <Secondary NCC Number>] - specify primary and optionally secondary NCC number.\n" \
             "\t-p <pcapfile> - Save packets in a .pcap file.\n" \
             "\t-q - Don't display sign-on banner.\n" \
+            "\t-r - Rating test mode: Amount charged determined by last 4 digits of dialed number.\n" \
             "\t-s - Download only minimum required tables to terminal.\n" \
             "\t-t <term_table_dir> - terminal-specific table directory.\n" \
             "\t-u <port> - Send packets as UDP to <port>.\n" \
@@ -2032,4 +2047,3 @@ static void mm_display_help(const char *name, FILE *stream) {
             "\t-w - don't monitor the modem for carrier loss.\n");
     return;
 }
-// "a:b:cd:e:f:hi:k:l:mn:p:qrst:uvw";

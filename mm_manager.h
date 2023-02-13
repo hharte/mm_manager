@@ -1263,6 +1263,7 @@ typedef struct mm_context {
     uint8_t error_inject_type;
     uint8_t waiting_for_ack;
     uint8_t monitor_carrier;
+    uint8_t rating_test_mode;
 } mm_context_t;
 
 typedef uint32_t pkt_status_t;  /* Packet status flags. */
