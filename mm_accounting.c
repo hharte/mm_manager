@@ -62,19 +62,20 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         sizeof(auth_request->phone_number));
     phone_num_to_string(card_number_string, sizeof(card_number_string), auth_request->card_number,
         sizeof(auth_request->card_number));
-    call_type_to_string(auth_request->call_type, call_type_str, sizeof(call_type_str));
+    call_type_to_string(auth_request->call_type & (~FLAG_CDR_IXL), call_type_str, sizeof(call_type_str));
 
-    printf("\t\tCard Auth request: Terminal: %s, Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, init: %02x/%02x, ctrlflag: 0x%02x carrier: %d, Call_type: %s, card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
+    printf("\t\tCard Auth request: Terminal: %s, Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, service_code: %d, PIN: %02x, ctrlflag: 0x%02x carrier: %d, Call_type: 0x%02x (%s,) card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
         context->terminal_id,
         phone_number_string,
         auth_request->seq,
         card_number_string,
         auth_request->exp_mm,
         auth_request->exp_yy + 0x2000,
-        auth_request->init_mm,
-        auth_request->init_yy + 0x2000,
+        auth_request->service_code,
+        ((auth_request->pin & 0xFF) << 8) | ((auth_request->pin & 0xFF00) >> 8),
         auth_request->control_flag,
         auth_request->carrier_ref,
+        auth_request->call_type,
         call_type_str,
         auth_request->card_ref_num,
         auth_request->unknown,
@@ -106,24 +107,46 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         phone_number_string,
         auth_request->carrier_ref,
         card_number_string,
-        0,
+        auth_request->service_code,
         auth_request->exp_yy + 0x2000,
         auth_request->exp_mm,
-        auth_request->init_yy + 0x2000,
-        auth_request->init_mm,
+        0, //auth_request->init_yy + 0x2000,
+        0, //auth_request->init_mm,
         auth_request->control_flag,
         0,
         0,
-        0,
+        ((auth_request->pin & 0xFF) << 8) | ((auth_request->pin & 0xFF00) >> 8),
         auth_request->call_type,
         auth_request->card_ref_num,
         auth_request->seq,
-        0,
+        (auth_request->control_flag & TAUTH_FOLLOW_ON_IND) ? 1 : 0,
         context->telco_id[0], context->telco_id[1],
         context->region_code[0], context->region_code[1], context->region_code[2]);
 
     return mm_sql_exec(context->database, sql);
 }
+
+const char* str_tcdr_flags[] = {
+    "10XXX_USER",
+    "SUMM_LOCAL_SC",
+    "MULTIPLE_SC",
+    "CARRIER_PFX",
+    "01_ADDED_CONVERTED",
+    "POST_MSR16",
+    "BIT6",
+    "BIT7"
+};
+
+const char* str_tcdr_rate_flags[] = {
+    "TRANSMITTED_IND",
+    "INTERNATIONAL_CALL_IND",
+    "REP_DIALER_CALL",
+    "SMART_CARD_FLAG",
+    "CARD_SPILL_OCCURRED",
+    "MANUAL_CARD_NUMBER",
+    "FEATURE_GROUP_B",
+    "FOLLOW_ON_CALL_IND"
+};
 
 int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
     char sql[512] = { 0 };
@@ -134,25 +157,31 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
     char call_type_str[38];
 
     printf(
-        "\t\tCDR: %s, Duration: %02d:%02d:%02d %s, DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, Seq: %04d\n",
+        "\t\tCDR: %s, Duration: %02d:%02d:%02d call_type: 0x%02x (%s), DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, card_ref=0x%02x, unknown=0x%02x, Seq: %04d\n",
         timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
         cdr->call_duration[0],
         cdr->call_duration[1],
         cdr->call_duration[2],
-        call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
+        cdr->call_type,
+        call_type_to_string(cdr->call_type & (~FLAG_CDR_IXL), call_type_str, sizeof(call_type_str)),
         phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num,
-                            sizeof(cdr->called_num)),
-        phone_num_to_string(card_number_string,  sizeof(card_number_string),  cdr->card_num,
-                            sizeof(cdr->card_num)),
+            sizeof(cdr->called_num)),
+        phone_num_to_string(card_number_string, sizeof(card_number_string), cdr->card_num,
+            sizeof(cdr->card_num)),
         (float)cdr->call_cost[0] / 100,
         (float)cdr->call_cost[1] / 100,
         cdr->carrier_code,
         cdr->rate_type,
+        cdr->card_ref,
+        cdr->unknown,
         cdr->seq);
 
     if (context->debuglevel > 2) {
-        printf("\t\t\tDLOG_MT_CALL_DETAILS Pad:");
-        dump_hex(cdr->pad, sizeof(cdr->pad));
+        printf("\t\t\tDLOG_MT_CALL_DETAILS Rate Flags: 0x%02x: ", cdr->rate_type);
+        print_bits(cdr->rate_type, (char**)str_tcdr_rate_flags);
+        printf("\n\t\t\tDLOG_MT_CALL_DETAILS Flags: 0x%02x: ", cdr->flags);
+        print_bits(cdr->flags, (char**)str_tcdr_flags);
+        printf("\n\t\t\tDLOG_MT_CALL_DETAILS Auth code: %llu\n", cdr->auth_code);
     }
 
     snprintf(sql, sizeof(sql), "INSERT " SQL_IGNORE "INTO TCDR ( TERMINAL_ID,RECEIVED_DATE,RECEIVED_TIME,SEQ,START_DATE,START_TIME,CALL_DURATION,CD_CALL_TYPE,CD_CALL_TYPE_STR,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE,TELCO_ID,REGION_CODE) VALUES ( " \
@@ -165,7 +194,7 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
         cdr->call_duration[1] * 60 +
         cdr->call_duration[2],
         cdr->call_type,
-        call_type_to_string(cdr->call_type, call_type_str, sizeof(call_type_str)),
+        call_type_to_string(cdr->call_type & (~FLAG_CDR_IXL), call_type_str, sizeof(call_type_str)),
         phone_num_to_string(phone_number_string, sizeof(phone_number_string), cdr->called_num,
                             sizeof(cdr->called_num)),
         phone_num_to_string(card_number_string,  sizeof(card_number_string),  cdr->card_num,

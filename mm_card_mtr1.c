@@ -190,6 +190,20 @@ int main(int argc, char *argv[]) {
     pcard_table->c[12].carrier_ref = 0x0;
     pcard_table->c[13].carrier_ref = 0x0;
 
+    pcard_table->c[0].ref_num = 0x10;
+    pcard_table->c[1].ref_num = 0x11;
+    pcard_table->c[2].ref_num = 0x12;
+    pcard_table->c[3].ref_num = 0x13;
+    pcard_table->c[4].ref_num = 0x14;
+    pcard_table->c[5].ref_num = 0x15;
+    pcard_table->c[6].ref_num = 0x16;
+    pcard_table->c[7].ref_num = 0x17;
+    pcard_table->c[8].ref_num = 0x18;
+    pcard_table->c[9].ref_num = 0x19;
+    pcard_table->c[10].ref_num = 0x1a;
+    pcard_table->c[11].ref_num = 0x1b;
+    pcard_table->c[12].ref_num = 0x1c;
+    pcard_table->c[13].ref_num = 0x1d;
 
     for (index = 0; index < CCARD_MAX_MTR1; index++) {
         pcard_table->c[index].vfy_flags &= ~CARD_VF_ACCS_ROUTING;

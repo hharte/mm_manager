@@ -57,7 +57,7 @@ typedef struct card_entry {
     uint8_t        p_init_date;
     uint8_t        p_disc_data;
     service_code_t svc_code;
-    uint8_t        ref_num;
+    uint8_t        ref_num;       /* Indicates the unique identifier for the card. Range: 0-62 */
     uint8_t        carrier_ref;   /* Unique number for each carrier used to cross reference the carrier in other tables. */
     uint8_t        control_info;  /* Control-info 1 */
     uint8_t        bank_info;
@@ -78,7 +78,7 @@ typedef struct card_entry_mtr1 {
     uint8_t        p_init_date;
     uint8_t        p_disc_data;
     service_code_t svc_code;
-    uint8_t        ref_num;
+    uint8_t        ref_num;       /* Indicates the unique identifier for the card. */
     uint8_t        carrier_ref;   /* Unique number for each carrier used to cross reference the carrier in other tables. */
 } card_entry_mtr1_t;
 

@@ -382,8 +382,22 @@ typedef struct dlog_mt_call_details {
     uint8_t start_timestamp[6];
     uint8_t call_duration[3];
     uint8_t call_type;              /* CALLTYP (Call Type) pp. 2-41 */
-    uint8_t pad[11];
+    uint64_t auth_code;             /* Authorization code returned from external system. */
+    uint8_t flags;
+    uint8_t card_ref;
+    uint8_t unknown;
 } dlog_mt_call_details_t;
+
+/* Rate type flags pp. 2-428*/
+#define TRANSMITTED_IND         0x01    // Indicates the record was transmitted to the billing system for billing.
+#define INTERNATIONAL_CALL_IND  0x02    // Indicates the call was an international call.
+#define REP_DIALER_CALL         0x04    // Indicates the call was a repertory dialer call.
+#define SMART_CARD_FLAG         0x08    // (Obsolete) Indicates that a smart card was used.
+#define CARD_SPILL_OCCURRED     0x10    // Indicates the card number was sent to the network.
+#define MANUAL_CARD_NUMBER      0x20    // Indicates the card number was manually entered at the payphone.
+#define FEATURE_GROUP_B         0x40    // Feature Group B is a category of free access to the carrier network.
+#define FOLLOW_ON_CALL_IND      0x80    // Indicates a call made using the Next Call button.
+
 
 /* Call Type (lower 4-bits) of CALLTYP */
 #define CALL_TYPE_INCOMING      0x00    // Incoming
@@ -420,6 +434,16 @@ typedef struct dlog_mt_call_details {
 #define PMT_TYPE_UNDEFINED2     0x0d    // Undefined
 #define PMT_TYPE_UNDEFINED3     0x0e    // Undefined
 #define PMT_TYPE_UNDEFINED4     0x0f    // Undefined
+
+#define FLAG_CDR_IXL            (1 << 7)    // International Call (CDR Call Type)
+
+/* TCDR Flags, pp. 2-435 */
+#define TCDR_FLAG_10XXX_USER    (1 << 0)    // 10XXX Dialed by User field.
+#define TCDR_FLAG_SUMM_LOCAL_SC (1 << 1)    // Summary local smart card CDR
+#define TCDR_FLAG_MULTIPLE_SC   (1 << 2)    // Multiple Smart Cards Used
+#define TCDR_FLAG_CARRIER_PFX   (1 << 3)    // Bit 3 is Carrier PREFIX in the TCDR table
+#define TCDR_FLAG_01_ADDED      (1 << 4)    // Bit 4 is ZERO ONE ADDED OR CONVERTED in the TCDR table
+#define TCDR_FLAG_POST_MSR16    (1 << 5)    // Bit 5 is Post MSR16 CDR
 
 /* DLOG_MT_CASH_BOX_COLLECTION */
 typedef struct dlog_mt_cash_box_collection {
@@ -680,18 +704,28 @@ typedef struct dlog_mt_funf_card_auth {
     uint8_t exp_yy;                         /* Card expiration year. */
     uint8_t exp_mm;                         /* Card expiration month. */
     uint16_t unknown2;
-    uint8_t init_yy;                        /* Card initial year. */
-    uint8_t init_mm;                        /* Card initial month. */
+    uint16_t pin;                           /* PIN */
     uint8_t call_type;                      /* See CALLTYP (Call Type) pp. 2-41 */
     uint8_t card_ref_num;
     uint16_t seq;                           /* Authorization sequence number */
 } dlog_mt_funf_card_auth_t;
 
+/* TAUTH Control Flags, pp. 2-378 */
+#define TAUTH_SPARE_FLAG1       (1 << 0)    /* Spare flag 1 */
+#define TAUTH_SPARE_FLAG2       (1 << 1)    /* Spare flag 2 */
+#define TAUTH_FOLLOW_ON_IND     (1 << 2)    /* Validation of a follow-on call. */
+#define TAUTH_TELCO_PIN_IND     (1 << 3)
+#define TAUTH_MAN_DIALED_CD_NUM (1 << 4)    /* Indicates the card number was manually entered at the payphone. */
+#define TAUTH_SPARE_FLAG3       (1 << 5)    /* Spare flag 3 */
+#define TAUTH_SPARE_FLAG4       (1 << 6)    /* Spare flag 4 */
+#define TAUTH_SPARE_FLAG5       (1 << 7)    /* Spare flag 5 */
+
 /* DLOG_MT_AUTH_RESP_CODE */
 typedef struct dlog_mt_auth_resp_code {
     uint8_t  id;
     uint8_t  resp_code;                     /* Authorization response code: 0=card valid, otherwise card invalid. */
-    uint8_t  pad[20];
+    uint64_t auth_code;                     /* Authorization code returned from external system. */
+    uint8_t  pad[12];
 } dlog_mt_auth_resp_code_t;
 
 typedef struct carrier_table_entry {
@@ -1325,6 +1359,7 @@ errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest);
 extern void print_bits(uint8_t bits, char *str_array[]);
 extern const char *table_to_string(uint8_t table);
 extern const char *alarm_id_to_string(uint8_t alarm_id);
+extern const char* rate_type_to_str(uint8_t type);
 extern const char *stats_call_type_to_str(uint8_t type);
 extern const char *stats_to_str(uint8_t type);
 extern const char *TCALSTE_stats_to_str(uint8_t type);

@@ -918,7 +918,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                     } else {
                         for (int j = 0; j < 29; j++) {
                             if (j % 2 == 0) printf(" |\n\t\t\t\t");
-                            printf("| stats[%15s] =%5d\t\t", stats_to_str(j), pcarr_stats_entry->stats[j]);
+                            printf("| stats[%24s] =%5d\t\t", stats_to_str(j), pcarr_stats_entry->stats[j]);
                         }
                         printf("\n");
                     }
@@ -987,14 +987,15 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 phone_num_to_string(phone_number, sizeof(phone_number), rate_request->phone_number,
                                     sizeof(rate_request->phone_number));
-                call_type_to_string(rate_request->call_type, call_type_str, sizeof(call_type_str));
+                call_type_to_string(rate_request->call_type & (~FLAG_CDR_IXL), call_type_str, sizeof(call_type_str));
 
-                printf("\t\tRate request: %s: Phone number: %s, pad=%d, telco_id=%d, %d,%s,%d,rate_type=%d,%d,%d.\n",
+                printf("\t\tRate request: %s: Phone number: %s, pad=%d, telco_id=%d, pad2=%d, call_type=0x%02x (%s), pad3=%d, rate_type=%d, pad4=%d,%d.\n",
                        timestamp_to_string(rate_request->timestamp, timestamp_str, sizeof(timestamp_str)),
                        phone_number,
                        rate_request->pad,
                        rate_request->telco_id,
                        rate_request->pad2,
+                       rate_request->call_type,
                        call_type_str,
                        rate_request->pad3,
                        rate_request->rate_type,
@@ -1008,7 +1009,9 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 rate_response.rate.additional_period = 0x00;
                 rate_response.rate.additional_charge = 0x00;
 
-                printf("\t\t\tRate response: Initial period: %d, Initial charge: %d, Additional Period: %d, Additional Charge: %d\n",
+                printf("\t\tRate response: Rate type: %d (%s), Initial period: %d, Initial charge: %d, Additional Period: %d, Additional Charge: %d\n",
+                    rate_response.rate.type,
+                    rate_type_to_str(rate_response.rate.type),
                     rate_response.rate.initial_period,
                     rate_response.rate.initial_charge,
                     rate_response.rate.additional_period,
@@ -1019,13 +1022,31 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 break;
             }
             case DLOG_MT_FUNF_CARD_AUTH: {
-                dlog_mt_auth_resp_code_t  auth_response = { DLOG_MT_AUTH_RESP_CODE, 0 , { 0 }};
+                dlog_mt_auth_resp_code_t  auth_response = { DLOG_MT_AUTH_RESP_CODE, 0 , 0, { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42 }};
                 dlog_mt_funf_card_auth_t *auth_request  = (dlog_mt_funf_card_auth_t *)ppayload;
+                time_t rawtime;
+
+                if (context->use_modem == 1) {
+                    /* When using the modem, use the current time as the auth code.  If not using the modem, use
+                     * a static time, so that results can be automatically checked.
+                     */
+                    time(&rawtime);
+                }
+                else {
+                    rawtime = JAN12020;
+                }
+
                 ppayload += sizeof(dlog_mt_funf_card_auth_t);
 
                 mm_acct_save_TAUTH(context, auth_request);
 
                 auth_response.resp_code = 0;
+                auth_response.auth_code = rawtime;
+
+                printf("\t\tSending auth response: Response code: 0x%02x, Authorization code: %llu\n",
+                    auth_response.resp_code,
+                    auth_response.auth_code);
+
                 memcpy(pack_payload, &auth_response, sizeof(auth_response));
                 pack_payload += sizeof(auth_response);
 
@@ -1368,7 +1389,7 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
 }
 
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
-    mm_packet_t  packet;
+    mm_packet_t  packet = { { 0 }, { 0 }, { 0 }, 0, 0 };
     mm_packet_t *pkt    = &packet;
     int status;
     int retries = 2;

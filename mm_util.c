@@ -527,6 +527,26 @@ const char* alarm_id_to_string(uint8_t alarm_id) {
     return alarm_type_str[alarm_index];
 }
 
+const char* rate_type_str_lut[] = {
+    "MM-Rated Intra-LATA",
+    "LMS Rate (Local call)",
+    "Fixed Charge (Local call)",
+    "Rate not available",
+    "Invalid NPA/NXX",
+    "Toll Intra-LATA",
+    "Toll Inter-LATA",
+    "MM-Rated Inter-LATA",
+    "MM-Rated Local",
+};
+
+const char* rate_type_to_str(uint8_t type) {
+    if (type >= (sizeof(rate_type_str_lut) / sizeof(char*))) {
+        type = 0;
+    }
+
+    return rate_type_str_lut[type];
+}
+
 const char* stats_call_type_str_lut[4] = {
     "Local        ",
     "Inter-LATA   ",
@@ -543,15 +563,15 @@ const char* stats_call_type_to_str(uint8_t type) {
 }
 
 const char* stats_to_str_lut[29] = {
-    "0",
+    "Local Coin",
     "1",
     "2",
-    "3",
+    "Local Calling Card",
     "4",
     "5",
     "6",
     "7",
-    "8",
+    "IntraLATA Calling Card",
     "9",
     "InterLATA Coin",
     "11",
@@ -561,17 +581,17 @@ const char* stats_to_str_lut[29] = {
     "15",
     "16",
     "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28"
+    "IXL Calling NCC",
+    "IXL Calling ACCS",
+    "Operator Assist",
+    "0+",
+    "Free FG-B",
+    "Directory Assist",
+    "Call duration1",
+    "Call duration2",
+    "Insert Mode Calls",
+    "Manual Mode Calls",
+    "Spare Counter"
 };
 
 const char* stats_to_str(uint8_t type) {
