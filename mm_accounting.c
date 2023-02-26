@@ -716,10 +716,10 @@ int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw
         sizeof(dlog_mt_sw_version->telephony_rom_edition));
     memcpy(telephony_version, dlog_mt_sw_version->telephony_version,
         sizeof(dlog_mt_sw_version->telephony_version));
-    memcpy(validator_sw_ver, dlog_mt_sw_version->validator_sw_ver,
-        sizeof(dlog_mt_sw_version->validator_sw_ver));
-    memcpy(validator_hw_ver, dlog_mt_sw_version->validator_hw_ver,
-        sizeof(dlog_mt_sw_version->validator_hw_ver));
+    validator_sw_ver[0] = dlog_mt_sw_version->validator_sw_ver[0] & 0x7F;
+    validator_sw_ver[1] = dlog_mt_sw_version->validator_sw_ver[1] & 0x7F;
+    validator_hw_ver[0] = dlog_mt_sw_version->validator_hw_ver[0] & 0x7F;
+    validator_hw_ver[1] = dlog_mt_sw_version->validator_hw_ver[1] & 0x7F;
 
     context->terminal_type = mm_config_get_term_type_from_control_rom_edition(context->database, control_rom_edition);
 
