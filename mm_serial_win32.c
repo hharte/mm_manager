@@ -88,7 +88,9 @@ ssize_t platform_read_serial(int fd, void *buf, size_t count) {
 
     Status = ReadFile(hComm, buf, (DWORD)count, (LPDWORD)&bytes_read, NULL);
 
-    if (Status == 0) return 0;
+    if (Status == 0) {
+        return -1;
+    }
     return (ssize_t)bytes_read;
 }
 

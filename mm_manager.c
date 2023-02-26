@@ -48,6 +48,8 @@ static void mm_display_help(const char* name, FILE* stream);
 void signal_handler(int sig);
 #endif
 
+extern const char* modem_responses[];
+
 /* Terminal Table Lists for various MTR versions. */
 uint8_t table_list_mtr_2x[] = {
     DLOG_MT_NCC_TERM_PARAMS,    /* Required */
@@ -284,6 +286,8 @@ int main(int argc, char *argv[]) {
     char  key_card_number_str[11];
     int   quiet = 0;
     int   status;
+    int   modem_response = 0;
+    int   retries;
 
     time_t rawtime;
     struct tm ptm = { 0 };
@@ -593,37 +597,83 @@ int main(int argc, char *argv[]) {
     printf("Waiting for call from terminal...\n");
 
     while (manager_running) {
-        if (wait_for_modem_response(mm_context->serial_context, "CONNECT", 1) == 0) {
+        modem_response = wait_for_modem_response(mm_context->serial_context, 1);
+
+        if (mm_context->use_modem == 1) {
+            time(&rawtime);
+        }
+        else {
+            rawtime = JAN12020;
+        }
+        localtime_r(&rawtime, &ptm);
+
+        switch (modem_response) {
+        case MODEM_RSP_OK:
+            break;
+        case MODEM_RSP_RING:
+            printf("%04d-%02d-%02d %2d:%02d:%02d: Ringing...\n\n",
+                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+            continue;
+        case MODEM_RSP_CONNECT:
             mm_context->tx_seq = 0;
-            if (mm_context->use_modem == 1) {
-                time(&rawtime);
-            } else {
-                rawtime = JAN12020;
-            }
-            localtime_r(&rawtime, &ptm);
 
             printf("%04d-%02d-%02d %2d:%02d:%02d: Connected!\n\n",
                 ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
 
             mm_context->connected = 1;
             mm_context->cdr_ack_buffer_len = 0;
-        } else {
+            break;
+        case MODEM_RSP_NO_CARRIER:
+            mm_context->tx_seq = 0;
+
+            printf("%04d-%02d-%02d %2d:%02d:%02d: Carrier lost.\n\n",
+                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+
+            mm_context->connected = 0;
+            mm_context->cdr_ack_buffer_len = 0;
+            continue;
+        case MODEM_RSP_NULL:
+            break;
+        case MODEM_RSP_READ_ERROR:
+            manager_running = 0;
+            printf("%04d-%02d-%02d %2d:%02d:%02d: Error communicating with modem, shutting down.\n\n",
+                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
+                break;
+        default:
+            printf("%04d-%02d-%02d %2d:%02d:%02d: Unhandled modem response = %d (%s)\n\n",
+                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec,
+                modem_response, modem_response <= MODEM_RSP_NULL ? modem_responses[modem_response] : "Unknown");
             continue;
         }
 
-        while ((receive_mm_table(mm_context, &mm_table) == 0) && (mm_context->connected == 1) && (manager_running == 1)) {}
+        retries = 0;
+        if (mm_context->connected) {
+            while ((mm_context->connected == 1) && (manager_running == 1) && (retries < 3)) {
 
-        if (mm_context->use_modem == 1) {
-            time(&rawtime);
-        } else {
-            rawtime = JAN12020;
+                retries++;
+                status = receive_mm_table(mm_context, &mm_table);
+
+                if (status == PKT_SUCCESS) {
+                    retries = 0;
+                }
+            }
+
+            if (mm_context->connected) {
+                hangup_modem(mm_context->serial_context);
+            }
+
+            if (mm_context->use_modem == 1) {
+                time(&rawtime);
+            }
+            else {
+                rawtime = JAN12020;
+            }
+            localtime_r(&rawtime, &ptm);
+
+            printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Terminal %s: Disconnected.\n\n",
+                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec,
+                mm_context->terminal_id);
         }
-        localtime_r(&rawtime, &ptm);
-
-        printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Terminal %s: Disconnected.\n\n",
-            ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec,
-            mm_context->terminal_id);
-        printf("Waiting for call from terminal...\n");
     }
 
     mm_shutdown(mm_context);
@@ -696,7 +746,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __func__, status);
             }
         }
-        return 0;
+        return status;
     }
 
     context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
@@ -1159,7 +1209,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 }
 
 int mm_download_tables(mm_context_t *context) {
-    uint8_t  table_data = DLOG_MT_TABLE_UPD;
+    uint8_t  table_upd_data = DLOG_MT_TABLE_UPD;
     int      table_index;
     int      status;
     size_t   table_len;
@@ -1194,11 +1244,17 @@ int mm_download_tables(mm_context_t *context) {
         break;
     }
 
-    send_mm_table(context, &table_data, 1);
+    /* Send DLOG_MT_TABLE_UPD */
+    status = send_mm_table(context, &table_upd_data, 1);
+    if (status != PKT_SUCCESS) {
+        hangup_modem(context->serial_context);
+        context->connected = 0;
+    }
 
     for (table_index = 0; (table_id = table_list[table_index]) > 0; table_index++) {
         /* Abort table download if manager is shutting down. */
         if (manager_running == 0) break;
+        if (context->connected == 0) break;
 
         /* Skip DLOG_MT_CARD_TABLE, DLOG_MT_CARD_TABLE_EXP if the terminal is coin-only. */
         if (term_model == TERM_COIN_BASIC) {
@@ -1315,19 +1371,23 @@ int mm_download_tables(mm_context_t *context) {
 
         status = send_mm_table(context, table_buffer, table_len);
 
-        if (status == 0) {
+        if (status == PKT_SUCCESS) {
             /* For all tables except END_OF_DATA, expect a table ACK. */
             if (table_list[table_index] != DLOG_MT_END_DATA) {
                 status = wait_for_table_ack(context, table_buffer[0]);
             }
+        } else {
+            hangup_modem(context->serial_context);
+            context->connected = 0;
         }
         free(table_buffer);
         table_buffer = NULL;
 
-        if (context->connected == 0) {
-            printf("%s: Download failed.\n", __func__);
-            return status;
-        }
+    }
+
+    if (context->connected == 0) {
+        printf("%s: Download failed.\n", __func__);
+        return status;
     }
 
     /* Update table download time. */
@@ -1391,6 +1451,8 @@ int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
         }
 
         status = send_mm_packet(context, p, chunk_len, 0);
+
+        if (status != PKT_SUCCESS) break;
 
         p               += chunk_len;
         bytes_remaining -= chunk_len;

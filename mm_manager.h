@@ -18,15 +18,23 @@
 #define RX 2
 #define TX 3
 
-#define START_BYTE      (0x02)
-#define STOP_BYTE       (0x03)
+#define START_BYTE                  (0x02)
+#define STOP_BYTE                   (0x03)
 
-#define FLAG_DISCONNECT (1 << 5)
-#define FLAG_STATUS     (1 << 4)    /* 0 = Success, 1 = Failure */
-#define FLAG_ACK        (1 << 3)
-#define FLAG_NACK       (0)
-#define FLAG_RETRY      (1 << 2)
-#define FLAG_SEQUENCE   (0x3)
+#define FLAG_DISCONNECT             (1 << 5)
+#define FLAG_STATUS                 (1 << 4)    /* 0 = Success, 1 = Failure */
+#define FLAG_ACK                    (1 << 3)
+#define FLAG_NACK                   (0)
+#define FLAG_RETRY                  (1 << 2)
+#define FLAG_SEQUENCE               (0x3)
+
+#define MODEM_RSP_READ_ERROR        (-1)
+#define MODEM_RSP_OK                (0)
+#define MODEM_RSP_ERROR             (1)
+#define MODEM_RSP_RING              (2)
+#define MODEM_RSP_CONNECT           (3)
+#define MODEM_RSP_NO_CARRIER        (4)
+#define MODEM_RSP_NULL              (5)
 
 /* Packet Error Flags */
 #define PKT_SUCCESS                 (0)
@@ -38,6 +46,7 @@
 #define PKT_ERROR_NACK              (1 << 6)
 #define PKT_ERROR_EOF               (1 << 7)
 #define PKT_ERROR_NO_CARRIER        (1 << 8)
+#define PKT_ERROR_FAILURE           (1 << 9)
 
 #define PKT_TIMEOUT_MAX             (10)    // Maximum time to wait for modem character
 #define PKT_MAX_RETRIES             (5)     // Maximum number of time to retry an errored packet
@@ -241,7 +250,6 @@ typedef struct mm_packet {
 
 typedef struct mm_table {
     uint8_t table_id;
-    uint8_t data[10 * 1024];
     mm_packet_t pkt;
 } mm_table_t;
 
@@ -1294,7 +1302,7 @@ extern int print_mm_packet(int direction, mm_packet_t *pkt);
 
 /* modem functions */
 extern int init_modem(struct mm_serial_context *pserial_context, const char *modem_reset_string, const char *modem_init_string);
-extern int wait_for_modem_response(struct mm_serial_context *pserial_context, const char* match_str, int max_tries);
+extern int wait_for_modem_response(struct mm_serial_context *pserial_context, int max_tries);
 extern int hangup_modem(struct mm_serial_context *pserial_context);
 
 /* accounting functions */

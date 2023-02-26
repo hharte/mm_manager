@@ -69,6 +69,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
 
     while (pkt_received == 0) {
         int inject_error = 0;
+        ssize_t bytes_read;
         if (inject_comm_error == 1) {
             if (((context->error_inject_type == ERROR_INJECT_CRC_DLOG_RX) && (context->waiting_for_ack == 0)) ||
                 ((context->error_inject_type == ERROR_INJECT_CRC_ACK_RX)  && (context->waiting_for_ack == 1))) {
@@ -79,7 +80,7 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
             printf("Inject error type %d: Injecting error on READ now.\n", context->error_inject_type);
             inject_comm_error = 0;
         }
-        while (read_serial(context->serial_context, &databyte, 1, inject_error) == 0) {
+        while ((bytes_read = read_serial(context->serial_context, &databyte, 1, inject_error)) == 0) {
             if (context->connected == 0) {
                 return PKT_ERROR_DISCONNECT;
             }
@@ -98,10 +99,17 @@ pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt) {
 
             if (timeout > PKT_TIMEOUT_MAX) {
                 printf("%s: Timeout waiting for packet error.\n", __func__);
-                status |= PKT_ERROR_TIMEOUT;
+                status = PKT_ERROR_TIMEOUT;
                 return status;
             }
         }
+
+        if (bytes_read == MODEM_RSP_READ_ERROR) {
+            context->connected = 0;
+            fprintf(stderr, "%s: Error reading from modem, bailing.\n", __func__);
+            return PKT_ERROR_FAILURE;
+        }
+
         timeout = 0;
 
         switch (l2_state) {
@@ -312,6 +320,7 @@ pkt_status_t send_mm_packet(mm_context_t* context, uint8_t* payload, size_t len,
 
     if (retries == PKT_MAX_RETRIES) {
         printf("%s: Error: Gave up after %d retries.\n", __func__, retries);
+        status |= PKT_ERROR_FAILURE;
     }
 
     if (payload != NULL) {

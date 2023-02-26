@@ -26,6 +26,15 @@
 #include "./mm_manager.h"
 #include "./mm_serial.h"
 
+const char* modem_responses[] = {
+    "OK",
+    "ERROR",
+    "RING",
+    "CONNECT",
+    "NO CARRIER",
+    "NULL"
+};
+
 /* Static function declarations */
 static int send_at_command(mm_serial_context_t *pserial_context, const char *command);
 
@@ -37,7 +46,7 @@ int init_modem(mm_serial_context_t *pserial_context, const char *modem_reset_str
     if (modem_reset_string != NULL && *modem_reset_string != '\0') {
         printf("Resetting modem: '%s'\n", modem_reset_string);
         status = send_at_command(pserial_context, modem_reset_string);
-        if (status != 0) {
+        if (status != MODEM_RSP_OK) {
             return -1;
         }
     }
@@ -45,17 +54,18 @@ int init_modem(mm_serial_context_t *pserial_context, const char *modem_reset_str
     printf("Intializing modem: '%s'\n", modem_init_string);
     status = send_at_command(pserial_context, modem_init_string);
 
-    if (status != 0) {
+    if (status != MODEM_RSP_OK) {
         return -1;
     }
     return status;
 }
 
 /* Wait for modem to connect */
-int wait_for_modem_response(mm_serial_context_t *pserial_context, const char *match_str, int max_tries) {
+int wait_for_modem_response(mm_serial_context_t *pserial_context, int max_tries) {
     char buffer[255] = { 0 }; /* Input buffer */
     uint8_t bufindex = 0;
-    int     tries    = 0;     /* Number of tries so far */
+    uint8_t i;
+    int     tries = 0;     /* Number of tries so far */
 
     drain_serial(pserial_context);
 
@@ -72,14 +82,20 @@ int wait_for_modem_response(mm_serial_context_t *pserial_context, const char *ma
             if ((buffer[bufindex - 1] == '\n') || (buffer[bufindex - 1] == '\r') || (bufindex >= (sizeof(buffer) - 1))) break;
         }
 
+        if (nbytes < 0) {
+            return MODEM_RSP_READ_ERROR;
+        }
+
         /* See if we got the expected response */
-        if (strstr(buffer, match_str) != 0) {
-            return 0;
+        for (i = 0; i < (sizeof(modem_responses) / sizeof(char*)); i++) {
+            if (strstr(buffer, modem_responses[i]) != 0) {
+                return i;
+            }
         }
         tries++;
     } while (tries < max_tries);
 
-    return -1;
+    return MODEM_RSP_NULL;
 }
 
 #define USE_MODEM_DTR
@@ -117,7 +133,7 @@ int hangup_modem(mm_serial_context_t *pserial_context) {
 #endif /* ifdef _WIN32 */
         }
 
-        if (wait_for_modem_response(pserial_context, "OK", 1) == 0) {
+        if (wait_for_modem_response(pserial_context, 1) == MODEM_RSP_OK) {
             return send_at_command(pserial_context, "ATH0");
         }
     }
@@ -129,6 +145,7 @@ int hangup_modem(mm_serial_context_t *pserial_context) {
 static int send_at_command(mm_serial_context_t *pserial_context, const char *command) {
     char buffer[80]; /* Input buffer */
     int  tries;      /* Number of tries so far */
+    int  modem_response = MODEM_RSP_ERROR;
 
     for (tries = 0; tries < 3; tries++) {
         flush_serial(pserial_context);
@@ -146,9 +163,7 @@ static int send_at_command(mm_serial_context_t *pserial_context, const char *com
         nanosleep((const struct timespec[]) { { 0, 100 * 1000000L } }, NULL);
 #endif /* _WIN32 */
 
-        if (wait_for_modem_response(pserial_context, "OK", 5) == 0) {
-            return 0;
-        }
+        if ((modem_response = wait_for_modem_response(pserial_context, 5)) == MODEM_RSP_OK) break;
     }
-    return -1;
+    return modem_response;
 }
