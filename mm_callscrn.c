@@ -17,9 +17,10 @@
 #include <errno.h>
 #include "./mm_manager.h"
 
-#define CALLSCRNU_TABLE_LEN     (sizeof(dlog_mt_call_screen_universal_t))
-#define CALLSCRNE_TABLE_LEN     (sizeof(dlog_mt_call_screen_enhanced_t))
-#define CALLSCRN_TABLE_LEN      (sizeof(dlog_mt_call_screen_list_t))
+#define CALLSCRNU_TABLE_LEN         (sizeof(dlog_mt_call_screen_universal_t))
+#define CALLSCRNE_TABLE_LEN         (sizeof(dlog_mt_call_screen_enhanced_t))
+#define CALLSCRN_TABLE_LEN          (sizeof(dlog_mt_call_screen_list_t))
+#define CALLSCRN_TABLE_LEN_MTR19    ((200 * sizeof(call_screen_list_entry_t)) + 1)
 
 const char *callscrn_free_flags_str[] = {
     "FREE",  // "FREE_DENY_IND",
@@ -100,7 +101,7 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium Call Screening List Table Dump\n\n");
 
-    pcallscrn_table = (dlog_mt_call_screen_list_t *)calloc(1, sizeof(dlog_mt_call_screen_list_t));
+    pcallscrn_table = (dlog_mt_call_screen_list_t *)calloc(1, CALLSCRN_TABLE_LEN_MTR19);
     pcallscrnu_table = (dlog_mt_call_screen_universal_t *)pcallscrn_table;
 
     if (pcallscrn_table == NULL) {
@@ -134,6 +135,11 @@ int main(int argc, char *argv[]) {
         callscrn_max_entries = CALLSCRN_TABLE_MAX;
         phone_num_len = 9;
         break;
+    case CALLSCRN_TABLE_LEN_MTR19:
+        printf("Call Screening List (200-entry) table.\n");
+        callscrn_max_entries = 200;
+        phone_num_len = 9;
+        break;
     default:
         printf("Invalid Call Screening table, len=%zu.\n", size);
         free(pcallscrn_table);
@@ -158,11 +164,14 @@ int main(int argc, char *argv[]) {
     for (callscrn_index = 0; callscrn_index < callscrn_max_entries; callscrn_index++) {
         call_screen_list_entry_t *pcallscreen_entry;
 
-        if (size + 1 == CALLSCRN_TABLE_LEN) {
+        switch (size + 1) {
+        case CALLSCRN_TABLE_LEN:        /* 180-entry table */
+        case CALLSCRN_TABLE_LEN_MTR19:  /* 200-entry table */
             pcallscreen_entry = &pcallscrn_table->entry[callscrn_index];
-        }
-        else {
+            break;
+        default:                        /* All other tables */
             pcallscreen_entry = (call_screen_list_entry_t *)&pcallscrnu_table->entry[callscrn_index];
+            break;
         }
 
         if (pcallscreen_entry->phone_number[0] == 0) continue;
