@@ -14,32 +14,19 @@
 #include <errno.h>
 
 int main(int argc, char* argv[]) {
-    int luhn_check = -1;
+    int luhn_check = 1;
     size_t i = 0;
     int sum = 0;
 
-    if (argc > 1) {
-        switch (strlen(argv[1])) {
-        case 16:
-            luhn_check = 1;
-            break;
-        case 15:
-            luhn_check = 0;
-            break;
-        default:
-            printf("Usage:\n" \
-                "\tmm_luhn <16-digit card number> - to verify the check digit.\n" \
-                "\tmm_luhn <15-digit card number> - to generate the check digit.\n");
-            return -1;
-            break;
-        }
+    if (argc <= 1) {
+        printf("Usage:\n" \
+            "\tmm_luhn <n-digit card number> - to verify the check digit.\n" \
+            "\tmm_luhn <n-digit card number> -g - to generate the check digit.\n");
+        return -1;
     }
 
-    if ((luhn_check == -1) || (argc <= 1)) {
-        printf("Usage:\n" \
-            "\tmm_luhn <16-digit card number> - to verify the check digit.\n" \
-            "\tmm_luhn <15-digit card number> - to generate the check digit.\n");
-        return -1;
+    if (argc > 2) {
+        luhn_check = 0;
     }
 
     printf("%s Luhn for card number %s: ", luhn_check ? "Checking" : "Generating", argv[1]);
@@ -64,7 +51,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (luhn_check == 0) {
-        printf("%d\n", 10 - (sum % 10));
+        uint8_t check_digit = 10 - (sum % 10);
+        if (i % 2 == 0) check_digit /= 2;
+        printf("n=%zu, %d\n", i, check_digit);
     }
     else {
         if (sum % 10) {
