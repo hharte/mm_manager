@@ -1318,9 +1318,6 @@ int mm_download_tables(mm_context_t *context) {
             case DLOG_MT_COMM_STAT_PARMS:
                 generate_comm_stat_parameters(context, &table_buffer, &table_len);
                 break;
-            case DLOG_MT_USER_IF_PARMS:
-                generate_user_if_parameters(context, &table_buffer, &table_len);
-                break;
             case DLOG_MT_END_DATA:
                 generate_dlog_mt_end_data(context, &table_buffer, &table_len);
                 break;
@@ -1355,11 +1352,15 @@ int mm_download_tables(mm_context_t *context) {
 
                 status = load_mm_table(context, table_id, &table_buffer, &table_len);
 
-                /* If table can't be loaded, continue to the next. */
                 if (status != 0) {
-                    if (table_buffer != NULL) free(table_buffer);
-                    table_buffer = NULL;
-                    continue;
+                    if (table_id == DLOG_MT_USER_IF_PARMS) { /* Can't load DLOG_MT_USER_IF_PARMS, generate it. */
+                        generate_user_if_parameters(context, &table_buffer, &table_len);
+                    }
+                    else { /* If table can't be loaded, continue to the next. */
+                        if (table_buffer != NULL) free(table_buffer);
+                        table_buffer = NULL;
+                        continue;
+                    }
                 }
                 break;
         }
@@ -1695,7 +1696,10 @@ void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t
     memcpy(pinstall_params->key_card_number, context->key_card_number, sizeof(pinstall_params->key_card_number));
     pinstall_params->tx_packet_delay = 10;
     pinstall_params->rx_packet_gap   = context->rx_packet_gap;
-    pinstall_params->coinbox_lock_timeout = 300;
+    pinstall_params->retries_until_oos = 40;
+    pinstall_params->coinbox_lock_timeout = 150;
+    pinstall_params->predial_string[0] = 0x0a;
+    pinstall_params->predial_string_alt[0] = 0x0a;
 
     print_instsv_table(pinstall_params);
 
@@ -1832,17 +1836,17 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
     pcall_in_params->call_in_interval[0]     = 0;                          /* Call-in inteval DD */
     pcall_in_params->call_in_interval[1]     = 12;                         /* Call-in inteval HH */
     pcall_in_params->call_in_interval[2]     = 0;                          /* Call-in inteval MM */
-    pcall_in_params->call_back_retry_time[0] = 59;                         /* Call-back retry time MM */
+    pcall_in_params->call_back_retry_time[0] = 15;                         /* Call-back retry time MM */
     pcall_in_params->call_back_retry_time[1] = 0;                          /* Call-back retry time SS */
-    pcall_in_params->cdr_threshold           = 4;                          /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
+    pcall_in_params->cdr_threshold           = 30;                         /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
     pcall_in_params->unknown_timestamp[0]    = ((ptm.tm_year + 1) & 0xff); /* Unknown timestamp YY (2020) */
     pcall_in_params->unknown_timestamp[1]    = ((ptm.tm_mon + 1) & 0xff);  /* Unknown timestamp MM */
     pcall_in_params->unknown_timestamp[2]    = (ptm.tm_mday & 0xff);       /* Unknown timestamp */
     pcall_in_params->unknown_timestamp[3]    = 2;                          /* Unknown timestamp */
     pcall_in_params->unknown_timestamp[4]    = 0;                          /* Unknown timestamp */
     pcall_in_params->unknown_timestamp[5]    = 0;                          /* Unknown timestamp */
-    pcall_in_params->unknown[0]              = 16;
-    pcall_in_params->unknown[1]              = 14;
+    pcall_in_params->unknown[0]              = 0;
+    pcall_in_params->unknown[1]              = 0;
 
     printf("\tCall-in start date: %04d-%02d-%02d\n",
            ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday);
@@ -1878,7 +1882,7 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pcall_stat_params->callstats_start_time[0]  = 0; /* HH */
     pcall_stat_params->callstats_start_time[1]  = 0; /* MM */
     pcall_stat_params->callstats_duration       = 1; /* Indicates the number of days over which call statistics will be accumulated. */
-    pcall_stat_params->callstats_threshold      = 10;
+    pcall_stat_params->callstats_threshold      = 1;
     pcall_stat_params->timestamp[0][0]          = 0; /* HH */
     pcall_stat_params->timestamp[0][1]          = 0; /* MM */
     pcall_stat_params->timestamp[1][0]          = 0; /* HH */
@@ -1887,8 +1891,8 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pcall_stat_params->timestamp[2][1]          = 0; /* MM */
     pcall_stat_params->timestamp[3][0]          = 0; /* HH */
     pcall_stat_params->timestamp[3][1]          = 0; /* MM */
-    pcall_stat_params->enable                   = 4;
-    pcall_stat_params->cdr_threshold            = 50;
+    pcall_stat_params->enable                   = 6;
+    pcall_stat_params->cdr_threshold            = 40;
     pcall_stat_params->cdr_start_time[0]        = 0; /* HH */
     pcall_stat_params->cdr_start_time[1]        = 0; /* MM */
     pcall_stat_params->cdr_duration_days        = 255;
@@ -1932,11 +1936,11 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     printf("\nGenerating Comm Stat Parameters table:\n");
     pcomm_stat_params->id = DLOG_MT_COMM_STAT_PARMS;
     pcomm_stat_params->co_access_dial_complete       = 100;
-    pcomm_stat_params->co_access_dial_complete_int   = 100;
+    pcomm_stat_params->co_access_dial_complete_int   = 50;
     pcomm_stat_params->dial_complete_carr_detect     = 100;
-    pcomm_stat_params->dial_complete_carr_detect_int = 100;
-    pcomm_stat_params->carr_detect_first_pac         = 100;
-    pcomm_stat_params->carr_detect_first_pac_int     = 100;
+    pcomm_stat_params->dial_complete_carr_detect_int = 50;
+    pcomm_stat_params->carr_detect_first_pac         = 10;
+    pcomm_stat_params->carr_detect_first_pac_int     = 5;
     pcomm_stat_params->user_waiting_expect_info      = 600;
     pcomm_stat_params->user_waiting_expect_info_int  = 100;
     pcomm_stat_params->perfstats_threshold           = 1;
