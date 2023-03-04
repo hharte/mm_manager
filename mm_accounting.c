@@ -57,6 +57,7 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
     char card_number_string[25] = { 0 };
     char call_type_str[38] = { 0 };
     char received_time_str[16] = { 0 };
+    int exp_year;
 
     phone_num_to_string(phone_number_string, sizeof(phone_number_string), auth_request->phone_number,
         sizeof(auth_request->phone_number));
@@ -64,13 +65,27 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         sizeof(auth_request->card_number));
     call_type_to_string(auth_request->call_type & (~FLAG_CDR_IXL), call_type_str, sizeof(call_type_str));
 
-    printf("\t\tCard Auth request: Terminal: %s, Phone number: %s, seq=%d, card#: %s, exp: %02x/%02x, service_code: %d, PIN: %02x, ctrlflag: 0x%02x carrier: %d, Call_type: 0x%02x (%s,) card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
+    /* Some calling cards do not contain an expiration date, and the terminal returns 0xee
+     * for the exp_mm and exp_yy.  Zero them out in this case.
+     */
+    if (auth_request->exp_mm >= 0x12) {
+        auth_request->exp_mm = 0;
+    }
+
+    if (auth_request->exp_yy > 0x99) {
+        exp_year = 0;
+    }
+    else {
+        exp_year = 0x2000 + auth_request->exp_yy; /* Fixme: in 2100 */
+    }
+
+    printf("\t\tCard Auth request: Terminal: %s, Phone number: %s, seq=%d, card#: %s, exp: %02x/%04x, service_code: %d, PIN: %02x, ctrlflag: 0x%02x carrier: %d, Call_type: 0x%02x (%s,) card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
         context->terminal_id,
         phone_number_string,
         auth_request->seq,
         card_number_string,
         auth_request->exp_mm,
-        auth_request->exp_yy + 0x2000,
+        exp_year,
         auth_request->service_code,
         ((auth_request->pin & 0xFF) << 8) | ((auth_request->pin & 0xFF00) >> 8),
         auth_request->control_flag,
@@ -108,7 +123,7 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         auth_request->carrier_ref,
         card_number_string,
         auth_request->service_code,
-        auth_request->exp_yy + 0x2000,
+        exp_year,
         auth_request->exp_mm,
         0, //auth_request->init_yy + 0x2000,
         0, //auth_request->init_mm,
