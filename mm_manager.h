@@ -1106,7 +1106,7 @@ typedef struct dlog_mt_install_params {
     uint8_t coin_service_flags;                 /* Coin servicing flags: Cashbox Query Menu is Accessible via craft interface */
     uint16_t coinbox_lock_timeout;              /* Time in seconds from when the cash box lock is opened until an alarm is sent to the Millennium Manager. This is a timeout on the time required to collect the cash box. */
     uint8_t predial_string[4];                  /* Predial string for the primary NCC. */
-    uint8_t predial_string_alt[4];              /* TPredial string for the secondary NCC. */
+    uint8_t predial_string_alt[4];              /* Predial string for the secondary NCC. */
     uint8_t spare[12];                          /* Some used for MTR2.x. */
 } dlog_mt_install_params_t;
 

@@ -1627,7 +1627,9 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
 
     if ((table_id == DLOG_MT_CALL_SCREEN_LIST) &&
         ((term_type_to_mtr(context->terminal_type) >= MTR_1_9) && (term_type_to_mtr(context->terminal_type) < MTR_1_20))) {
-        size += 340;    /* Pad 180-entry Call Screen List to 200-entries. */
+        if (size == 3061) {
+            size += 340;    /* Pad 180-entry Call Screen List to 200-entries. */
+        }
     }
 
     *buffer = (uint8_t *)calloc(size, sizeof(uint8_t));
