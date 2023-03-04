@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
             snprintf(rate_str_additional, sizeof(rate_str_additional), "   %5ds", prate->additional_period);
         }
 
-        printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |         %3.2f |         %s |            %3.2f |",
+        printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |       %6.2f |         %s |          %6.2f |",
                rate_index, rate_index,
                prate->type,
                str_rates[(prate->type) & 0x0F],

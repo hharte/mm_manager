@@ -157,7 +157,7 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
     char call_type_str[38];
 
     printf(
-        "\t\tCDR: %s, Duration: %02d:%02d:%02d call_type: 0x%02x (%s), DN: %s, Card#: %s, Collected: $%3.2f, Requested: $%3.2f, carrier code=%d, rate_type=%d, card_ref=0x%02x, unknown=0x%02x, Seq: %04d\n",
+        "\t\tCDR: %s, Duration: %02d:%02d:%02d call_type: 0x%02x (%s), DN: %s, Card#: %s, Collected: $%6.2f, Requested: $%6.2f, carrier code=%d, rate_type=%d, card_ref=0x%02x, unknown=0x%02x, Seq: %04d\n",
         timestamp_to_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
         cdr->call_duration[0],
         cdr->call_duration[1],
@@ -185,7 +185,7 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
     }
 
     snprintf(sql, sizeof(sql), "INSERT " SQL_IGNORE "INTO TCDR ( TERMINAL_ID,RECEIVED_DATE,RECEIVED_TIME,SEQ,START_DATE,START_TIME,CALL_DURATION,CD_CALL_TYPE,CD_CALL_TYPE_STR,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE,TELCO_ID,REGION_CODE) VALUES ( " \
-                               " \"%s\",%s,%d,%s,%d,%d,\"%s\",\"%s\",\"%s\",\"%3.2f\",\"%3.2f\",%d,%d," TELCO_ID_REGION_CODE ");",
+                               " \"%s\",%s,%d,%s,%d,%d,\"%s\",\"%s\",\"%s\",\"%6.2f\",\"%6.2f\",%d,%d," TELCO_ID_REGION_CODE ");",
         context->terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         cdr->seq,
@@ -313,7 +313,7 @@ int mm_acct_load_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_s
     /* Retrieve cash box status for the current terminal. */
     mm_sql_load_TCASHST(context->database, context->terminal_id, cashbox_status);
 
-    printf("Load Cashbox status: %s Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+    printf("Load Cashbox status: %s Total: $%6.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
         timestamp_to_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
         (float)cashbox_status->currency_value / 100.0,
         cashbox_status->percent_full,
@@ -334,7 +334,7 @@ int mm_acct_save_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_s
     char received_time_str[16] = { 0 };
     char timestamp_str[20];
 
-    printf("\t\tCashbox status: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+    printf("\t\tCashbox status: %s: Total: $%6.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
         timestamp_to_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
         (float)cashbox_status->currency_value / 100,
         cashbox_status->percent_full,
@@ -353,7 +353,7 @@ int mm_acct_save_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_s
         "NUMBER_OF_US_NICKELS,  NUMBER_OF_US_DIMES,  NUMBER_OF_US_QUARTERS,  NUMBER_OF_US_DOLLARS,"
         "TELCO_ID, REGION_CODE"
         ") VALUES ( "
-        "\"%s\",%s,%s,%d,%d,\"%3.2f\", "
+        "\"%s\",%s,%s,%d,%d,\"%6.2f\", "
         "%d, %d, %d, %d, %d, %d, %d, %d, " TELCO_ID_REGION_CODE ");",
         context->terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
@@ -380,7 +380,7 @@ int mm_acct_save_TCOLLST(mm_context_t* context, dlog_mt_cash_box_collection_t* c
     char received_time_str[16] = { 0 };
     char timestamp_str[20];
 
-    printf("\t\tCashbox Collection: %s: Total: $%3.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
+    printf("\t\tCashbox Collection: %s: Total: $%6.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
         timestamp_to_string(cash_box_collection->timestamp, timestamp_str, sizeof(timestamp_str)),
         (float)cash_box_collection->currency_value / 100,
         cash_box_collection->percent_full,
@@ -410,7 +410,7 @@ int mm_acct_save_TCOLLST(mm_context_t* context, dlog_mt_cash_box_collection_t* c
         "NUMBER_OF_CDN_NICKELS, NUMBER_OF_CDN_DIMES, NUMBER_OF_CDN_QUARTERS, NUMBER_OF_CDN_DOLLARS,"
         "NUMBER_OF_US_NICKELS,  NUMBER_OF_US_DIMES,  NUMBER_OF_US_QUARTERS,  NUMBER_OF_US_DOLLARS, "
         "TELCO_ID, REGION_CODE ) VALUES ( "
-        "\"%s\",%s,%s,%d,%d,\"%3.2f\", "
+        "\"%s\",%s,%s,%d,%d,\"%6.2f\", "
         "%d, %d, %d, %d, %d, %d, %d, %d," TELCO_ID_REGION_CODE ")",
         context->terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),

@@ -131,9 +131,9 @@ int main(int argc, char *argv[]) {
     printf("|           Cash Box Volume:   %5d          |\n",    pcoinvl_table->cash_box_volume);
     printf("|             Escrow Volume:   %5d          |\n",    pcoinvl_table->escrow_volume);
     printf("| Cash Box Volume Threshold:   %5d          |\n",    pcoinvl_table->cash_box_volume_threshold);
-    printf("|  Cash Box Value Threshold: $%3.2f          |\n",   (float)(pcoinvl_table->cash_box_value_threshold) / 100.0);
+    printf("|  Cash Box Value Threshold: $%6.2f          |\n",   (float)(pcoinvl_table->cash_box_value_threshold) / 100.0);
     printf("|   Escrow Volume Threshold:   %5d          |\n",    pcoinvl_table->escrow_volume_threshold);
-    printf("|    Escrow Value Threshold: $  %3.2f          |\n", (float)(pcoinvl_table->escrow_value_threshold) / 100.0);
+    printf("|    Escrow Value Threshold: $%6.2f          |\n", (float)(pcoinvl_table->escrow_value_threshold) / 100.0);
     printf("+---------------------------------------------+\n");
 
     pcoinvl_table->coin_param[cdn_nickel]  = 0x03;

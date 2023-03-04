@@ -105,17 +105,17 @@ int main(int argc, char *argv[]) {
 
     printf("+------------------------+\n");
 
-    printf("\n+-----+-------------------------------+--------+\n" \
-           "| Idx | Rebate Type                   | Rebate |\n"   \
-           "+-----+-------------------------------+--------+\n");
+    printf("\n+-----+-------------------------------+---------+\n" \
+           "| Idx | Rebate Type                   | Rebate  |\n"   \
+           "+-----+-------------------------------+---------+\n");
 
     for (index = 0; index < SC_REBATE_MAX; index++) {
         int rebate = psmcard_table->rebates[index];
 
-        printf("|  %2d | %s |  $%3.2f |\n", index, str_smcard_rebate[index], (float)rebate / 100);
+        printf("|  %2d | %s | $%6.2f |\n", index, str_smcard_rebate[index], (float)rebate / 100);
     }
 
-    printf("+----------------------------------------------+\n");
+    printf("+-----------------------------------------------+\n");
 
     if (argc > 2) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
