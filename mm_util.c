@@ -567,28 +567,28 @@ const char* stats_to_str_lut[29] = {
     "1",
     "Local Cash Card",
     "Local Calling Card",
-    "4",
-    "IntraLATA Coin",
+    "Local No Charge",
+    "IntraLATA Coin",           /* 5 */
     "6",
     "IntraLATA Cash Card",
     "IntraLATA Calling Card",
-    "9",
-    "InterLATA Coin",
+    "IntraLATA No Charge",
+    "InterLATA Coin",           /* 10 */
     "11",
     "InterLATA Cash Card",
     "InterLATA Calling Card",
-    "14",
-    "15",
+    "InterLATA No Charge",
+    "15",                       /* 15 */
     "16",
     "17",
     "IXL Calling NCC",
     "IXL Calling ACCS",
-    "Operator Assist",
+    "Operator Assist",          /* 20 */
     "0+",
     "Free FG-B",
     "Directory Assist",
     "Call duration1",
-    "Call duration2",
+    "Call duration2",           /* 25 */
     "Insert Mode Calls",
     "Manual Mode Calls",
     "Spare Counter"
