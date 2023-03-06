@@ -1,6 +1,5 @@
 /*
- * Code to dump Credit Card table from Nortel Millennium Payphone
- * Table 134 (0x86)
+ * Code to dump DLOG_MT_CARD_TABLE table from Nortel Millennium Payphone
  *
  * www.github.com/hharte/mm_manager
  *
@@ -15,6 +14,8 @@
 #include <errno.h>
 #include "./mm_manager.h"
 #include "./mm_card.h"
+
+#define TABLE_ID    DLOG_MT_CARD_TABLE
 
 const char *standard_cd_str[] = {
     "Undefd",  // 0
@@ -53,32 +54,32 @@ int main(int argc, char *argv[]) {
     int   j;
     int   ret = 0;
 
-    dlog_mt_card_table_mtr1_t *pcard_table;
+    dlog_mt_card_table_mtr1_t *ptable;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_card mm_table_16.bin [outputfile.bin]\n");
+               "\tmm_card mm_table_%02x.bin [outputfile.bin]\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium Credit Card Table 0x16 (22) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    pcard_table = (dlog_mt_card_table_mtr1_t *)calloc(1, sizeof(dlog_mt_card_table_mtr1_t));
+    ptable = (dlog_mt_card_table_mtr1_t *)calloc(1, sizeof(dlog_mt_card_table_mtr1_t));
 
-    if (pcard_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_card_table_mtr1_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(pcard_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    if (fread(pcard_table, sizeof(dlog_mt_card_table_mtr1_t), 1, instream) != 1) {
-        printf("Error reading CCARD table.\n");
-        free(pcard_table);
+    if (fread(ptable, sizeof(dlog_mt_card_table_mtr1_t), 1, instream) != 1) {
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
+        free(ptable);
         fclose(instream);
         return -EIO;
     }
@@ -90,9 +91,9 @@ int main(int argc, char *argv[]) {
            "+------+-----------------+--------+-----+---------+-----+---------------+");
 
     for (index = 0; index < CCARD_MAX_MTR1; index++) {
-        card_entry_mtr1_t *pcard = &pcard_table->c[index];
+        card_entry_mtr1_t *pcard = &ptable->c[index];
 
-        if (pcard_table->c[index].standard_cd == 0) continue;
+        if (ptable->c[index].standard_cd == 0) continue;
 
         printf("\n|  %2d  | %02x%02x%02x - %02x%02x%02x | %s | x%02x |   0x%02x  | x%02x | P x%02x x%02x x%02x |",
                index,
@@ -175,53 +176,53 @@ int main(int argc, char *argv[]) {
     }
 
     /* Update CARD table */
-    pcard_table->c[0].carrier_ref  = 0x0;
-    pcard_table->c[1].carrier_ref  = 0x0;
-    pcard_table->c[2].carrier_ref  = 0x0;
-    pcard_table->c[3].carrier_ref  = 0x0;
-    pcard_table->c[4].carrier_ref  = 0x0;
-    pcard_table->c[5].carrier_ref  = 0x0;
-    pcard_table->c[6].carrier_ref  = 0x0;
-    pcard_table->c[7].carrier_ref  = 0x0;
-    pcard_table->c[8].carrier_ref  = 0x0;
-    pcard_table->c[9].carrier_ref  = 0x0;
-    pcard_table->c[10].carrier_ref = 0x0;
-    pcard_table->c[11].carrier_ref = 0x0;
-    pcard_table->c[12].carrier_ref = 0x0;
-    pcard_table->c[13].carrier_ref = 0x0;
+    ptable->c[0].carrier_ref  = 0x0;
+    ptable->c[1].carrier_ref  = 0x0;
+    ptable->c[2].carrier_ref  = 0x0;
+    ptable->c[3].carrier_ref  = 0x0;
+    ptable->c[4].carrier_ref  = 0x0;
+    ptable->c[5].carrier_ref  = 0x0;
+    ptable->c[6].carrier_ref  = 0x0;
+    ptable->c[7].carrier_ref  = 0x0;
+    ptable->c[8].carrier_ref  = 0x0;
+    ptable->c[9].carrier_ref  = 0x0;
+    ptable->c[10].carrier_ref = 0x0;
+    ptable->c[11].carrier_ref = 0x0;
+    ptable->c[12].carrier_ref = 0x0;
+    ptable->c[13].carrier_ref = 0x0;
 
-    pcard_table->c[0].ref_num = 0x10;
-    pcard_table->c[1].ref_num = 0x11;
-    pcard_table->c[2].ref_num = 0x12;
-    pcard_table->c[3].ref_num = 0x13;
-    pcard_table->c[4].ref_num = 0x14;
-    pcard_table->c[5].ref_num = 0x15;
-    pcard_table->c[6].ref_num = 0x16;
-    pcard_table->c[7].ref_num = 0x17;
-    pcard_table->c[8].ref_num = 0x18;
-    pcard_table->c[9].ref_num = 0x19;
-    pcard_table->c[10].ref_num = 0x1a;
-    pcard_table->c[11].ref_num = 0x1b;
-    pcard_table->c[12].ref_num = 0x1c;
-    pcard_table->c[13].ref_num = 0x1d;
+    ptable->c[0].ref_num = 0x10;
+    ptable->c[1].ref_num = 0x11;
+    ptable->c[2].ref_num = 0x12;
+    ptable->c[3].ref_num = 0x13;
+    ptable->c[4].ref_num = 0x14;
+    ptable->c[5].ref_num = 0x15;
+    ptable->c[6].ref_num = 0x16;
+    ptable->c[7].ref_num = 0x17;
+    ptable->c[8].ref_num = 0x18;
+    ptable->c[9].ref_num = 0x19;
+    ptable->c[10].ref_num = 0x1a;
+    ptable->c[11].ref_num = 0x1b;
+    ptable->c[12].ref_num = 0x1c;
+    ptable->c[13].ref_num = 0x1d;
 
     for (index = 0; index < CCARD_MAX_MTR1; index++) {
-        pcard_table->c[index].vfy_flags &= ~CARD_VF_ACCS_ROUTING;
+        ptable->c[index].vfy_flags &= ~CARD_VF_ACCS_ROUTING;
     }
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(pcard_table, sizeof(dlog_mt_card_table_mtr1_t), 1, ostream) != 1) {
+        if (fwrite(ptable, sizeof(dlog_mt_card_table_mtr1_t), 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }
         fclose(ostream);
     }
 
-    if (pcard_table != NULL) {
-        free(pcard_table);
+    if (ptable != NULL) {
+        free(ptable);
     }
 
     return ret;

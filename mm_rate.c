@@ -1,10 +1,9 @@
 /*
- * Code to dump RATE table from Nortel Millennium Payphone
- * Table 73 (0x49)
+ * Code to dump DLOG_MT_RATE_TABLE table from Nortel Millennium Payphone
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  * The RATE Table is an array of 1191 bytes.  The first 39 bytes contain
  * unknown data.
@@ -19,6 +18,8 @@
 #include <stdint.h>
 #include <errno.h>
 #include "./mm_manager.h"
+
+#define TABLE_ID    DLOG_MT_RATE_TABLE
 
 const char *str_rates[] = {
     "mm_intra_lata     ",
@@ -46,54 +47,54 @@ int main(int argc, char *argv[]) {
     char  rate_str_initial[10];
     char  rate_str_additional[10];
     char  timestamp_str[20];
-    dlog_mt_rate_table_t *prate_table;
+    dlog_mt_rate_table_t *ptable;
     uint8_t *load_buffer;
     int ret = 0;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_rate mm_table_49.bin [outputfile.bin]\n");
+               "\tmm_rate mm_table_%02x.bin [outputfile.bin]\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium RATE Table 0x49 (73) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    prate_table = (dlog_mt_rate_table_t *)calloc(1, sizeof(dlog_mt_rate_table_t));
+    ptable = (dlog_mt_rate_table_t *)calloc(1, sizeof(dlog_mt_rate_table_t));
 
-    if (prate_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_rate_table_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(prate_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    load_buffer = ((uint8_t*)prate_table) + 1;
+    load_buffer = ((uint8_t*)ptable) + 1;
     if (fread(load_buffer, sizeof(dlog_mt_rate_table_t) - 1, 1, instream) != 1) {
-        printf("Error reading RATE table.\n");
-        free(prate_table);
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
+        free(ptable);
         fclose(instream);
         return -EIO;
     }
 
     fclose(instream);
 
-    printf("Date: %s\n", timestamp_to_string(prate_table->timestamp, timestamp_str, sizeof(timestamp_str)));
-    printf("Telco ID: 0x%02x (%d)\n", prate_table->telco_id, prate_table->telco_id);
+    printf("Date: %s\n", timestamp_to_string(ptable->timestamp, timestamp_str, sizeof(timestamp_str)));
+    printf("Telco ID: 0x%02x (%d)\n", ptable->telco_id, ptable->telco_id);
 
     /* Dump spare 32 bytes at the beginning of the RATE table */
     printf("Spare bytes:\n");
-    dump_hex(prate_table->spare, 32);
+    dump_hex(ptable->spare, 32);
 
     printf("\n+------------+-------------------------+----------------+--------------+-------------------+-----------------+\n" \
            "| Index      | Type                    | Initial Period | Initial Rate | Additional Period | Additional Rate |\n"   \
            "+------------+-------------------------+----------------+--------------+-------------------+-----------------+");
 
     for (rate_index = 0; rate_index < RATE_TABLE_MAX_ENTRIES; rate_index++) {
-        rate_table_entry_t *prate = &prate_table->r[rate_index];
+        rate_table_entry_t *prate = &ptable->r[rate_index];
 
         if (prate->type ==  0) continue;
 
@@ -146,8 +147,8 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    if (prate_table != NULL) {
-        free(prate_table);
+    if (ptable != NULL) {
+        free(ptable);
     }
 
     return ret;

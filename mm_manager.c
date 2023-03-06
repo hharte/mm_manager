@@ -1827,42 +1827,33 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
         call_in_hour -= 12;
     }
 
-    pcall_in_params->call_in_start_date[0]   = (ptm.tm_year & 0xff);       /* Call-in start YY */
-    pcall_in_params->call_in_start_date[1]   = ((ptm.tm_mon + 1) & 0xff);  /* Call in start MM */
-    pcall_in_params->call_in_start_date[2]   = (ptm.tm_mday & 0xff);       /* Call in start DD */
-    pcall_in_params->call_in_start_time[0]   = call_in_hour;               /* Call-in start HH */
-    pcall_in_params->call_in_start_time[1]   = (ptm.tm_min & 0xff);        /* Call-in start MM */
-    pcall_in_params->call_in_start_time[2]   = (ptm.tm_sec & 0xff);        /* Call-in start SS */
-    pcall_in_params->call_in_interval[0]     = 0;                          /* Call-in inteval DD */
-    pcall_in_params->call_in_interval[1]     = 12;                         /* Call-in inteval HH */
-    pcall_in_params->call_in_interval[2]     = 0;                          /* Call-in inteval MM */
-    pcall_in_params->call_back_retry_time[0] = 15;                         /* Call-back retry time MM */
-    pcall_in_params->call_back_retry_time[1] = 0;                          /* Call-back retry time SS */
-    pcall_in_params->cdr_threshold           = 30;                         /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
-    pcall_in_params->unknown_timestamp[0]    = ((ptm.tm_year + 1) & 0xff); /* Unknown timestamp YY (2020) */
-    pcall_in_params->unknown_timestamp[1]    = ((ptm.tm_mon + 1) & 0xff);  /* Unknown timestamp MM */
-    pcall_in_params->unknown_timestamp[2]    = (ptm.tm_mday & 0xff);       /* Unknown timestamp */
-    pcall_in_params->unknown_timestamp[3]    = 2;                          /* Unknown timestamp */
-    pcall_in_params->unknown_timestamp[4]    = 0;                          /* Unknown timestamp */
-    pcall_in_params->unknown_timestamp[5]    = 0;                          /* Unknown timestamp */
-    pcall_in_params->unknown[0]              = 0;
-    pcall_in_params->unknown[1]              = 0;
+    pcall_in_params->call_in_start_date[0]      = (ptm.tm_year & 0xff);       /* Call-in start YY */
+    pcall_in_params->call_in_start_date[1]      = ((ptm.tm_mon + 1) & 0xff);  /* Call in start MM */
+    pcall_in_params->call_in_start_date[2]      = (ptm.tm_mday & 0xff);       /* Call in start DD */
+    pcall_in_params->call_in_start_time[0]      = call_in_hour;               /* Call-in start HH */
+    pcall_in_params->call_in_start_time[1]      = (ptm.tm_min & 0xff);        /* Call-in start MM */
+    pcall_in_params->call_in_start_time[2]      = (ptm.tm_sec & 0xff);        /* Call-in start SS */
+    pcall_in_params->call_in_interval[0]        = 0;                          /* Call-in inteval DD */
+    pcall_in_params->call_in_interval[1]        = 12;                         /* Call-in inteval HH */
+    pcall_in_params->call_in_interval[2]        = 0;                          /* Call-in inteval MM */
+    pcall_in_params->call_back_retry_time[0]    = 15;                         /* Call-back retry time MM */
+    pcall_in_params->call_back_retry_time[1]    = 0;                          /* Call-back retry time SS */
+    pcall_in_params->cdr_threshold              = 30;                         /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
+    pcall_in_params->call_in_expiration_date[0] = ((ptm.tm_year + 1) & 0xff); /* Expiration timestamp YY */
+    pcall_in_params->call_in_expiration_date[1] = ((ptm.tm_mon + 1) & 0xff);  /* Expiration timestamp MM */
+    pcall_in_params->call_in_expiration_date[2] = (ptm.tm_mday & 0xff);       /* Expiration timestamp DD */
+    pcall_in_params->call_in_expiration_time[0] = 2;                          /* Expiration timestamp HH */
+    pcall_in_params->call_in_expiration_time[1] = 0;                          /* Expiration timestamp MM */
+    pcall_in_params->call_in_expiration_time[2] = 0;                          /* Expiration timestamp SS */
+    pcall_in_params->unknown[0]                 = 0;
+    pcall_in_params->unknown[1]                 = 0;
 
-    printf("\tCall-in start date: %04d-%02d-%02d\n",
-           ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday);
-    printf("\tCall-in start time: %02d:%02d:%02d\n",
-           ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
-    printf("\tCall-in interval:   %02dD:%02dH:%02dM\n",
-           pcall_in_params->call_in_interval[0], pcall_in_params->call_in_interval[1], pcall_in_params->call_in_interval[2]);
-    printf("\tCall-back retry:    %02dm:%02ds\n",
-           pcall_in_params->call_back_retry_time[0], pcall_in_params->call_back_retry_time[1]);
-    printf("\tCDR Threshold:      %d\n", pcall_in_params->cdr_threshold);
+    print_call_in_params_table(pcall_in_params);
 
     *buffer = pbuffer;
 }
 
 void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
-    int i;
     dlog_mt_call_stat_params_t *pcall_stat_params;
     uint8_t *pbuffer;
 
@@ -1899,26 +1890,11 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pcall_stat_params->cdr_duration_hours_flags = 0;
     *buffer                                     = pbuffer;
 
-    printf("\tStart time:     %02d:%02d\n",
-           pcall_stat_params->callstats_start_time[0], pcall_stat_params->callstats_start_time[1]);
-    printf("\tDuration:       %02dd\n", pcall_stat_params->callstats_duration);
-    printf("\tThreshold:      %02d\n",  pcall_stat_params->callstats_threshold);
+    print_call_stat_params_table(pcall_stat_params);
 
-    for (i = 0; i < 4; i++) {
-        printf("\tTimestamp[%d]:   %02d:%02d\n", i,
-               pcall_stat_params->timestamp[i][0], pcall_stat_params->timestamp[i][1]);
-    }
-
-    printf("\tEnable:         0x%02x\n",  pcall_stat_params->enable);
-    printf("\tCDR Threshold:  %d\n",      pcall_stat_params->cdr_threshold);
-    printf("\tCDR Start Time: %02d:%02d\n",
-           pcall_stat_params->cdr_start_time[0], pcall_stat_params->cdr_start_time[1]);
-    printf("\tCDR Duration:   %dd:%dh\n", pcall_stat_params->cdr_duration_days, pcall_stat_params->cdr_duration_hours_flags & 0x1f);
-    printf("\tCDR Flags:      0x%02x\n",  pcall_stat_params->cdr_duration_hours_flags & 0xe0);
 }
 
 void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
-    int i;
     dlog_mt_comm_stat_params_t *pcomm_stat_params;
     uint8_t *pbuffer;
 
@@ -1957,15 +1933,7 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     pcomm_stat_params->perfstats_timestamp[3][1]     = 0; /* MM */
     *buffer                                          = pbuffer;
 
-    printf("\tStart time:     %02d:%02d\n",
-           pcomm_stat_params->perfstats_start_time[0], pcomm_stat_params->perfstats_start_time[1]);
-    printf("\tDuration:       %02dd\n", pcomm_stat_params->perfstats_duration);
-    printf("\tThreshold:      %02d\n",  pcomm_stat_params->perfstats_threshold);
-
-    for (i = 0; i < 4; i++) {
-        printf("\tTimestamp[%d]:   %02d:%02d\n", i,
-               pcomm_stat_params->perfstats_timestamp[i][0], pcomm_stat_params->perfstats_timestamp[i][1]);
-    }
+    print_comm_stat_table(pcomm_stat_params);
 }
 
 void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
@@ -2020,38 +1988,8 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
     puser_if_params->datajack_ias_timer              = 10;
     *buffer                                          = pbuffer;
 
-    printf("\tDigit clear delay:           %5d\n",    puser_if_params->digit_clear_delay);
-    printf("\tTransient Delay:             %5d\n",    puser_if_params->transient_delay);
-    printf("\tTransient Hint Time:         %5d\n",    puser_if_params->transient_hint_time);
-    printf("\tVisual to Voice Delay:       %5d\n",    puser_if_params->visual_to_voice_delay);
-    printf("\tVoice Repetition Delay:      %5d\n",    puser_if_params->voice_repitition_delay);
-    printf("\tNo Action Timeout:           %5d\n",    puser_if_params->no_action_timeout);
-    printf("\tCard Validation Timeout:     %5d\n",    puser_if_params->card_validation_timeout);
-    printf("\tDJ 2nd String DTMF Timeout:  %5d\n",    puser_if_params->dj_second_string_dtmf_timeout);
-    printf("\tCP Input Timeout:            %5d\n",    puser_if_params->cp_input_timeout);
-    printf("\tLanguage Timeout:            %5d\n",    puser_if_params->language_timeout);
-    printf("\tCFS Timeout:                 %5d\n",    puser_if_params->cfs_timeout);
-    printf("\tCPD Timeout:                 %5d\n",    puser_if_params->called_party_disconnect);
-    printf("\t# Voice Prompt Repititions:     %2d\n", puser_if_params->no_voice_prompt_reps);
-    printf("\tACCS Digit Timeout:          %5d\n",    puser_if_params->accs_digit_timeout);
-    printf("\tCollect Call Timeout:        %5d\n",    puser_if_params->collect_call_timeout);
-    printf("\tBong Tone Timeout:           %5d\n",    puser_if_params->bong_tone_timeout);
-    printf("\tACCS No Action Timeout:      %5d\n",    puser_if_params->accs_no_action_timeout);
-    printf("\tCCard Auth Required Timeout: %5d\n",    puser_if_params->card_auth_required_timeout);
-    printf("\tRate Request Timeout:        %5d\n",    puser_if_params->rate_request_timeout);
-    printf("\tManual Dial Hold Time:       %5d\n",    puser_if_params->manual_dial_hold_time);
-    printf("\tAutodialer Hold Time:        %5d\n",    puser_if_params->autodialer_hold_time);
-    printf("\tCoin First Warning Time:     %5d\n",    puser_if_params->coin_first_warning_time);
-    printf("\tCoin Second Warning Time:    %5d\n",    puser_if_params->coin_second_warning_time);
-    printf("\tAlt Bong Tone Timeout:       %5d\n",    puser_if_params->alternate_bong_tone_timeout);
-    printf("\tDelay After Bong Tone:       %5d\n",    puser_if_params->delay_after_bong_tone);
-    printf("\tAlt Delay After Bong Tone:   %5d\n",    puser_if_params->alternate_delay_after_bong_tone);
-    printf("\tDisplay Scroll Speed:        %5d\n",    puser_if_params->display_scroll_speed);
-    printf("\tAOS Bong Tone Timeout:       %5d\n",    puser_if_params->aos_bong_tone_timeout);
-    printf("\tFGB AOS Second Spill Timeout:%5d\n",    puser_if_params->fgb_aos_second_spill_timeout);
-    printf("\tDatajack Connect Timeout:    %5d\n",    puser_if_params->datajack_connect_timeout);
-    printf("\tDatajack Pause Threshold:    %5d\n",    puser_if_params->datajack_pause_threshold);
-    printf("\tDatajack IAS Timer:          %5d\n",    puser_if_params->datajack_ias_timer);
+    print_user_if_params_table(puser_if_params);
+
 }
 
 void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len) {

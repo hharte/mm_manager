@@ -73,13 +73,19 @@ else()
 TARGET_LINK_LIBRARIES(mm_manager mm_serial mm_util sqlite3 pthread dl)
 endif()
 add_executable (mm_admess "mm_admess.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_admess mm_util)
 add_executable (mm_areacode "mm_areacode.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_areacode mm_util)
 add_executable (mm_callscrn "mm_callscrn.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_callscrn mm_util)
 add_executable (mm_convert_callscrn_mtr2_to_mtr1 "mm_convert_callscrn_mtr2_to_mtr1.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_convert_callscrn_mtr2_to_mtr1 mm_util)
 add_executable (mm_card "mm_card.c" "mm_manager.h" "mm_card.h")
 TARGET_LINK_LIBRARIES(mm_card mm_util)
+add_executable (mm_callin "mm_callin.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_callin mm_util)
+add_executable (mm_callstat "mm_callstat.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_callstat mm_util)
 add_executable (mm_card_mtr1 "mm_card_mtr1.c" "mm_manager.h" "mm_card.h")
 TARGET_LINK_LIBRARIES(mm_card_mtr1 mm_util)
 add_executable (mm_convert_card_mtr2_to_mtr1 "mm_convert_card_mtr2_to_mtr1.c" "mm_manager.h" "mm_card.h")
@@ -88,10 +94,12 @@ add_executable (mm_carrier "mm_carrier.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_carrier mm_util)
 add_executable (mm_carrier_mtr1 "mm_carrier_mtr1.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_carrier_mtr1 mm_util)
+add_executable (mm_commstat "mm_commstat.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_commstat mm_util)
 add_executable (mm_coinvl "mm_coinvl.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_coinvl mm_util)
-add_executable (mm_featru "mm_featru.c" "mm_manager.h")
-TARGET_LINK_LIBRARIES(mm_featru mm_util)
+add_executable (mm_fconfig "mm_fconfig.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_fconfig mm_util)
 add_executable (mm_instsv "mm_instsv.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_instsv mm_util)
 add_executable (mm_lcd "mm_lcd.c" "mm_manager.h")
@@ -103,8 +111,11 @@ TARGET_LINK_LIBRARIES(mm_rateint mm_util)
 add_executable (mm_rdlist "mm_rdlist.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_rdlist mm_util)
 add_executable (mm_smcard "mm_smcard.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_smcard mm_util)
 add_executable (mm_table_cutter "mm_table_cutter.c" "mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_table_cutter mm_util)
+add_executable (mm_userif "mm_userif.c" "mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_userif mm_util)
 add_executable (mm_dlog2pcap ${DLOG2PCAP_SRC})
 TARGET_LINK_LIBRARIES(mm_dlog2pcap mm_util)
 
@@ -120,22 +131,28 @@ set(INSTALL_TARGETS
     "mm_manager"
     "mm_admess"
     "mm_areacode"
+    "mm_callin"
     "mm_callscrn"
+    "mm_callstat"
     "mm_card"
     "mm_card_mtr1"
-    "mm_convert_card_mtr2_to_mtr1"
     "mm_carrier"
     "mm_carrier_mtr1"
+    "mm_convert_callscrn_mtr2_to_mtr1"
+    "mm_convert_card_mtr2_to_mtr1"
     "mm_coinvl"
+    "mm_commstat"
     "mm_dlog2pcap"
-    "mm_featru"
+    "mm_fconfig"
     "mm_instsv"
     "mm_lcd"
+    "mm_luhn"
     "mm_rate"
     "mm_rateint"
     "mm_rdlist"
     "mm_smcard"
     "mm_table_cutter"
+    "mm_userif"
 )
 
 install(TARGETS ${INSTALL_TARGETS} DESTINATION .)

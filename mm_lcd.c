@@ -1,6 +1,5 @@
 /*
  * Code to dump LCD table from Nortel Millennium Payphone
- * Tables 136-138 (0x88-0x8a)
  *
  * www.github.com/hharte/mm_manager
  *

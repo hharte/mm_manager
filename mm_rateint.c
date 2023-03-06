@@ -1,6 +1,5 @@
 /*
- * Code to dump International Set-based Rating table from Nortel Millennium Payphone
- * Table 151 (0x97)
+ * Code to dump DLOG_MT_INTL_SBR_TABLE table from Nortel Millennium Payphone
  *
  * www.github.com/hharte/mm_manager
  *
@@ -26,6 +25,8 @@
 #include <errno.h>
 #include "./mm_manager.h"
 
+#define TABLE_ID    DLOG_MT_INTL_SBR_TABLE
+
 /* Sample table entries */
 intl_rate_table_entry_t new_irates[] = {
     {  44, 6             },  // International Rate 0 - United Kingdom
@@ -42,35 +43,35 @@ int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int   rate_index;
-    dlg_mt_intl_sbr_table_t *prate_table;
+    dlg_mt_intl_sbr_table_t *ptable;
     uint8_t* load_buffer;
     int ret = 0;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_rateint mm_table_97.bin [outputfile.bin]\n");
+               "\tmm_rateint mm_table_%02x.bin [outputfile.bin]\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium RATEINT Table 0x97 (151) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    prate_table = (dlg_mt_intl_sbr_table_t *)calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
+    ptable = (dlg_mt_intl_sbr_table_t *)calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
 
-    if (prate_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlg_mt_intl_sbr_table_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(prate_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    load_buffer = ((uint8_t*)prate_table) + 1;
+    load_buffer = ((uint8_t*)ptable) + 1;
     if (fread(load_buffer, sizeof(dlg_mt_intl_sbr_table_t) - 1, 1, instream) != 1) {
-        printf("Error reading RATEINT table.\n");
-        free(prate_table);
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
+        free(ptable);
         fclose(instream);
         return -EIO;
     }
@@ -78,18 +79,18 @@ int main(int argc, char *argv[]) {
     fclose(instream);
 
     /* Display International SBR table common information. */
-    printf("International Flags: 0x%02x (%d)\n", prate_table->flags,              prate_table->flags);
-    printf(" Default Rate index: 0x%02x (%d) ",  prate_table->default_rate_index, prate_table->default_rate_index);
+    printf("International Flags: 0x%02x (%d)\n", ptable->flags,              ptable->flags);
+    printf(" Default Rate index: 0x%02x (%d) ",  ptable->default_rate_index, ptable->default_rate_index);
 
-    if (prate_table->default_rate_index == 0) {         // Rated by NCC
+    if (ptable->default_rate_index == 0) {         // Rated by NCC
         printf("NCC-rated\n");
-    } else if (prate_table->default_rate_index == 1) {  // Blocked call
+    } else if (ptable->default_rate_index == 1) {  // Blocked call
         printf("Blocked\n");
     } else {
         printf("Rate table Index: %02x (%d)\n",
-               IXL_TO_RATE(prate_table->default_rate_index), IXL_TO_RATE(prate_table->default_rate_index));
+               IXL_TO_RATE(ptable->default_rate_index), IXL_TO_RATE(ptable->default_rate_index));
     }
-    printf("              Spare: 0x%02x (%d)\n", prate_table->spare, prate_table->spare);
+    printf("              Spare: 0x%02x (%d)\n", ptable->spare, ptable->spare);
 
     printf("\n+------------+--------------+------------+\n" \
            "| Index      | CCode        | RATE Entry |\n"   \
@@ -98,7 +99,7 @@ int main(int argc, char *argv[]) {
     for (rate_index = 0; rate_index < INTL_RATE_TABLE_MAX_ENTRIES; rate_index++) {
         intl_rate_table_entry_t *prate;
 
-        prate = &prate_table->irate[rate_index];
+        prate = &ptable->irate[rate_index];
 
         if (prate->ccode ==  0) continue;
 
@@ -126,8 +127,8 @@ int main(int argc, char *argv[]) {
     }
 
     /* Update International RATE table */
-    memset(prate_table->irate, 0, sizeof(intl_rate_table_entry_t) * INTL_RATE_TABLE_MAX_ENTRIES);
-    memcpy(prate_table->irate, new_irates, sizeof(new_irates));
+    memset(ptable->irate, 0, sizeof(intl_rate_table_entry_t) * INTL_RATE_TABLE_MAX_ENTRIES);
+    memcpy(ptable->irate, new_irates, sizeof(new_irates));
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
@@ -140,7 +141,7 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    free(prate_table);
+    free(ptable);
 
     return ret;
 }

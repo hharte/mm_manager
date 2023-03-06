@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    printf("Nortel Millennium Call Screening List Table Dump\n\n");
+    printf("Nortel Millennium Call Screening List Table 24, 59, 92 (0x18, 0x3b, 0x5c) Dump\n\n");
 
     pcallscrn_table = (dlog_mt_call_screen_list_t *)calloc(1, CALLSCRN_TABLE_LEN_MTR19);
     pcallscrnu_table = (dlog_mt_call_screen_universal_t *)pcallscrn_table;

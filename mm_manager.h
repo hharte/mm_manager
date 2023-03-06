@@ -299,11 +299,12 @@ typedef struct dlog_mt_ncc_term_params_mtr1 {
 typedef struct dlog_mt_call_in_params {
     uint8_t id;
     uint8_t call_in_start_date[3];      /* Call-in start date YY:MM:DD */
-    uint8_t call_in_start_time[3];      /* Call-in start date HH:MM:SS */
+    uint8_t call_in_start_time[3];      /* Call-in start time HH:MM:SS */
     uint8_t call_in_interval[3];        /* Call-in inteval DD:HH:MM */
     uint8_t call_back_retry_time[2];    /* Call-back retry time MM:SS */
     uint8_t cdr_threshold;              /* Indicates the number of CDRs that the terminal will store before automatically calling in to the Millennium Manager to upload them. (Range: 1-50) */
-    uint8_t unknown_timestamp[6];       /* Looks like a timestamp, but not sure what it's for. */
+    uint8_t call_in_expiration_date[3]; /* Call-in expiration date YY:MM:DD */
+    uint8_t call_in_expiration_time[3]; /* Call-in expiration time HH:MM:SS */
     uint8_t unknown[2];
 } dlog_mt_call_in_params_t;
 
@@ -1352,8 +1353,20 @@ extern char *seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len,
 extern const char* error_inject_type_to_str(uint8_t type);
 extern uint16_t term_type_to_mtr(uint8_t term_type);
 extern uint8_t term_type_to_model(uint8_t term_type);
-
+extern void print_bits(uint8_t bits, char* str_array[]);
+extern const char* table_to_string(uint8_t table);
+extern const char* alarm_id_to_string(uint8_t alarm_id);
+extern const char* rate_type_to_str(uint8_t type);
+extern const char* stats_call_type_to_str(uint8_t type);
+extern const char* stats_to_str(uint8_t type);
+extern const char* TCALSTE_stats_to_str(uint8_t type);
+extern const char* TPERFST_stats_to_str(uint8_t type);
 extern const char* feature_term_type_to_str(uint8_t type);
+extern void print_call_in_params_table(dlog_mt_call_in_params_t* call_in_params);
+extern void print_call_stat_params_table(dlog_mt_call_stat_params_t* call_stat_params);
+extern void print_instsv_table(dlog_mt_install_params_t* instsv_table);
+extern void print_user_if_params_table(dlog_mt_user_if_params_t* user_if_table);
+extern void print_comm_stat_table(dlog_mt_comm_stat_params_t* comm_stat_table);
 
 /* mm_pcap */
 int mm_create_pcap(const char* capfilename, FILE** pcapstream);
@@ -1364,16 +1377,6 @@ int mm_close_pcap(FILE* pcapstream);
 char* basename(char* path);
 errno_t localtime_r(time_t const* const sourceTime, struct tm* tmDest);
 #endif /* _WIN32 */
-
-extern void print_bits(uint8_t bits, char *str_array[]);
-extern const char *table_to_string(uint8_t table);
-extern const char *alarm_id_to_string(uint8_t alarm_id);
-extern const char* rate_type_to_str(uint8_t type);
-extern const char *stats_call_type_to_str(uint8_t type);
-extern const char *stats_to_str(uint8_t type);
-extern const char *TCALSTE_stats_to_str(uint8_t type);
-extern const char *TPERFST_stats_to_str(uint8_t type);
-extern void print_instsv_table(dlog_mt_install_params_t* instsv_table);
 
 #pragma pack(pop)
 

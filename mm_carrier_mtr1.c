@@ -1,10 +1,9 @@
 /*
- * Code to dump CARRIER table from Nortel Millennium Payphone
- * Table 23 (0x17)
+ * Code to dump DLOG_MT_CARRIER_TABLE table from Nortel Millennium
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -21,6 +20,8 @@
 # include <arpa/inet.h>
 #endif /* ifdef _WIN32 */
 #include "./mm_manager.h"
+
+#define TABLE_ID    DLOG_MT_CARRIER_TABLE
 
 /* Default Carrier Mapping strings
  *
@@ -213,34 +214,34 @@ int main(int argc, char *argv[]) {
     uint8_t  i;
     int ret = 0;
 
-    dlog_mt_carrier_table_mtr1_t *pcarrier_table;
+    dlog_mt_carrier_table_mtr1_t *ptable;
     uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_carrier mm_table_17.bin [outputfile.bin]\n");
+               "\tmm_carrier mm_table_%02x.bin [outputfile.bin]\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium CARRIER Table (Table 23) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    pcarrier_table = (dlog_mt_carrier_table_mtr1_t *)calloc(1, sizeof(dlog_mt_carrier_table_mtr1_t));
+    ptable = (dlog_mt_carrier_table_mtr1_t *)calloc(1, sizeof(dlog_mt_carrier_table_mtr1_t));
 
-    if (pcarrier_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_carrier_table_mtr1_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(pcarrier_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    load_buffer = ((uint8_t*)pcarrier_table) + 1;
+    load_buffer = ((uint8_t*)ptable) + 1;
     if (fread(load_buffer, sizeof(dlog_mt_carrier_table_mtr1_t) - 1, 1, instream) != 1) {
-        printf("Error reading CARRIER table.\n");
-        free(pcarrier_table);
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
+        free(ptable);
         fclose(instream);
         return -EIO;
     }
@@ -253,52 +254,52 @@ int main(int argc, char *argv[]) {
         printf("\t%d %s = 0x%02x (%3d)\n",
                i,
                str_default_carrier[i],
-               pcarrier_table->defaults[i],
-               pcarrier_table->defaults[i]);
+               ptable->defaults[i],
+               ptable->defaults[i]);
     }
     printf("\n+---------------------------------------------------------------------------------------------------------------------+\n" \
            "|  # | Ref  | Number | Valid Cards | Display Prompt       |  CB2 |  CB  | FGB Tmr | Int'l | Call Entry | CB2/CB Flags |\n"   \
            "+----+------+--------+-------------+----------------------+------+------+---------+-------+------------+--------------+");
 
     for (carrier_index = 0; carrier_index < CARRIER_TABLE_MTR1_MAX_CARRIERS; carrier_index++) {
-        if (pcarrier_table->carrier[carrier_index].display_prompt[0] >= 0x20) {
-            memcpy(display_prompt_string, pcarrier_table->carrier[carrier_index].display_prompt,
-                   sizeof(pcarrier_table->carrier[carrier_index].display_prompt));
+        if (ptable->carrier[carrier_index].display_prompt[0] >= 0x20) {
+            memcpy(display_prompt_string, ptable->carrier[carrier_index].display_prompt,
+                   sizeof(ptable->carrier[carrier_index].display_prompt));
             display_prompt_string[20] = '\0';
         } else {
-            if ((pcarrier_table->carrier[carrier_index].carrier_ref == 0) &&
-                (pcarrier_table->carrier[carrier_index].call_entry == 0)) {
+            if ((ptable->carrier[carrier_index].carrier_ref == 0) &&
+                (ptable->carrier[carrier_index].call_entry == 0)) {
                 continue;
             }
             snprintf(display_prompt_string, sizeof(display_prompt_string), "                    ");
         }
 
-        carrier_num = ntohs(pcarrier_table->carrier[carrier_index].carrier_num);
+        carrier_num = ntohs(ptable->carrier[carrier_index].carrier_num);
 
         printf("\n| %2d | 0x%02x | 0x%04x |   0x%02x%02x%02x  | %s | 0x%02x | 0x%02x |  %5d  |  0x%02x | 0x%02x   %3d | ",
                carrier_index,
-               pcarrier_table->carrier[carrier_index].carrier_ref,
+               ptable->carrier[carrier_index].carrier_ref,
                carrier_num,
-               pcarrier_table->carrier[carrier_index].valid_cards[2],
-               pcarrier_table->carrier[carrier_index].valid_cards[1],
-               pcarrier_table->carrier[carrier_index].valid_cards[0],
+               ptable->carrier[carrier_index].valid_cards[2],
+               ptable->carrier[carrier_index].valid_cards[1],
+               ptable->carrier[carrier_index].valid_cards[0],
                display_prompt_string,
-               pcarrier_table->carrier[carrier_index].control_byte2,
-               pcarrier_table->carrier[carrier_index].control_byte,
-               pcarrier_table->carrier[carrier_index].fgb_timer,
-               pcarrier_table->carrier[carrier_index].spare,
-               pcarrier_table->carrier[carrier_index].call_entry,
-               pcarrier_table->carrier[carrier_index].call_entry);
+               ptable->carrier[carrier_index].control_byte2,
+               ptable->carrier[carrier_index].control_byte,
+               ptable->carrier[carrier_index].fgb_timer,
+               ptable->carrier[carrier_index].spare,
+               ptable->carrier[carrier_index].call_entry,
+               ptable->carrier[carrier_index].call_entry);
 
-        print_bits(pcarrier_table->carrier[carrier_index].control_byte2, (char **)str_cb2);
-        print_bits(pcarrier_table->carrier[carrier_index].control_byte,  (char **)str_cb);
+        print_bits(ptable->carrier[carrier_index].control_byte2, (char **)str_cb2);
+        print_bits(ptable->carrier[carrier_index].control_byte,  (char **)str_cb);
     }
 
     printf("\n+------------------------------------------------------------------------------------------------------+\n");
 
     printf("Spare: ");
-    for (i = 0; i < sizeof(pcarrier_table->spare); i++) {
-        printf("0x%02x, ", pcarrier_table->spare[i]);
+    for (i = 0; i < sizeof(ptable->spare); i++) {
+        printf("0x%02x, ", ptable->spare[i]);
     }
     printf("\n");
 
@@ -310,10 +311,10 @@ int main(int argc, char *argv[]) {
     }
 
     for (i = 0; i < DEFAULT_CARRIERS_MTR1_MAX; i++) {
-        pcarrier_table->defaults[i] = 0;
+        ptable->defaults[i] = 0;
     }
 
-    memcpy(pcarrier_table->carrier, new_carriers, sizeof(new_carriers));
+    memcpy(ptable->carrier, new_carriers, sizeof(new_carriers));
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
@@ -326,7 +327,7 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    free(pcarrier_table);
+    free(ptable);
 
     return ret;
 }

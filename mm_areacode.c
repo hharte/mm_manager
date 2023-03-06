@@ -1,10 +1,9 @@
 /*
- * Code to dump area codes list from Nortel Millennium
- * payphone table 0x96
+ * Code to dump DLOG_MT_NPA_SBR_TABLE table from Nortel Millennium
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  * Table 0x96 is an array of 400 bytes, where each nibble corresponds
  * to one of the area codes from 200-999.
@@ -24,6 +23,8 @@
 #include <errno.h>
 #include "./mm_manager.h"
 
+#define TABLE_ID    DLOG_MT_NPA_SBR_TABLE
+
 const char *str_flags[4] = {
     "---", /* 0 - Invalid NPA */
     "   ", /* 1 - Unassigned */
@@ -34,34 +35,34 @@ const char *str_flags[4] = {
 int main(int argc, char *argv[]) {
     FILE *instream;
     int   areacode = 200;
-    dlog_mt_npa_sbr_table_t *npa_table;
+    dlog_mt_npa_sbr_table_t *ptable;
     uint8_t* load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_areacode mm_table_96.bin\n");
+               "\tmm_areacode mm_table_%02x.bin\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium NPA (Table 0x96) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    npa_table = (dlog_mt_npa_sbr_table_t *)calloc(1, sizeof(dlog_mt_npa_sbr_table_t));
+    ptable = (dlog_mt_npa_sbr_table_t *)calloc(1, sizeof(dlog_mt_npa_sbr_table_t));
 
-    if (npa_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_npa_sbr_table_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(npa_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    load_buffer = ((uint8_t*)npa_table) + 1;
+    load_buffer = ((uint8_t*)ptable) + 1;
     if (fread(load_buffer, sizeof(dlog_mt_npa_sbr_table_t) - 1, 1, instream) != 1) {
-        printf("Error reading NPA table.\n");
-        free(npa_table);
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
+        free(ptable);
         fclose(instream);
         return -EIO;
     }
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]) {
         uint8_t c;
         uint8_t flags0, flags1;
 
-        c = npa_table->npa[i];
+        c = ptable->npa[i];
 
         if (areacode % 200 == 0) {
             printf("\n+-----------------------------------------------------------------+\n" \
@@ -97,8 +98,8 @@ int main(int argc, char *argv[]) {
 
     printf("\n+-----------------------------------------------------------------+\n");
 
-    if (npa_table != NULL) {
-        free(npa_table);
+    if (ptable != NULL) {
+        free(ptable);
     }
 
     return 0;

@@ -891,6 +891,94 @@ void print_instsv_table(dlog_mt_install_params_t* instsv_table) {
             instsv_table->predial_string_alt, sizeof(instsv_table->predial_string_alt)));
 }
 
+void print_call_in_params_table(dlog_mt_call_in_params_t* call_in_params) {
+    printf("\tCall-in start date: %04d-%02d-%02d\n",
+        call_in_params->call_in_start_date[0] + 1900, call_in_params->call_in_start_date[1], call_in_params->call_in_start_date[2]);
+    printf("\tCall-in start time: %02d:%02d:%02d\n",
+        call_in_params->call_in_start_time[0], call_in_params->call_in_start_time[1], call_in_params->call_in_start_time[2]);
+    printf("\tCall-in interval:   %02dD:%02dH:%02dM\n",
+        call_in_params->call_in_interval[0], call_in_params->call_in_interval[1], call_in_params->call_in_interval[2]);
+    printf("\tCall-back retry:    %02dm:%02ds\n",
+        call_in_params->call_back_retry_time[0], call_in_params->call_back_retry_time[1]);
+    printf("\tCDR Threshold:      %d\n", call_in_params->cdr_threshold);
+    printf("\tExpiration date:    %04d-%02d-%02d\n",
+        call_in_params->call_in_expiration_date[0] + 1900, call_in_params->call_in_expiration_date[1], call_in_params->call_in_expiration_date[2]);
+    printf("\tExpiration time:    %02d:%02d:%02d\n",
+        call_in_params->call_in_expiration_time[0] , call_in_params->call_in_expiration_time[1], call_in_params->call_in_expiration_time[2]);
+    printf("\tUnknown bytes:      %02d, %02d\n", call_in_params->unknown[0], call_in_params->unknown[1]);
+
+}
+
+void print_call_stat_params_table(dlog_mt_call_stat_params_t* call_stat_params) {
+    int i;
+
+    printf("\tStart time:     %02d:%02d\n",
+        call_stat_params->callstats_start_time[0], call_stat_params->callstats_start_time[1]);
+    printf("\tDuration:       %02dd\n", call_stat_params->callstats_duration);
+    printf("\tThreshold:      %02d\n", call_stat_params->callstats_threshold);
+
+    for (i = 0; i < 4; i++) {
+        printf("\tTimestamp[%d]:   %02d:%02d\n", i,
+            call_stat_params->timestamp[i][0], call_stat_params->timestamp[i][1]);
+    }
+
+    printf("\tEnable:         0x%02x\n", call_stat_params->enable);
+    printf("\tCDR Threshold:  %d\n", call_stat_params->cdr_threshold);
+    printf("\tCDR Start Time: %02d:%02d\n",
+        call_stat_params->cdr_start_time[0], call_stat_params->cdr_start_time[1]);
+    printf("\tCDR Duration:   %dd:%dh\n", call_stat_params->cdr_duration_days, call_stat_params->cdr_duration_hours_flags & 0x1f);
+    printf("\tCDR Flags:      0x%02x\n", call_stat_params->cdr_duration_hours_flags & 0xe0);
+}
+
+void print_user_if_params_table(dlog_mt_user_if_params_t* user_if_table) {
+    printf("\tDigit clear delay:           %5d\n", user_if_table->digit_clear_delay);
+    printf("\tTransient Delay:             %5d\n", user_if_table->transient_delay);
+    printf("\tTransient Hint Time:         %5d\n", user_if_table->transient_hint_time);
+    printf("\tVisual to Voice Delay:       %5d\n", user_if_table->visual_to_voice_delay);
+    printf("\tVoice Repetition Delay:      %5d\n", user_if_table->voice_repitition_delay);
+    printf("\tNo Action Timeout:           %5d\n", user_if_table->no_action_timeout);
+    printf("\tCard Validation Timeout:     %5d\n", user_if_table->card_validation_timeout);
+    printf("\tDJ 2nd String DTMF Timeout:  %5d\n", user_if_table->dj_second_string_dtmf_timeout);
+    printf("\tCP Input Timeout:            %5d\n", user_if_table->cp_input_timeout);
+    printf("\tLanguage Timeout:            %5d\n", user_if_table->language_timeout);
+    printf("\tCFS Timeout:                 %5d\n", user_if_table->cfs_timeout);
+    printf("\tCPD Timeout:                 %5d\n", user_if_table->called_party_disconnect);
+    printf("\t# Voice Prompt Repititions:     %2d\n", user_if_table->no_voice_prompt_reps);
+    printf("\tACCS Digit Timeout:          %5d\n", user_if_table->accs_digit_timeout);
+    printf("\tCollect Call Timeout:        %5d\n", user_if_table->collect_call_timeout);
+    printf("\tBong Tone Timeout:           %5d\n", user_if_table->bong_tone_timeout);
+    printf("\tACCS No Action Timeout:      %5d\n", user_if_table->accs_no_action_timeout);
+    printf("\tCCard Auth Required Timeout: %5d\n", user_if_table->card_auth_required_timeout);
+    printf("\tRate Request Timeout:        %5d\n", user_if_table->rate_request_timeout);
+    printf("\tManual Dial Hold Time:       %5d\n", user_if_table->manual_dial_hold_time);
+    printf("\tAutodialer Hold Time:        %5d\n", user_if_table->autodialer_hold_time);
+    printf("\tCoin First Warning Time:     %5d\n", user_if_table->coin_first_warning_time);
+    printf("\tCoin Second Warning Time:    %5d\n", user_if_table->coin_second_warning_time);
+    printf("\tAlt Bong Tone Timeout:       %5d\n", user_if_table->alternate_bong_tone_timeout);
+    printf("\tDelay After Bong Tone:       %5d\n", user_if_table->delay_after_bong_tone);
+    printf("\tAlt Delay After Bong Tone:   %5d\n", user_if_table->alternate_delay_after_bong_tone);
+    printf("\tDisplay Scroll Speed:        %5d\n", user_if_table->display_scroll_speed);
+    printf("\tAOS Bong Tone Timeout:       %5d\n", user_if_table->aos_bong_tone_timeout);
+    printf("\tFGB AOS Second Spill Timeout:%5d\n", user_if_table->fgb_aos_second_spill_timeout);
+    printf("\tDatajack Connect Timeout:    %5d\n", user_if_table->datajack_connect_timeout);
+    printf("\tDatajack Pause Threshold:    %5d\n", user_if_table->datajack_pause_threshold);
+    printf("\tDatajack IAS Timer:          %5d\n", user_if_table->datajack_ias_timer);
+}
+
+extern void print_comm_stat_table(dlog_mt_comm_stat_params_t* comm_stat_table) {
+    int i;
+
+    printf("\tStart time:     %02d:%02d\n",
+        comm_stat_table->perfstats_start_time[0], comm_stat_table->perfstats_start_time[1]);
+    printf("\tDuration:       %02dd\n", comm_stat_table->perfstats_duration);
+    printf("\tThreshold:      %02d\n", comm_stat_table->perfstats_threshold);
+
+    for (i = 0; i < 4; i++) {
+        printf("\tTimestamp[%d]:   %02d:%02d\n", i,
+            comm_stat_table->perfstats_timestamp[i][0], comm_stat_table->perfstats_timestamp[i][1]);
+    }
+}
+
 #ifdef _WIN32
 char* basename(char* path) {
     char fname[20] = { 0 };

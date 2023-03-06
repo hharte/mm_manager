@@ -17,7 +17,6 @@ The Nortel Millennium payphones utilize a Manager to facilitate installation, re
 
 `mm_manager` runs on Windows, Linux, and MacOS X.
 
-
 The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Terminal with both V1.0 Control PCP (Through-hole, 1.20 firmware) and V1.1 Control PCP (Surface-mount, 2.11 firmware.)  It partially works with other terminal types and firmware versions, see table for limitations:
 
 
@@ -137,9 +136,21 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
    <td>MP/MC
    </td>
-   <td>
+   <td>English / French
    </td>
-   <td>Fully working except for chip cards
+   <td>Fully working
+   </td>
+  </tr>
+  <tr>
+   <td>NNA1F02
+   </td>
+   <td>1,9
+   </td>
+   <td>MP/MC/TTY
+   </td>
+   <td>English / French
+   </td>
+   <td>Fully working
    </td>
   </tr>
   <tr>
@@ -413,8 +424,6 @@ Key in this Terminal’s telephone number (10-digits) NPA-NXX-XXXX.
 Key in this Terminal’s 10-digit serial number (1234567890 is fine.)
 
 Key in the Manager’s phone number (I use 1-800-555-1234, which I intercept in the Asterisk dialplan and send to the modem connected to the computer running `mm_manager`.)
-
-
 
 
 # Configuration Tables
@@ -1000,9 +1009,21 @@ Two multipay terminals with different Advertising messages, and otherwise config
    </td>
   </tr>
   <tr>
+   <td>mm_callin
+   </td>
+   <td>Dump Call-in Parameters table
+   </td>
+  </tr>
+  <tr>
    <td>mm_callscrn
    </td>
    <td>Dump Call Screening List
+   </td>
+  </tr>
+  <tr>
+   <td>mm_callstat
+   </td>
+   <td>Dump Call Statistics Parameters table
    </td>
   </tr>
   <tr>
@@ -1036,6 +1057,12 @@ Two multipay terminals with different Advertising messages, and otherwise config
    </td>
   </tr>
   <tr>
+   <td>mm_commstat
+   </td>
+   <td>Dump Communications Statistics Parameters table
+   </td>
+  </tr>
+  <tr>
    <td>mm_convert_callscrn_mtr2_to_mtr1
    </td>
    <td>Convert MTR 1.20/2.x Call Screening List to MTR 1.7, 1.9.
@@ -1054,7 +1081,7 @@ Two multipay terminals with different Advertising messages, and otherwise config
    </td>
   </tr>
   <tr>
-   <td>mm_featru
+   <td>mm_fconfig
    </td>
    <td>Dump Feature Configuration Options table
    </td>
@@ -1105,6 +1132,12 @@ Two multipay terminals with different Advertising messages, and otherwise config
    <td>mm_table_cutter
    </td>
    <td>Extract ROM tables from firmware binaries
+   </td>
+  </tr>
+  <tr>
+   <td>mm_userif
+   </td>
+   <td>Dump User Interface Parameters table
    </td>
   </tr>
 </table>

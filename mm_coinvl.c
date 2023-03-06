@@ -4,7 +4,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
  *
@@ -16,6 +16,8 @@
 #include <stdint.h>
 #include <errno.h>
 #include "./mm_manager.h"
+
+#define TABLE_ID    DLOG_MT_COIN_VAL_TABLE
 
 const char *str_coin_name[] = {
     "CDN Nickel       ",
@@ -81,32 +83,32 @@ int main(int argc, char *argv[]) {
     int   coin_index;
     int   ret = 0;
 
-    dlog_mt_coin_val_table_t *pcoinvl_table;
+    dlog_mt_coin_val_table_t *ptable;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_coinvl mm_table_32.bin [outputfile.bin]\n");
+               "\tmm_coinvl mm_table_%02x.bin [outputfile.bin]\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium COINVL Table (Table 50) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    pcoinvl_table = (dlog_mt_coin_val_table_t *)calloc(1, sizeof(dlog_mt_coin_val_table_t));
+    ptable = (dlog_mt_coin_val_table_t *)calloc(1, sizeof(dlog_mt_coin_val_table_t));
 
-    if (pcoinvl_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_coin_val_table_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(pcoinvl_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    if (fread(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, instream) != 1) {
-        printf("Error reading COINVL table.\n");
-        free(pcoinvl_table);
+    if (fread(ptable, sizeof(dlog_mt_coin_val_table_t), 1, instream) != 1) {
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
+        free(ptable);
         fclose(instream);
         return -EIO;
     }
@@ -121,54 +123,54 @@ int main(int argc, char *argv[]) {
         printf("\n| %2d | %s | %3d | %3d |     %2d |",
                coin_index + 1,
                str_coin_name[coin_index],
-               pcoinvl_table->coin_value[coin_index],
-               pcoinvl_table->coin_volume[coin_index],
-               pcoinvl_table->coin_param[coin_index]);
+               ptable->coin_value[coin_index],
+               ptable->coin_volume[coin_index],
+               ptable->coin_param[coin_index]);
     }
 
     printf("\n+---------------------------------------------+\n");
 
-    printf("|           Cash Box Volume:   %5d          |\n",    pcoinvl_table->cash_box_volume);
-    printf("|             Escrow Volume:   %5d          |\n",    pcoinvl_table->escrow_volume);
-    printf("| Cash Box Volume Threshold:   %5d          |\n",    pcoinvl_table->cash_box_volume_threshold);
-    printf("|  Cash Box Value Threshold: $%6.2f          |\n",   (float)(pcoinvl_table->cash_box_value_threshold) / 100.0);
-    printf("|   Escrow Volume Threshold:   %5d          |\n",    pcoinvl_table->escrow_volume_threshold);
-    printf("|    Escrow Value Threshold: $%6.2f          |\n", (float)(pcoinvl_table->escrow_value_threshold) / 100.0);
+    printf("|           Cash Box Volume:   %5d          |\n",    ptable->cash_box_volume);
+    printf("|             Escrow Volume:   %5d          |\n",    ptable->escrow_volume);
+    printf("| Cash Box Volume Threshold:   %5d          |\n",    ptable->cash_box_volume_threshold);
+    printf("|  Cash Box Value Threshold: $%6.2f          |\n",   (float)(ptable->cash_box_value_threshold) / 100.0);
+    printf("|   Escrow Volume Threshold:   %5d          |\n",    ptable->escrow_volume_threshold);
+    printf("|    Escrow Value Threshold: $%6.2f          |\n", (float)(ptable->escrow_value_threshold) / 100.0);
     printf("+---------------------------------------------+\n");
 
-    pcoinvl_table->coin_param[cdn_nickel]  = 0x03;
-    pcoinvl_table->coin_param[cdn_nickel2] = 0x03;
-    pcoinvl_table->coin_param[cdn_dime]    = 0x03;
-    pcoinvl_table->coin_param[cdn_quarter] = 0x03;
-    pcoinvl_table->coin_param[cdn_dollar]  = 0x03;
+    ptable->coin_param[cdn_nickel]  = 0x03;
+    ptable->coin_param[cdn_nickel2] = 0x03;
+    ptable->coin_param[cdn_dime]    = 0x03;
+    ptable->coin_param[cdn_quarter] = 0x03;
+    ptable->coin_param[cdn_dollar]  = 0x03;
 
     /* Add coin params for US Dollar */
-    pcoinvl_table->coin_param[us_dollar]  = 0x03;
-    pcoinvl_table->coin_value[us_dollar]  = 100;
-    pcoinvl_table->coin_volume[us_dollar] = 40;
+    ptable->coin_param[us_dollar]  = 0x03;
+    ptable->coin_value[us_dollar]  = 100;
+    ptable->coin_volume[us_dollar] = 40;
 
     /* Add coin params for Canadian Steel nickel, dime, quarter */
-    pcoinvl_table->coin_param[cdn_steel_nickel]  = 0x03;
-    pcoinvl_table->coin_value[cdn_steel_nickel]  = 5;
-    pcoinvl_table->coin_volume[cdn_steel_nickel] = 20;
+    ptable->coin_param[cdn_steel_nickel]  = 0x03;
+    ptable->coin_value[cdn_steel_nickel]  = 5;
+    ptable->coin_volume[cdn_steel_nickel] = 20;
 
-    pcoinvl_table->coin_param[cdn_steel_dime]  = 0x03;
-    pcoinvl_table->coin_value[cdn_steel_dime]  = 10;
-    pcoinvl_table->coin_volume[cdn_steel_dime] = 10;
+    ptable->coin_param[cdn_steel_dime]  = 0x03;
+    ptable->coin_value[cdn_steel_dime]  = 10;
+    ptable->coin_volume[cdn_steel_dime] = 10;
 
-    pcoinvl_table->coin_param[cdn_steel_quarter]  = 0x03;
-    pcoinvl_table->coin_value[cdn_steel_quarter]  = 25;
-    pcoinvl_table->coin_volume[cdn_steel_quarter] = 25;
+    ptable->coin_param[cdn_steel_quarter]  = 0x03;
+    ptable->coin_value[cdn_steel_quarter]  = 25;
+    ptable->coin_volume[cdn_steel_quarter] = 25;
 
     /* Add coin params for New Canadian Dollar coin */
-    pcoinvl_table->coin_param[cdn_dollar2]  = 0x03;
-    pcoinvl_table->coin_value[cdn_dollar2]  = 100;
-    pcoinvl_table->coin_volume[cdn_dollar2] = 40;
+    ptable->coin_param[cdn_dollar2]  = 0x03;
+    ptable->coin_value[cdn_dollar2]  = 100;
+    ptable->coin_volume[cdn_dollar2] = 40;
 
     if (argc > 2) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
             printf("Error opening output file %s for write.\n", argv[2]);
-            free(pcoinvl_table);
+            free(ptable);
             return -ENOENT;
         }
     }
@@ -177,15 +179,15 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(pcoinvl_table, sizeof(dlog_mt_coin_val_table_t), 1, ostream) != 1) {
+        if (fwrite(ptable, sizeof(dlog_mt_coin_val_table_t), 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }
         fclose(ostream);
     }
 
-    if (pcoinvl_table != NULL) {
-        free(pcoinvl_table);
+    if (ptable != NULL) {
+        free(ptable);
     }
 
     return ret;

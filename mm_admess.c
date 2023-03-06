@@ -1,10 +1,10 @@
 /*
- * Code to dump Advertisiing Message table from Nortel Millennium Payphone
+ * Code to dump DLOG_MT_ADVERT_PROMPTS table from Nortel Millennium Payphone
  * Table 29 (0x1d) - ADMESS pp. 2-3
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  *
  */
 
@@ -15,6 +15,8 @@
 #include <errno.h>
 #include "./mm_manager.h"
 
+#define TABLE_ID    DLOG_MT_ADVERT_PROMPTS
+
 int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
@@ -22,35 +24,35 @@ int main(int argc, char *argv[]) {
     char  vfd_string[21];
     int   ret = 0;
 
-    dlog_mt_advert_prompts_t *padmess_table;
+    dlog_mt_advert_prompts_t *ptable;
     uint8_t *load_buffer;
 
     if (argc <= 1) {
         printf("Usage:\n" \
-               "\tmm_admess mm_table_1d.bin [outputfile.bin]\n");
+               "\tmm_admess mm_table_%02x.bin [outputfile.bin]\n", TABLE_ID);
         return -1;
     }
 
-    printf("Nortel Millennium Advertising Message Table (Table 29) Dump\n\n");
+    printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    padmess_table = (dlog_mt_advert_prompts_t *)calloc(1, sizeof(dlog_mt_advert_prompts_t));
+    ptable = (dlog_mt_advert_prompts_t *)calloc(1, sizeof(dlog_mt_advert_prompts_t));
 
-    if (padmess_table == NULL) {
+    if (ptable == NULL) {
         printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_advert_prompts_t));
         return -ENOMEM;
     }
 
     if ((instream = fopen(argv[1], "rb")) == NULL) {
         printf("Error opening %s\n", argv[1]);
-        free(padmess_table);
+        free(ptable);
         return -ENOENT;
     }
 
-    load_buffer = ((uint8_t *)padmess_table) + 1;
+    load_buffer = ((uint8_t *)ptable) + 1;
     if (fread(load_buffer, sizeof(dlog_mt_advert_prompts_t) - 1, 1, instream) != 1) {
-        printf("Error reading ADMESS table.\n");
+        printf("Error reading %s table.\n", table_to_string(TABLE_ID));
         fclose(instream);
-        free(padmess_table);
+        free(ptable);
         return -EIO;
     }
 
@@ -61,15 +63,15 @@ int main(int argc, char *argv[]) {
            "+------+----------+---------+----------------------+-------+\n");
 
     for (index = 0; index < ADVERT_PROMPTS_MAX; index++) {
-        memcpy(vfd_string, (char *)padmess_table->entry[index].message_text, sizeof(vfd_string) - 1);
+        memcpy(vfd_string, (char *)ptable->entry[index].message_text, sizeof(vfd_string) - 1);
         vfd_string[sizeof(vfd_string) - 1] = '\0';
 
         printf("|  %2d  |    %5d |    0x%02x | %s |  0x%02x |\n",
                index,
-               padmess_table->entry[index].display_time,
-               padmess_table->entry[index].display_attr,
+               ptable->entry[index].display_time,
+               ptable->entry[index].display_attr,
                vfd_string,
-               padmess_table->entry[index].spare);
+               ptable->entry[index].spare);
     }
 
     printf("+----------------------------------------------------------+\n");
@@ -94,8 +96,8 @@ int main(int argc, char *argv[]) {
         fclose(ostream);
     }
 
-    if (padmess_table != NULL) {
-        free(padmess_table);
+    if (ptable != NULL) {
+        free(ptable);
     }
 
     return ret;
