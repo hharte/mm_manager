@@ -155,14 +155,14 @@ set(INSTALL_TARGETS
     "mm_userif"
 )
 
-install(TARGETS ${INSTALL_TARGETS} DESTINATION .)
+install(TARGETS ${INSTALL_TARGETS} DESTINATION bin)
 install(DIRECTORY tables/default DESTINATION tables)
 install(DIRECTORY tables/card_only DESTINATION tables)
 install(DIRECTORY tables/coin DESTINATION tables)
 install(DIRECTORY tables/desk DESTINATION tables)
 install(FILES LICENSE DESTINATION .)
 install(FILES README.md DESTINATION .)
-install(FILES generate_intl_sbr.py generate_lcd.py generate_lcd_lata.py generate_npa.py DESTINATION .)
+install(FILES generate_intl_sbr.py generate_lcd.py generate_lcd_lata.py generate_lcd_lir.py generate_npa.py DESTINATION bin)
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
