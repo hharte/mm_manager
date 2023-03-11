@@ -24,13 +24,28 @@ After installing Wireshark, you need to install the Millennium dissector ([mille
 ## Dissector Plugin Installation
 
 
-### For Windows
+### For Windows Command Prompt
 
 Create the plugins directory and copy `millennium.lua` into `%APPDATA%\wireshark\plugins` using the Windows Command Prompt as follows:
 
-mkdir %APPDATA%\wireshark\plugins
 
+```
+mkdir %APPDATA%\wireshark\plugins
 copy wireshark\millennium.lua %APPDATA%\wireshark\plugins
+```
+
+
+
+### For Windows PowerShell
+
+Create the plugins directory and copy `millennium.lua` into `$env:APPDATA\wireshark\plugins` using Windows PowerShell as follows:
+
+
+```
+mkdir $env:APPDATA\wireshark\plugins
+copy wireshark\millennium.lua $env:APPDATA\wireshark\plugins
+```
+
 
 
 ### For Linux and MacOS
@@ -82,6 +97,13 @@ mm_dlog2pcap transcript.dlog transcript.pcap
 
 
 The resulting .pcap file can be loaded with Wireshark.
+
+
+# Tested Wireshark Releases
+
+v4.0.4
+
+v3.6.5
 
 
 # References

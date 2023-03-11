@@ -142,9 +142,9 @@ The `mm_manager` has been tested with a Nortel Multi-Pay (coin, credit card) Ter
    </td>
   </tr>
   <tr>
-   <td>NNA1F02
+   <td><a href="https://github.com/muccc/millennium/tree/71ccd39f3004b8e54ed6fa1af009516a9753a5fa/firmware/NNA1F02">NNA1F02</a>
    </td>
-   <td>1,9
+   <td>1.9
    </td>
    <td>MP/MC/TTY
    </td>
