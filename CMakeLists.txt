@@ -156,6 +156,7 @@ set(INSTALL_TARGETS
 )
 
 install(TARGETS ${INSTALL_TARGETS} DESTINATION bin)
+install(DIRECTORY wireshark DESTINATION .)
 install(DIRECTORY tables/default DESTINATION tables)
 install(DIRECTORY tables/card_only DESTINATION tables)
 install(DIRECTORY tables/coin DESTINATION tables)
