@@ -40,6 +40,7 @@
 #define JAN12020 1577865600
 
 /* Function Prototypes */
+static int mm_download_tables(mm_context_t *context);
 static int create_terminal_specific_directory(char* table_dir, char* terminal_id);
 static int update_terminal_download_time(mm_context_t* context);
 static int check_mm_table_is_newer(mm_context_t* context, uint8_t table_id);
@@ -728,10 +729,8 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
     char     timestamp_str[20];
     char     timestamp2_str[20];
     uint8_t* ppayload;
-    uint8_t  cashbox_pending = 0;
-    uint8_t  dont_send_reply = 0;
+    int      reply_length = 0;
     uint8_t  table_download_pending = 0;
-    uint8_t  end_of_data = 0;
     uint8_t  status;
 
     status = receive_mm_packet(context, pkt);
@@ -804,7 +803,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 time_sync_response->year  = (ptm.tm_year & 0xff);      /* Fill current years since 1900 */
                 time_sync_response->month = ((ptm.tm_mon + 1) & 0xff); /* Fill current month (1-12) */
-                time_sync_response->day   = (ptm.tm_mday & 0xff);      /* Fill current day (0-31) */
+                time_sync_response->day   = (ptm.tm_mday & 0xff);      /* Fill current day (1-31) */
                 time_sync_response->hour  = (ptm.tm_hour & 0xff);      /* Fill current hour (0-23) */
                 time_sync_response->min   = (ptm.tm_min & 0xff);       /* Fill current minute (0-59) */
                 time_sync_response->sec   = (ptm.tm_sec & 0xff);       /* Fill current second (0-59) */
@@ -819,7 +818,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                     time_sync_response->sec);
 
                 pack_payload += sizeof(dlog_mt_time_sync_t);
-                end_of_data = 1;
+                *pack_payload++ = DLOG_MT_END_DATA;
                 break;
             }
             case DLOG_MT_ATN_REQ_TAB_UPD: {
@@ -834,7 +833,17 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                        context->terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL ? "Power Lost on Download, " : "",
                        context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS ? "Cashbox Status Request" : "");
 
-                if (context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS) cashbox_pending = 1;
+                /* Send DLOG_MT_TABLE_UPD */
+                *pack_payload++ = DLOG_MT_TABLE_UPD;
+
+                /* Send cash box status if requested by terminal */
+                if (context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS) {
+                    printf("\tSend DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n\t");
+
+                    mm_acct_load_TCASHST(context, (cashbox_status_univ_t*)pack_payload);
+                    pack_payload += sizeof(cashbox_status_univ_t);
+                }
+
                 table_download_pending = 1;
                 break;
             }
@@ -875,7 +884,6 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 /* If terminal is transferring multiple tables, queue the CDR response for later, after receiving DLOG_MT_END_DATA */
                 if (context->trans_data_in_progress == 1) {
                     append_to_cdr_ack_buffer(context, cdr_ack_buf, sizeof(cdr_ack_buf));
-                    dont_send_reply = 1;
                 } else {
                     /* If receiving a CDR as part of a credit card auth, etc, send the CDR ack immediately. */
                     memcpy(pack_payload, cdr_ack_buf, sizeof(cdr_ack_buf));
@@ -911,6 +919,12 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 mm_acct_save_TSTATUS(context, dlog_mt_term_status);
                 break;
             }
+            case DLOG_MT_TERM_ERR_REP: {
+                printf("\t\tTerminal %s DLOG_MT_TERM_ERR_REP\n\n", context->terminal_id);
+
+                ppayload += 97;
+                break;
+            }
             case DLOG_MT_SW_VERSION: {
                 dlog_mt_sw_version_t *dlog_mt_sw_version = (dlog_mt_sw_version_t *)ppayload;
 
@@ -930,7 +944,6 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
 
                 mm_acct_save_TPERFST(context, perf_stats);
-                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CALL_IN: {
@@ -978,8 +991,6 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                         printf("\n");
                     }
                 }
-
-                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_CARRIER_STATS_EXP: {
@@ -1020,8 +1031,6 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                     printf("\t\t\t\tTotal Insert Mode Calls: %d\n",         pcarr_stats_entry->total_insert_mode_calls);
                     printf("\t\t\t\tTotal Manual Mode Calls: %d\n",         pcarr_stats_entry->total_manual_mode_calls);
                 }
-
-                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
@@ -1029,8 +1038,6 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 ppayload += sizeof(dlog_mt_summary_call_stats_t);
 
                 mm_acct_save_TCALLST(context, summary_call_stats);
-
-                dont_send_reply = 1;
                 break;
             }
             case DLOG_MT_RATE_REQUEST: {
@@ -1083,6 +1090,39 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 memcpy(pack_payload, &rate_response, sizeof(rate_response));
                 pack_payload += sizeof(rate_response);
+//#define REQUEST_CALL_BACK_DURING_RATE_REQ
+#ifdef REQUEST_CALL_BACK_DURING_RATE_REQ
+                {
+                    time_t rawtime = { 0 };
+                    struct tm ptm = { 0 };
+                    dlog_mt_call_back_req_t   call_back_req = { DLOG_MT_CALL_BACK_REQ, 0, 0, 0, 0, 0, 0 };
+
+                    call_back_req.id = DLOG_MT_CALL_BACK_REQ;
+
+                    mm_time(context->test_mode, &rawtime);
+                    localtime_r(&rawtime, &ptm);
+
+                    call_back_req.year = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
+                    call_back_req.month = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
+                    call_back_req.day = (ptm.tm_mday & 0xff);    /* Fill current day (1-31) */
+                    call_back_req.hour = (ptm.tm_hour & 0xff);    /* Fill current hour (0-23) */
+                    call_back_req.min = ((ptm.tm_min + 2) & 0xff);     /* Fill current minute (0-59) */
+                    call_back_req.sec = (ptm.tm_sec & 0xff);     /* Fill current second (0-59) */
+
+                    memcpy(pack_payload, &call_back_req, sizeof(call_back_req));
+                    pack_payload += sizeof(dlog_mt_call_back_req_t);
+
+                    printf("\t\tRequest callback at day/time: %04d-%02d-%02d / %2d:%02d:%02d\n",
+                        call_back_req.year + 1900,
+                        call_back_req.month,
+                        call_back_req.day,
+                        call_back_req.hour,
+                        call_back_req.min,
+                        call_back_req.sec);
+
+                }
+#endif /* REQUEST_CALL_BACK_DURING_RATE_REQ */
+
                 break;
             }
             case DLOG_MT_FUNF_CARD_AUTH: {
@@ -1119,7 +1159,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 {
                     time_t rawtime = { 0 };
                     struct tm ptm = { 0 };
-                    dlog_mt_call_back_req_t   call_back_req = { DLOG_MT_CALL_BACK_REQ, 0 };
+                    dlog_mt_call_back_req_t   call_back_req = { DLOG_MT_CALL_BACK_REQ, 0, 0, 0, 0, 0, 0 };
 
                     call_back_req.id = DLOG_MT_CALL_BACK_REQ;
 
@@ -1136,7 +1176,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                     localtime_r(&rawtime, &ptm);
                     call_back_req.year = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
                     call_back_req.month = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
-                    call_back_req.day = (ptm.tm_mday & 0xff);    /* Fill current day (0-31) */
+                    call_back_req.day = (ptm.tm_mday & 0xff);    /* Fill current day (1-31) */
                     call_back_req.hour = (ptm.tm_hour & 0xff);    /* Fill current hour (0-23) */
                     call_back_req.min = ((ptm.tm_min + 1) & 0xff);     /* Fill current minute (0-59) */
                     call_back_req.sec = (ptm.tm_sec & 0xff);     /* Fill current second (0-59) */
@@ -1149,56 +1189,36 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
             }
             case DLOG_MT_END_DATA:
                 ppayload += sizeof(dlog_mt_end_data_t);
-                dont_send_reply                 = 0;
                 context->trans_data_in_progress = 0;
 
-                if (context->cdr_ack_buffer_len == 0) {
-                    if (pack_payload - ack_payload == 0) {
-                        printf("Sending empty DLOG_MT_END_DATA.\n");
-                        *pack_payload++ = DLOG_MT_END_DATA;
-                        end_of_data     = 0;
-                    } else {
-                        printf("Appending DLOG_MT_END_DATA to reply.\n");
-                        *pack_payload++ = DLOG_MT_END_DATA;
-                        end_of_data     = 0;
-                    }
-                } else {
+                *pack_payload++ = DLOG_MT_END_DATA;
+
+                if (context->cdr_ack_buffer_len > 0) {
                     memcpy(pack_payload, context->cdr_ack_buffer, context->cdr_ack_buffer_len);
                     pack_payload += context->cdr_ack_buffer_len;
-                    printf("Sending CDR ACKs in response to DLOG_MT_END_DATA.\n");
-                    end_of_data                 = 1;
+                    printf("Appending CDR ACKs to DLOG_MT_END_DATA.\n");
                     context->cdr_ack_buffer_len = 0;
+                } else {
+                    printf("Sending DLOG_MT_END_DATA.\n");
                 }
 
                 break;
             case DLOG_MT_TAB_UPD_ACK:
-                printf("\tDLOG_MT_TAB_UPD_ACK for table 0x%02x.\n", *ppayload);
+                printf("\tDLOG_MT_TABLE_UPD_ACK for table 0x%02x.\n", *ppayload);
                 ppayload+=2;
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
                 break;
             default:
                 fprintf(stderr, "Error: * * * Unhandled table %d (0x%02x)", table->table_id, table->table_id);
                 ppayload++;
-                send_mm_ack(context, FLAG_ACK);
                 break;
         }
     }
 
-    /* Send cash box status if requested by terminal */
-    if (cashbox_pending == 1) {
-        printf("\tSeq %d: Send DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n\t", context->tx_seq);
+    reply_length = (int)(pack_payload - ack_payload);
 
-        mm_acct_load_TCASHST(context, (cashbox_status_univ_t*)pack_payload);
-        pack_payload += sizeof(cashbox_status_univ_t);
-    }
-
-    if (dont_send_reply == 0) {
+    if (reply_length > 0) {
         send_mm_table(context, ack_payload, (int)(pack_payload - ack_payload));
-
-        if (end_of_data == 1) {
-            uint8_t end_of_data_msg = DLOG_MT_END_DATA;
-            send_mm_table(context, &end_of_data_msg, sizeof(end_of_data_msg));
-        }
     }
 
     if (table_download_pending == 1) {
@@ -1208,10 +1228,9 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
     return 0;
 }
 
-int mm_download_tables(mm_context_t *context) {
-    uint8_t  table_upd_data = DLOG_MT_TABLE_UPD;
+static int mm_download_tables(mm_context_t *context) {
     int      table_index;
-    int      status;
+    int      status = 0;
     size_t   table_len;
     uint8_t *table_buffer;
     uint8_t *table_list = table_list_mtr_2x;
@@ -1242,13 +1261,6 @@ int mm_download_tables(mm_context_t *context) {
         fprintf(stderr, "%s: Error: Unknown terminal type %d, defaulting to MTR 1.7\n", __func__, context->terminal_type);
         table_list = table_list_mtr17;
         break;
-    }
-
-    /* Send DLOG_MT_TABLE_UPD */
-    status = send_mm_table(context, &table_upd_data, 1);
-    if (status != PKT_SUCCESS) {
-        hangup_modem(context->serial_context);
-        context->connected = 0;
     }
 
     for (table_index = 0; (table_id = table_list[table_index]) > 0; table_index++) {

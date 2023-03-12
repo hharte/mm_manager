@@ -1280,7 +1280,6 @@ typedef uint32_t pkt_status_t;  /* Packet status flags. */
 /* MM Table Operations */
 int mm_shutdown(mm_context_t* context);
 int receive_mm_table(mm_context_t *context, mm_table_t *table);
-int mm_download_tables(mm_context_t *context);
 int send_mm_table(mm_context_t *context, uint8_t* payload, size_t len);
 int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
 int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len);
