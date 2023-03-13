@@ -45,6 +45,7 @@ set(MANAGER_SRC
     "mm_manager.c"
     "mm_manager.h"
     "mm_accounting.c"
+    "mm_connection.c"
     "mm_modem.c"
     "mm_pcap.c"
     "mm_pcap.h"

@@ -177,43 +177,38 @@ int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t
     return 0;
 }
 
-int mm_open_database(mm_context_t *context) {
+void *mm_open_database(const char *database_filename) {
     sqlite3 *db = { 0 };
 
-    int rc = sqlite3_open("mm_manager.db", &db);
+    int rc = sqlite3_open(database_filename, &db);
 
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return 1;
+        return NULL;
     }
 
     if (mm_acct_create_tables(db) != 0) {
         fprintf(stderr, "Failure creating accounting tables: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return -1;
+        return NULL;
     }
 
     if (mm_table_create_tables(db) != 0) {
         fprintf(stderr, "Failure creating data tables: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return -1;
+        return NULL;
     }
 
     if (mm_config_create_tables(db) != 0) {
         fprintf(stderr, "Failure creating configuration tables: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return -1;
+        return NULL;
     }
 
-    context->database = db;
-    return 0;
+    return (void *)db;
 }
 
-int mm_close_database(mm_context_t *context) {
-    sqlite3 *db = (sqlite3 *)context->database;
-
-    sqlite3_close(db);
-
-    return 0;
+int mm_close_database(void *db) {
+    return ((db != NULL) ? sqlite3_close((sqlite3 *)db) : 0);
 }

@@ -7,7 +7,7 @@
  *
  * www.github.com/hharte/mm_manager
  *
- * Copyright (c) 2020-2022, Howard M. Harte
+ * Copyright (c) 2020-2023, Howard M. Harte
  */
 
 #include <stdio.h>   /* Standard input/output definitions */
@@ -40,10 +40,23 @@
 #define JAN12020 1577865600
 
 /* Function Prototypes */
-static int mm_download_tables(mm_context_t *context);
+time_t mm_time(int test_mode, time_t* rawtime);
+
+static int mm_shutdown(mm_context_t* context);
+static int mm_download_tables(mm_context_t* context, char* terminal_id);
+static int load_mm_table(mm_context_t* context, char* terminal_id, uint8_t table_id, uint8_t** buffer, size_t* len);
+static void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
+static void generate_term_access_parameters(mm_context_t* context, char* terminal_id, uint8_t** buffer, size_t* len);
+static void generate_term_access_parameters_mtr1(mm_context_t* context, char* terminal_id, uint8_t** buffer, size_t* len);
+static void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
+static void generate_call_stat_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
+static void generate_comm_stat_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
+static void generate_user_if_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
+static void generate_dlog_mt_end_data(mm_context_t* context, uint8_t** buffer, size_t* len);
+static int process_mm_table(mm_context_t* context, mm_table_t* table);
 static int create_terminal_specific_directory(char* table_dir, char* terminal_id);
-static int update_terminal_download_time(mm_context_t* context);
-static int check_mm_table_is_newer(mm_context_t* context, uint8_t table_id);
+static int update_terminal_download_time(mm_context_t* context, char* terminal_id);
+static int check_mm_table_is_newer(mm_context_t* context, char* terminal_id, uint8_t table_id);
 static void mm_display_help(const char* name, FILE* stream);
 #ifndef _WIN32
 void signal_handler(int sig);
@@ -287,7 +300,6 @@ int main(int argc, char *argv[]) {
     char  key_card_number_str[11];
     int   quiet = 0;
     int   status;
-    int   modem_response = 0;
     int   retries;
 
     time_t rawtime;
@@ -304,22 +316,22 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         mm_display_help(basename(argv[0]), stderr);
         fprintf(stderr, "\nError: at least -f <filename> must be specified.\n");
-        return -EINVAL;
+        exit (-EINVAL);
     }
 
     mm_context = (mm_context_t *)calloc(1, sizeof(mm_context_t));
 
     if (mm_context == NULL) {
         printf("Error: failed to allocate %d bytes.\n", (int)sizeof(mm_context_t));
-        return -ENOMEM;
+        exit (-ENOMEM);
     }
 
     snprintf(mm_context->default_table_dir,  sizeof(mm_context->default_table_dir),  "tables/default");
     snprintf(mm_context->term_table_dir,     sizeof(mm_context->term_table_dir),     "tables");
-    snprintf(mm_context->modem_reset_string, sizeof(mm_context->modem_reset_string), "%s", DEFAULT_MODEM_RESET_STRING);
-    snprintf(mm_context->modem_init_string,  sizeof(mm_context->modem_init_string), "%s",  DEFAULT_MODEM_INIT_STRING);
+    snprintf(mm_context->connection.modem_reset_string, sizeof(mm_context->connection.modem_reset_string), "%s", DEFAULT_MODEM_RESET_STRING);
+    snprintf(mm_context->connection.modem_init_string,  sizeof(mm_context->connection.modem_init_string), "%s",  DEFAULT_MODEM_INIT_STRING);
 
-    mm_context->rx_packet_gap = 10;
+    mm_context->connection.proto.rx_packet_gap = 10;
 
     mm_context->access_code[0] = 0x27;
     mm_context->access_code[1] = 0x27;
@@ -333,7 +345,9 @@ int main(int argc, char *argv[]) {
     mm_context->key_card_number[4] = 0x88;
 
     mm_context->complete_download = FALSE;
-    mm_context->monitor_carrier = TRUE;
+    mm_context->connection.proto.monitor_carrier = TRUE;
+
+    mm_context->test_mode = TRUE;
 
     /* Parse command line to get -q (quiet) option. */
     while ((c = getopt(argc, argv, cmdline_options)) != -1) {
@@ -359,8 +373,8 @@ int main(int argc, char *argv[]) {
             {
                 if (strnlen(optarg, 7) != 7) {
                     fprintf(stderr, "Option -a takes a 7-digit access code.\n");
-                    free(mm_context);
-                    return -EINVAL;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
 
                 /* Update Access Code */
@@ -387,17 +401,17 @@ int main(int argc, char *argv[]) {
                 snprintf(mm_context->default_table_dir, sizeof(mm_context->default_table_dir), "%s", optarg);
                 break;
             case 'e':
-                mm_context->error_inject_type = atoi(optarg);
-                if (mm_context->error_inject_type < 5) {
-                    printf("SIGBRK will inject %s.\n", error_inject_type_to_str(mm_context->error_inject_type));
+                mm_context->connection.proto.error_inject_type = atoi(optarg);
+                if (mm_context->connection.proto.error_inject_type < 5) {
+                    printf("SIGBRK will inject %s.\n", error_inject_type_to_str(mm_context->connection.proto.error_inject_type));
                 }
                 else {
                     fprintf(stderr, "Error: -e <inject_error_type> must be one of:\n");
                     for (int i = 0; i < 5; i++) {
                         fprintf(stderr, "\t%d - %s\n", i, error_inject_type_to_str(i));
                     }
-                    free(mm_context);
-                    return -EINVAL;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
                 break;
             case 'f':
@@ -405,18 +419,18 @@ int main(int argc, char *argv[]) {
                 break;
             case 'h':
                 mm_display_help(basename(argv[0]), stdout);
-                free(mm_context);
-                return 0;
+                mm_shutdown(mm_context);
+                return(0);
                 break;
             case 'i':
-                snprintf(mm_context->modem_init_string, sizeof(mm_context->modem_init_string), "%s", optarg);
+                snprintf(mm_context->connection.modem_init_string, sizeof(mm_context->connection.modem_init_string), "%s", optarg);
                 break;
             case 'k':
             {
                 if (strnlen(optarg, 10) != 10) {
                     fprintf(stderr, "Option -k takes a 10-digit key code.\n");
-                    free(mm_context);
-                    return -EINVAL;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
 
                 /* Update Key Card Number */
@@ -431,26 +445,27 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'l':
-                if (!(mm_context->logstream = fopen(optarg, "w"))) {
+                if (!(mm_context->connection.logstream = fopen(optarg, "w"))) {
                     fprintf(stderr, "mm_manager: Can't write log file '%s': %s\n", optarg, strerror(errno));
-                    free(mm_context);
-                    return -ENOENT;
+                    mm_shutdown(mm_context);
+                    return(-ENOENT);
                 }
                 break;
             case 'm':
-                mm_context->use_modem = 1;
+                mm_context->connection.proto.use_modem = TRUE;
+                mm_context->test_mode = FALSE;
                 break;
             case 'n':
                 if (ncc_index > 1) {
                     fprintf(stderr, "-n may only be specified twice.\n");
-                    free(mm_context);
-                    return -EINVAL;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
 
                 if ((strnlen(optarg, 16) < 1) || (strnlen(optarg, 16) > 15)) {
                     fprintf(stderr, "Option -n takes a 1- to 15-digit NCC number.\n");
-                    free(mm_context);
-                    return -EINVAL;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
                 else {
                     snprintf(mm_context->ncc_number[ncc_index], sizeof(mm_context->ncc_number[0]), "%s", optarg);
@@ -458,10 +473,10 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case 'p':
-                if (mm_create_pcap(optarg, &mm_context->pcapstream) != 0) {
+                if (mm_create_pcap(optarg, &mm_context->connection.proto.pcapstream) != 0) {
                     fprintf(stderr, "mm_manager: Can't write packet capture file '%s': %s\n", optarg, strerror(errno));
-                    free(mm_context);
-                    return -ENOENT;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
                 break;
             case 'q':
@@ -481,16 +496,17 @@ int main(int argc, char *argv[]) {
                 printf("Sending UDP packets to 127.0.0.1:%d\n", MM_UDP_PORT);
                 if (mm_create_udp("127.0.0.1", MM_UDP_PORT) != 0) {
                     fprintf(stderr, "mm_create_udp() failed.\n");
-                    free(mm_context);
-                    return -EINVAL;
+                    mm_shutdown(mm_context);
+                    return(-EINVAL);
                 }
-                mm_context->send_udp = 1;
+                mm_context->connection.proto.send_udp = 1;
                 break;
             case 'v':
                 mm_context->debuglevel++;
+                mm_context->connection.proto.debuglevel++;
                 break;
             case 'w':   /* Don't monitor carrier detect signal from modem. */
-                mm_context->monitor_carrier = FALSE;
+                mm_context->connection.proto.monitor_carrier = FALSE;
                 break;
             case '?':
             default:
@@ -499,17 +515,18 @@ int main(int argc, char *argv[]) {
                 } else {
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 }
-                free(mm_context);
-                return -EINVAL;
-        }
+                mm_shutdown(mm_context);
+                exit(-EINVAL);
+                break;
+            }
     }
 
     if (optind < argc) {
         for (c = optind; c < argc; c++) {
             fprintf(stderr, "Error: superfluous non-option argument '%s'.\n", argv[c]);
         }
-        free(mm_context);
-        return -EINVAL;
+        mm_shutdown(mm_context);
+        return(-EINVAL);
     }
 
     printf("Default Table directory: %s\n",                         mm_context->default_table_dir);
@@ -522,7 +539,7 @@ int main(int argc, char *argv[]) {
         phone_num_to_string(key_card_number_str, sizeof(key_card_number_str), mm_context->key_card_number,
             sizeof(mm_context->key_card_number)));
 
-    printf("Manager Inter-packet Tx gap: %dms.\n", mm_context->rx_packet_gap * 10);
+    printf("Manager Inter-packet Tx gap: %dms.\n", mm_context->connection.proto.rx_packet_gap * 10);
 
     if (strnlen(mm_context->ncc_number[0], sizeof(mm_context->ncc_number[0])) >= 1) {
         printf("Using Primary NCC number: %s\n", mm_context->ncc_number[0]);
@@ -532,184 +549,77 @@ int main(int argc, char *argv[]) {
         }
 
         printf("Using Secondary NCC number: %s\n", mm_context->ncc_number[1]);
-    } else if (mm_context->use_modem == 1) {
+    } else if (mm_context->connection.proto.use_modem == 1) {
         fprintf(stderr, "Error: -n <NCC Number> must be specified.\n");
-        free(mm_context);
-        return -EINVAL;
-    }
-
-    mm_context->telco_id[0] = 'V';
-    mm_context->telco_id[1] = 'Z';
-    mm_context->region_code[0] = 'U';
-    mm_context->region_code[1] = 'S';
-    mm_context->region_code[2] = '.';
-
-    mm_open_database(mm_context);
-
-    if (mm_context->use_modem == 0) {
-        if (modem_dev == NULL) {
-            (void)fprintf(stderr, "mm_manager: -f <filename> must be specified.\n");
-            free(mm_context);
-            return -EINVAL;
-        }
-
-        if (!(mm_context->bytestream = fopen(modem_dev, "r"))) {
-            fprintf(stderr, "Error opening input stream: %s\n", modem_dev);
-            free(mm_context);
-            return -EPERM;
-        }
-    } else {
-        mm_context->bytestream = NULL;
-        if (modem_dev == NULL) {
-            (void)fprintf(stderr, "mm_manager: -f <modem_dev> must be specified.\n");
-            free(mm_context);
-            return(-EINVAL);
-        }
+        mm_shutdown(mm_context);
+        return(-EINVAL);
     }
 
     if (baudrate < 1200) {
         fprintf(stderr, "Error: baud rate must be 1200 bps or faster.\n");
-        free(mm_context);
-        return -EINVAL;
+        return(-EINVAL);
     }
     printf("Baud Rate: %d\n", baudrate);
 
-    mm_context->serial_context = open_serial(modem_dev, mm_context->logstream, mm_context->bytestream);
+    mm_context->telco.id[0] = 'V';
+    mm_context->telco.id[1] = 'Z';
+    mm_context->telco.region_code[0] = 'U';
+    mm_context->telco.region_code[1] = 'S';
+    mm_context->telco.region_code[2] = '.';
 
-    if (mm_context->serial_context == NULL) {
-        fprintf(stderr, "Unable to open modem: %s.", modem_dev);
-        free(mm_context);
-        return -ENODEV;
+    if ((mm_context->database = mm_open_database("mm_manager.db")) == 0) {
+        (void)fprintf(stderr, "mm_manager: error opening database.\n");
+        mm_shutdown(mm_context);
+        return(-EINVAL);
     }
 
-    init_serial(mm_context->serial_context, baudrate);
-    status = init_modem(mm_context->serial_context, mm_context->modem_reset_string, mm_context->modem_init_string);
-
-    if (status == 0) {
-        printf("Modem initialized.\n");
-    } else {
-        fprintf(stderr, "Error initializing modem.\n");
-        close_serial(mm_context->serial_context);
-        free(mm_context);
-        return -EIO;
+    status = mm_connection_open(&mm_context->connection, modem_dev, baudrate, mm_context->test_mode);
+    if (status != 0) {
+        mm_shutdown(mm_context);
+        return(status);
     }
 
     mm_context->cdr_ack_buffer_len = 0;
     printf("Waiting for call from terminal...\n");
 
     while (manager_running) {
-        modem_response = wait_for_modem_response(mm_context->serial_context, 1);
-
-        if (mm_context->use_modem == 1) {
-            time(&rawtime);
-        }
-        else {
-            rawtime = JAN12020;
-        }
-        localtime_r(&rawtime, &ptm);
-
-        switch (modem_response) {
-        case MODEM_RSP_OK:
-            break;
-        case MODEM_RSP_RING:
-            printf("%04d-%02d-%02d %2d:%02d:%02d: Ringing...\n\n",
-                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
-            continue;
-        case MODEM_RSP_CONNECT:
-            mm_context->tx_seq = 0;
-
-            printf("%04d-%02d-%02d %2d:%02d:%02d: Connected!\n\n",
-                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
-
-            mm_context->connected = 1;
-            mm_context->cdr_ack_buffer_len = 0;
-            break;
-        case MODEM_RSP_NO_CARRIER:
-            mm_context->tx_seq = 0;
-
-            printf("%04d-%02d-%02d %2d:%02d:%02d: Carrier lost.\n\n",
-                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
-
-            mm_context->connected = 0;
-            mm_context->cdr_ack_buffer_len = 0;
-            continue;
-        case MODEM_RSP_NULL:
-            break;
-        case MODEM_RSP_READ_ERROR:
-            manager_running = 0;
-            printf("%04d-%02d-%02d %2d:%02d:%02d: Error communicating with modem, shutting down.\n\n",
-                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec);
-                break;
-        default:
-            printf("%04d-%02d-%02d %2d:%02d:%02d: Unhandled modem response = %d (%s)\n\n",
-                ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec,
-                modem_response, modem_response <= MODEM_RSP_NULL ? modem_responses[modem_response] : "Unknown");
-            continue;
-        }
 
         retries = 0;
-        if (mm_context->connected) {
-            while ((mm_context->connected == 1) && (manager_running == 1) && (retries < 3)) {
-
+        if (mm_connection_wait(&mm_context->connection)) {
+            while (proto_connected(&mm_context->connection.proto) && (manager_running) && (retries < 3)) {
                 retries++;
-                status = receive_mm_table(mm_context, &mm_table);
-
+                status = process_mm_table(mm_context, &mm_table);
                 if (status == PKT_SUCCESS) {
                     retries = 0;
                 }
             }
 
-            if (mm_context->connected) {
-                hangup_modem(mm_context->serial_context);
+            if (proto_connected(&mm_context->connection.proto)) {
+                proto_disconnect(&mm_context->connection.proto);
             }
 
-            if (mm_context->use_modem == 1) {
-                time(&rawtime);
-            }
-            else {
-                rawtime = JAN12020;
-            }
+            mm_time(mm_context->test_mode, &rawtime);
             localtime_r(&rawtime, &ptm);
 
             printf("\n\n%04d-%02d-%02d %2d:%02d:%02d: Terminal %s: Disconnected.\n\n",
                 ptm.tm_year + 1900, ptm.tm_mon + 1, ptm.tm_mday, ptm.tm_hour, ptm.tm_min, ptm.tm_sec,
-                mm_context->terminal_id);
+                mm_context->connection.proto.terminal_id);
         }
     }
 
+    printf("mm_manager: Shutting down.\n");
     mm_shutdown(mm_context);
-
     return 0;
 }
 
-int mm_shutdown(mm_context_t* context) {
-    printf("mm_manager: Shutting down.\n");
-
-    close_serial(context->serial_context);
-
-    if (context->database) {
-        mm_close_database(context);
-    }
-
-    if (context->bytestream) {
-        fclose(context->bytestream);
-    }
-
-    if (context->logstream) {
-        fclose(context->logstream);
-    }
-
-    if (context->pcapstream) {
-        mm_close_pcap(context->pcapstream);
-    }
-
-    if (context->send_udp) {
-        mm_close_udp();
-    }
+static int mm_shutdown(mm_context_t* context) {
+    mm_close_database(context->database);
+    mm_connection_close(&context->connection);
 
     free(context);
-    return 0;
+    return (0);
 }
+
 static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint8_t length) {
     if ((size_t)context->cdr_ack_buffer_len + length > sizeof(context->cdr_ack_buffer)) {
         printf("ERROR: %s: cdr_ack_buffer_len exceeded.\n", __func__);
@@ -722,10 +632,11 @@ static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint
     return 0;
 }
 
-int receive_mm_table(mm_context_t* context, mm_table_t* table) {
+static int process_mm_table(mm_context_t* context, mm_table_t* table) {
     mm_packet_t* pkt = &table->pkt;
     uint8_t  ack_payload[PKT_TABLE_DATA_LEN_MAX] = { 0 };
     uint8_t* pack_payload = ack_payload;
+    char     terminal_id[11];   /* The terminal's phone number */
     char     timestamp_str[20];
     char     timestamp2_str[20];
     uint8_t* ppayload;
@@ -733,48 +644,19 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
     uint8_t  table_download_pending = 0;
     uint8_t  status;
 
-    status = receive_mm_packet(context, pkt);
+    status = receive_mm_table(&context->connection.proto, table);
 
-    if ((status != PKT_SUCCESS) && (status != PKT_ERROR_RETRY)) {
-        if (context->debuglevel > 2) print_mm_packet(RX, pkt);
+    if (status != 0) return status;
 
-        if (context->connected) {
-            send_mm_ack(context, FLAG_NACK);  /* Retry unless the terminal disconnected. */
-            status = wait_for_mm_ack(context);
-            if (status != PKT_ERROR_NACK) {
-                fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __func__, status);
-            }
-        }
-        return status;
-    }
-
-    context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
-
-    ppayload = pkt->payload;
-
-    if (pkt->payload_len < PKT_TABLE_ID_OFFSET) {
-        table->table_id = 0;
-        print_mm_packet(RX, pkt);
-        fprintf(stderr, "Error: Received an ACK without expecting it!\n");
-        return 0;
-    }
-
-    phone_num_to_string(context->terminal_id, sizeof(context->terminal_id), ppayload, PKT_TABLE_ID_OFFSET);
-    ppayload += PKT_TABLE_ID_OFFSET;
-
-    if (context->debuglevel > 0) {
-        print_mm_packet(RX, pkt);
-    }
-
-    /* Acknowledge the received packet */
-    send_mm_ack(context, FLAG_ACK);
+    phone_num_to_string(terminal_id, sizeof(terminal_id), pkt->payload, PKT_TABLE_ID_OFFSET);
+    ppayload = pkt->payload + PKT_TABLE_ID_OFFSET;
 
     while (ppayload < pkt->payload + pkt->payload_len) {
         table->table_id = *ppayload;
 
         if (context->debuglevel > 1) {
             printf("\n\tTerminal ID %s: Processing Table ID %d (0x%02x) %s\n",
-                   context->terminal_id,
+                   terminal_id,
                    table->table_id,
                    table->table_id,
                    table_to_string(table->table_id));
@@ -790,15 +672,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 time_sync_response->id = DLOG_MT_TIME_SYNC;
 
-                if (context->use_modem == 1) {
-                    /* When using the modem, fill the current time.  If not using the modem, use
-                     * a static time, so that results can be automatically checked.
-                     */
-                    time(&rawtime);
-                } else {
-                    rawtime = JAN12020;
-                }
-
+                mm_time(context->test_mode, &rawtime);
                 localtime_r(&rawtime, &ptm);
 
                 time_sync_response->year  = (ptm.tm_year & 0xff);      /* Fill current years since 1900 */
@@ -825,7 +699,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 ppayload++;
                 context->terminal_upd_reason = *ppayload++;
                 printf("\t\tTerminal %s requests table update. Reason: 0x%02x [%s%s%s%s%s]\n\n",
-                       context->terminal_id,
+                       terminal_id,
                        context->terminal_upd_reason,
                        context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL ? "Force Download, " : "",
                        context->terminal_upd_reason & TTBLREQ_CRAFT_INSTALL  ? "Install, " : "",
@@ -840,7 +714,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 if (context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS) {
                     printf("\tSend DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n\t");
 
-                    mm_acct_load_TCASHST(context, (cashbox_status_univ_t*)pack_payload);
+                    mm_acct_load_TCASHST(context->database, terminal_id, (cashbox_status_univ_t*)pack_payload);
                     pack_payload += sizeof(cashbox_status_univ_t);
                 }
 
@@ -855,14 +729,15 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 *pack_payload++ = DLOG_MT_ALARM_ACK;
                 *pack_payload++ = alarm->alarm_id;
 
-                mm_acct_save_TALARM(context, alarm);
+                mm_acct_save_TALARM(context->database, &context->telco, terminal_id, alarm);
+
                 break;
             }
             case DLOG_MT_MAINT_REQ: {
                 dlog_mt_maint_req_t *maint = (dlog_mt_maint_req_t *)ppayload;;
                 ppayload += sizeof(dlog_mt_maint_req_t);
 
-                mm_acct_save_TOPCODE(context, maint);
+                mm_acct_save_TOPCODE(context->database, &context->telco, terminal_id, maint);
 
                 *pack_payload++ = DLOG_MT_MAINT_ACK;
                 *pack_payload++ = maint->type & 0xFF;
@@ -875,7 +750,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                mm_acct_save_TCDR(context, cdr);
+                mm_acct_save_TCDR(context->database, &context->telco, terminal_id, cdr);
 
                 cdr_ack_buf[0] = DLOG_MT_CDR_DETAILS_ACK;
                 cdr_ack_buf[1] = cdr->seq & 0xFF;
@@ -907,7 +782,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 ppayload += sizeof(dlog_mt_cash_box_collection_t);
 
-                mm_acct_save_TCOLLST(context, cash_box_collection);
+                mm_acct_save_TCOLLST(context->database, &context->telco, terminal_id, cash_box_collection);
                 *pack_payload++ = DLOG_MT_END_DATA;
                 break;
             }
@@ -916,11 +791,11 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 ppayload += sizeof(dlog_mt_term_status_t);
 
-                mm_acct_save_TSTATUS(context, dlog_mt_term_status);
+                mm_acct_save_TSTATUS(context->database, &context->telco, terminal_id, dlog_mt_term_status);
                 break;
             }
             case DLOG_MT_TERM_ERR_REP: {
-                printf("\t\tTerminal %s DLOG_MT_TERM_ERR_REP\n\n", context->terminal_id);
+                printf("\t\tTerminal %s DLOG_MT_TERM_ERR_REP\n\n", terminal_id);
 
                 ppayload += 97;
                 break;
@@ -930,11 +805,11 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 ppayload += sizeof(dlog_mt_sw_version_t);
 
-                mm_acct_save_TSWVERS(context, dlog_mt_sw_version);
+                mm_acct_save_TSWVERS(context->database, &context->telco, terminal_id, dlog_mt_sw_version, &context->terminal_type);
                 break;
             }
             case DLOG_MT_CASH_BOX_STATUS: {
-                mm_acct_save_TCASHST(context, (cashbox_status_univ_t*)ppayload);
+                mm_acct_save_TCASHST(context->database, &context->telco, terminal_id, (cashbox_status_univ_t*)ppayload);
 
                 ppayload += sizeof(cashbox_status_univ_t);
                 break;
@@ -943,11 +818,11 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
 
-                mm_acct_save_TPERFST(context, perf_stats);
+                mm_acct_save_TPERFST(context->database, &context->telco, terminal_id, perf_stats);
                 break;
             }
             case DLOG_MT_CALL_IN: {
-                printf("\tDLOG_MT_CALL_IN: Terminal: %s\n", context->terminal_id);
+                printf("\tDLOG_MT_CALL_IN: Terminal: %s\n", terminal_id);
                 ppayload += sizeof(dlog_mt_call_in_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
 //                context->terminal_upd_reason |= TTBLREQ_CRAFT_FORCE_DL;
@@ -956,7 +831,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 break;
             }
             case DLOG_MT_CALL_BACK: {
-                printf("\tDLOG_MT_CALL_BACK: Terminal: %s\n", context->terminal_id);
+                printf("\tDLOG_MT_CALL_BACK: Terminal: %s\n", terminal_id);
                 ppayload += sizeof(dlog_mt_call_back_t);
                 *pack_payload++                 = DLOG_MT_TRANS_DATA;
                 context->trans_data_in_progress = 1;
@@ -1037,7 +912,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 dlog_mt_summary_call_stats_t *summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_summary_call_stats_t);
 
-                mm_acct_save_TCALLST(context, summary_call_stats);
+                mm_acct_save_TCALLST(context->database, &context->telco, terminal_id, summary_call_stats);
                 break;
             }
             case DLOG_MT_RATE_REQUEST: {
@@ -1130,19 +1005,10 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 dlog_mt_funf_card_auth_t *auth_request  = (dlog_mt_funf_card_auth_t *)ppayload;
                 time_t rawtime;
 
-                if (context->use_modem == 1) {
-                    /* When using the modem, use the current time as the auth code.  If not using the modem, use
-                     * a static time, so that results can be automatically checked.
-                     */
-                    time(&rawtime);
-                }
-                else {
-                    rawtime = JAN12020;
-                }
-
+                mm_time(context->test_mode, &rawtime);
                 ppayload += sizeof(dlog_mt_funf_card_auth_t);
 
-                mm_acct_save_TAUTH(context, auth_request);
+                mm_acct_save_TAUTH(context->database, &context->telco, terminal_id, auth_request);
 
                 auth_response.resp_code = 0;
                 auth_response.auth_code = rawtime;
@@ -1163,17 +1029,9 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
 
                     call_back_req.id = DLOG_MT_CALL_BACK_REQ;
 
-                    if (context->use_modem == 1) {
-                        /* When using the modem, fill the current time.  If not using the modem, use
-                         * a static time, so that results can be automatically checked.
-                         */
-                        time(&rawtime);
-                    }
-                    else {
-                        rawtime = JAN12020;
-                    }
-
+                    mm_time(context->test_mode, &rawtime);
                     localtime_r(&rawtime, &ptm);
+
                     call_back_req.year = (ptm.tm_year & 0xff);    /* Fill current years since 1900 */
                     call_back_req.month = (ptm.tm_mon + 1 & 0xff); /* Fill current month (1-12) */
                     call_back_req.day = (ptm.tm_mday & 0xff);    /* Fill current day (1-31) */
@@ -1203,7 +1061,7 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
                 }
 
                 break;
-            case DLOG_MT_TAB_UPD_ACK:
+            case DLOG_MT_TABLE_UPD_ACK:
                 printf("\tDLOG_MT_TABLE_UPD_ACK for table 0x%02x.\n", *ppayload);
                 ppayload+=2;
                 *pack_payload++ = DLOG_MT_TRANS_DATA;
@@ -1218,17 +1076,17 @@ int receive_mm_table(mm_context_t* context, mm_table_t* table) {
     reply_length = (int)(pack_payload - ack_payload);
 
     if (reply_length > 0) {
-        send_mm_table(context, ack_payload, (int)(pack_payload - ack_payload));
+        send_mm_table(&context->connection.proto, ack_payload, (int)(pack_payload - ack_payload));
     }
 
     if (table_download_pending == 1) {
-        mm_download_tables(context);
+        mm_download_tables(context, terminal_id);
     }
 
     return 0;
 }
 
-static int mm_download_tables(mm_context_t *context) {
+static int mm_download_tables(mm_context_t *context, char *terminal_id) {
     int      table_index;
     int      status = 0;
     size_t   table_len;
@@ -1265,8 +1123,8 @@ static int mm_download_tables(mm_context_t *context) {
 
     for (table_index = 0; (table_id = table_list[table_index]) > 0; table_index++) {
         /* Abort table download if manager is shutting down. */
-        if (manager_running == 0) break;
-        if (context->connected == 0) break;
+        if (!manager_running) break;
+        if (!proto_connected(&context->connection.proto)) break;
 
         /* Skip DLOG_MT_CARD_TABLE, DLOG_MT_CARD_TABLE_EXP if the terminal is coin-only. */
         if (term_model == TERM_COIN_BASIC) {
@@ -1319,9 +1177,9 @@ static int mm_download_tables(mm_context_t *context) {
                 break;
             case DLOG_MT_NCC_TERM_PARAMS:
                 if (term_type_to_mtr(context->terminal_type) <= MTR_1_13) {
-                    generate_term_access_parameters_mtr1(context, &table_buffer, &table_len);
+                    generate_term_access_parameters_mtr1(context, terminal_id, &table_buffer, &table_len);
                 } else {
-                    generate_term_access_parameters(context, &table_buffer, &table_len);
+                    generate_term_access_parameters(context, terminal_id, &table_buffer, &table_len);
                 }
                 break;
             case DLOG_MT_CALL_STAT_PARMS:
@@ -1342,7 +1200,7 @@ static int mm_download_tables(mm_context_t *context) {
                     fprintf(stderr, "%s: Error: failed to allocate %zu bytes.\n", __func__, sizeof(cashbox_status_univ_t));
                     return -ENOMEM;
                 }
-                mm_acct_load_TCASHST(context, (cashbox_status_univ_t *)table_buffer);
+                mm_acct_load_TCASHST(context->database, terminal_id, (cashbox_status_univ_t *)table_buffer);
                 table_len = sizeof(cashbox_status_univ_t);
                 break;
             }
@@ -1356,13 +1214,13 @@ static int mm_download_tables(mm_context_t *context) {
                     (context->terminal_upd_reason & TTBLREQ_CRAFT_FORCE_DL) &&
                     !(context->terminal_upd_reason & TTBLREQ_LOST_MEMORY) &&
                     !(context->terminal_upd_reason & TTBLREQ_PWR_LOST_ON_DL)) {
-                    if (check_mm_table_is_newer(context, table_id) != 0) {
+                    if (check_mm_table_is_newer(context, terminal_id, table_id) != 0) {
                         table_buffer = NULL;
                         continue;
                     }
                 }
 
-                status = load_mm_table(context, table_id, &table_buffer, &table_len);
+                status = load_mm_table(context, terminal_id, table_id, &table_buffer, &table_len);
 
                 if (status != 0) {
                     if (table_id == DLOG_MT_USER_IF_PARMS) { /* Can't load DLOG_MT_USER_IF_PARMS, generate it. */
@@ -1382,54 +1240,46 @@ static int mm_download_tables(mm_context_t *context) {
             ((dlog_mt_fconfig_opts_t*)table_buffer)->term_type = term_model & 0x0F;
         }
 
-        status = send_mm_table(context, table_buffer, table_len);
+        status = send_mm_table(&context->connection.proto, table_buffer, table_len);
 
         if (status == PKT_SUCCESS) {
             /* For all tables except END_OF_DATA, expect a table ACK. */
             if (table_list[table_index] != DLOG_MT_END_DATA) {
-                status = wait_for_table_ack(context, table_buffer[0]);
+                status = wait_for_table_ack(&context->connection.proto, table_buffer[0]);
             }
-        } else {
-            hangup_modem(context->serial_context);
-            context->connected = 0;
         }
+
         free(table_buffer);
         table_buffer = NULL;
 
     }
 
-    if (context->connected == 0) {
+    if (proto_connected(&context->connection.proto)) {
+        /* Update table download time. */
+        update_terminal_download_time(context, terminal_id);
+    } else {
         printf("%s: Download failed.\n", __func__);
-        return status;
     }
 
-    /* Update table download time. */
-    update_terminal_download_time(context);
-
-    return 0;
+    return status;
 }
 
-static int update_terminal_download_time(mm_context_t *context) {
+static int update_terminal_download_time(mm_context_t *context, char *terminal_id) {
     FILE *stream;
     char  fname[TABLE_PATH_MAX_LEN + 1];
     char  date[100];
     time_t rawtime;
     struct tm ptm = { 0 };
 
-    if (context->terminal_id[0] != '\0') {
-        snprintf(fname, sizeof(fname), "%s/%s/table_update.log", context->term_table_dir, context->terminal_id);
+    if (terminal_id[0] != '\0') {
+        snprintf(fname, sizeof(fname), "%s/%s/table_update.log", context->term_table_dir, terminal_id);
     } else {
         return -EINVAL;
     }
 
-    create_terminal_specific_directory(context->term_table_dir, context->terminal_id);
+    create_terminal_specific_directory(context->term_table_dir, terminal_id);
 
-    if (context->use_modem == 1) {
-        time(&rawtime);
-    } else {
-        rawtime = JAN12020;
-    }
-
+    mm_time(context->test_mode, &rawtime);
     localtime_r(&rawtime, &ptm);
     strftime(date, 99, "%Y-%m-%d %H:%M:%S", &ptm);
 
@@ -1438,108 +1288,14 @@ static int update_terminal_download_time(mm_context_t *context) {
         return -ENOENT;
     }
 
-    printf("%s: Terminal %s download complete.\n", date, context->terminal_id);
-    fprintf(stream, "%s: Terminal %s download complete.\n", date, context->terminal_id);
+    printf("%s: Terminal %s download complete.\n", date, terminal_id);
+    fprintf(stream, "%s: Terminal %s download complete.\n", date, terminal_id);
     fclose(stream);
 
     return 0;
 }
 
-int send_mm_table(mm_context_t *context, uint8_t *payload, size_t len) {
-    size_t   bytes_remaining;
-    size_t   chunk_len;
-    pkt_status_t status = PKT_SUCCESS;
-    uint8_t *p = payload;
-    uint8_t  table_id;
-
-    table_id        = payload[0];
-    bytes_remaining = len;
-    printf("\tSending Table ID %d (0x%02x) %s...\n", table_id, table_id, table_to_string(table_id));
-
-    while (bytes_remaining > 0) {
-        if (bytes_remaining > PKT_TABLE_DATA_LEN_MAX) {
-            chunk_len = PKT_TABLE_DATA_LEN_MAX;
-        } else {
-            chunk_len = bytes_remaining;
-        }
-
-        status = send_mm_packet(context, p, chunk_len, 0);
-
-        if (status != PKT_SUCCESS) break;
-
-        p               += chunk_len;
-        bytes_remaining -= chunk_len;
-        printf("\tTable %d (0x%02x) %s progress: (%3d%%) - %4d / %4zu\n",
-               table_id, table_id, table_to_string(table_id),
-               (uint16_t)(((p - payload) * 100) / len), (uint16_t)(p - payload), len);
-    }
-
-    return status;
-}
-
-int wait_for_table_ack(mm_context_t *context, uint8_t table_id) {
-    mm_packet_t  packet = { { 0 }, { 0 }, { 0 }, 0, 0 };
-    mm_packet_t *pkt    = &packet;
-    int status;
-    int retries = 2;
-
-    if (context->debuglevel > 1) printf("Waiting for ACK for table %d (0x%02x)\n", table_id, table_id);
-
-    while (retries > 0) {
-        memset(pkt, 0, sizeof(mm_packet_t));
-        status = receive_mm_packet(context, pkt);
-
-        if ((status == PKT_SUCCESS) || (status == PKT_ERROR_RETRY)) {
-            context->rx_seq = pkt->hdr.flags & FLAG_SEQUENCE;
-
-            if (pkt->payload_len >= PKT_TABLE_ID_OFFSET) {
-                phone_num_to_string(context->terminal_id, sizeof(context->terminal_id), pkt->payload, PKT_TABLE_ID_OFFSET);
-
-                if (context->debuglevel > 1) printf("Received packet from phone# %s\n", context->terminal_id);
-
-                if (context->debuglevel > 2) print_mm_packet(RX, pkt);
-
-                if ((pkt->payload[PKT_TABLE_ID_OFFSET] == DLOG_MT_TAB_UPD_ACK) &&
-                    (pkt->payload[PKT_TABLE_DATA_OFFSET] == table_id)) {
-                    if (context->debuglevel > 0) {
-                        printf("Seq: %d: Received ACK for table %d (0x%02x)\n",
-                            context->rx_seq,
-                            table_id,
-                            table_id);
-                    }
-                    send_mm_ack(context, FLAG_ACK);
-                    return 0;
-                } else {
-                    printf("%s: Error: Received ACK for wrong table, expected %d (0x%02x), received %d (0x%02x)\n",
-                        __func__, table_id, table_id, pkt->payload[6], pkt->payload[6]);
-                    return -1;
-                }
-            }
-        } else {
-            printf("%s: ERROR: Did not receive ACK for table ID %d (0x%02x), status=%02x\n",
-                __func__, table_id, table_id, status);
-
-            if (context->debuglevel > 2) print_mm_packet(RX, pkt);
-
-            if (context->connected) {
-                send_mm_ack(context, FLAG_RETRY);  /* Retry unless the terminal disconnected. */
-                status = wait_for_mm_ack(context);
-                if (status != PKT_ERROR_NACK) {
-                    fprintf(stderr, "%s: Expected NACK from terminal, status=0x%02x\n", __func__, status);
-                }
-                if (context->connected) {
-                    send_mm_ack(context, FLAG_ACK);  /* Retry unless the terminal disconnected. */
-                }
-            } else {
-                /* Not connected anymore, bail out. */
-                break;
-            }
-        }
-    }
-    return status;
-}
-
-static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id) {
+static int check_mm_table_is_newer(mm_context_t *context, char *terminal_id, uint8_t table_id) {
     char  fname[TABLE_PATH_MAX_LEN];
     char  download_time_fname[TABLE_PATH_MAX_LEN + 1];
     struct stat table_mtime_attr;
@@ -1550,9 +1306,9 @@ static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id) {
 
     struct tm ptm = { 0 };
 
-    if (context->terminal_id[0] != '\0') {
-        snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, context->terminal_id, table_id);
-        snprintf(download_time_fname, sizeof(download_time_fname), "%s/%s/table_update.log", context->term_table_dir, context->terminal_id);
+    if (terminal_id[0] != '\0') {
+        snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, terminal_id, table_id);
+        snprintf(download_time_fname, sizeof(download_time_fname), "%s/%s/table_update.log", context->term_table_dir, terminal_id);
         if (stat(fname, &table_mtime_attr) == -1) {
             snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
             if (stat(fname, &table_mtime_attr) == -1) {
@@ -1584,15 +1340,15 @@ static int check_mm_table_is_newer(mm_context_t *context, uint8_t table_id) {
     return 0;
 }
 
-int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len) {
+static int load_mm_table(mm_context_t *context, char *terminal_id, uint8_t table_id, uint8_t **buffer, size_t *len) {
     FILE *stream;
     char  fname[TABLE_PATH_MAX_LEN];
     uint32_t size;
     uint8_t *bufp;
     uint8_t  term_model = term_type_to_model(context->terminal_type);
 
-    if (context->terminal_id[0] != '\0') {
-        snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, context->terminal_id, table_id);
+    if (terminal_id[0] != '\0') {
+        snprintf(fname, sizeof(fname), "%s/%s/mm_table_%02x.bin", context->term_table_dir, terminal_id, table_id);
     } else {
         snprintf(fname, sizeof(fname), "%s/mm_table_%02x.bin", context->default_table_dir, table_id);
     }
@@ -1685,7 +1441,7 @@ int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, siz
 }
 
 
-void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t* len) {
+static void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t* len) {
     dlog_mt_install_params_t* pinstall_params;
     uint8_t* pbuffer;
 
@@ -1707,7 +1463,7 @@ void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t
     memcpy(pinstall_params->access_code, context->access_code, sizeof(pinstall_params->access_code));
     memcpy(pinstall_params->key_card_number, context->key_card_number, sizeof(pinstall_params->key_card_number));
     pinstall_params->tx_packet_delay = 10;
-    pinstall_params->rx_packet_gap   = context->rx_packet_gap;
+    pinstall_params->rx_packet_gap   = context->connection.proto.rx_packet_gap;
     pinstall_params->retries_until_oos = 40;
     pinstall_params->coinbox_lock_timeout = 150;
     pinstall_params->predial_string[0] = 0x0a;
@@ -1718,7 +1474,7 @@ void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t
     *buffer = pbuffer;
 }
 
-void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_term_access_parameters(mm_context_t *context, char *terminal_id, uint8_t **buffer, size_t *len) {
     int i;
     dlog_mt_ncc_term_params_t *pncc_term_params;
 
@@ -1732,14 +1488,14 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     }
 
     printf("\nGenerating Terminal Access Parameters table:\n" \
-           "\t  Terminal ID: %s\n", context->terminal_id);
+           "\t  Terminal ID: %s\n", terminal_id);
 
     pncc_term_params->id = DLOG_MT_NCC_TERM_PARAMS;
 
     // Rewrite table with our Terminal ID (phone number)
     for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
-        pncc_term_params->terminal_id[i]  = (context->terminal_id[i * 2] - '0') << 4;
-        pncc_term_params->terminal_id[i] |= (context->terminal_id[i * 2 + 1] - '0');
+        pncc_term_params->terminal_id[i]  = (terminal_id[i * 2] - '0') << 4;
+        pncc_term_params->terminal_id[i] |= (terminal_id[i * 2 + 1] - '0');
     }
 
     // Rewrite table with Primary NCC phone number
@@ -1755,7 +1511,7 @@ void generate_term_access_parameters(mm_context_t *context, uint8_t **buffer, si
     *buffer = (uint8_t *)pncc_term_params;
 }
 
-void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_term_access_parameters_mtr1(mm_context_t *context, char *terminal_id, uint8_t **buffer, size_t *len) {
     int i;
     dlog_mt_ncc_term_params_mtr1_t *pncc_term_params;
     uint8_t *pbuffer;
@@ -1772,13 +1528,13 @@ void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffe
     pncc_term_params = (dlog_mt_ncc_term_params_mtr1_t *)pbuffer;
 
     printf("\nGenerating Terminal Access Parameters table (MTR 1.x):\n" \
-           "\t  Terminal ID: %s\n", context->terminal_id);
+           "\t  Terminal ID: %s\n", terminal_id);
 
     pncc_term_params->id = DLOG_MT_NCC_TERM_PARAMS;
     // Rewrite table with our Terminal ID (phone number)
     for (i = 0; i < PKT_TABLE_ID_OFFSET; i++) {
-        pncc_term_params->terminal_id[i]  = (context->terminal_id[i * 2] - '0') << 4;
-        pncc_term_params->terminal_id[i] |= (context->terminal_id[i * 2 + 1] - '0');
+        pncc_term_params->terminal_id[i]  = (terminal_id[i * 2] - '0') << 4;
+        pncc_term_params->terminal_id[i] |= (terminal_id[i * 2 + 1] - '0');
     }
 
     // Rewrite table with Primary NCC phone number
@@ -1794,7 +1550,7 @@ void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffe
     *buffer = pbuffer;
 }
 
-void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     dlog_mt_call_in_params_t *pcall_in_params;
     uint8_t  *pbuffer;
     time_t    rawtime;
@@ -1816,15 +1572,7 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
 
     pcall_in_params->id = DLOG_MT_CALL_IN_PARMS;
 
-    if (context->use_modem == 1) {
-        /* When using the modem, fill the current time.  If not using the modem, use
-         * a static time, so that results can be automatically checked.
-         */
-        time(&rawtime);
-    } else {
-        rawtime = JAN12020;
-    }
-
+    mm_time(context->test_mode, &rawtime);
     localtime_r(&rawtime, &ptm);
 
     /* Interestingly, the terminal will call in starting at the call-in time, and continue
@@ -1865,7 +1613,7 @@ void generate_call_in_parameters(mm_context_t *context, uint8_t **buffer, size_t
     *buffer = pbuffer;
 }
 
-void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     dlog_mt_call_stat_params_t *pcall_stat_params;
     uint8_t *pbuffer;
 
@@ -1906,7 +1654,7 @@ void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size
 
 }
 
-void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     dlog_mt_comm_stat_params_t *pcomm_stat_params;
     uint8_t *pbuffer;
 
@@ -1948,7 +1696,7 @@ void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size
     print_comm_stat_table(pcomm_stat_params);
 }
 
-void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len) {
     dlog_mt_user_if_params_t *puser_if_params;
     uint8_t *pbuffer;
 
@@ -2004,7 +1752,7 @@ void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t
 
 }
 
-void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len) {
+static void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len) {
     *len    = 1;
     *buffer = (uint8_t *)calloc(1, *len);
     if (*buffer == NULL) {
@@ -2036,6 +1784,18 @@ static int create_terminal_specific_directory(char *table_dir, char *terminal_id
     }
 
     return status;
+}
+
+time_t mm_time(int test_mode, time_t *rawtime) {
+    if (test_mode) {
+        /* When in test mode, use a static time, so that results are consistent. */
+        *rawtime = JAN12020;
+    }
+    else {
+        time(rawtime);
+    }
+
+    return *rawtime;
 }
 
 static void mm_display_help(const char *name, FILE *stream) {

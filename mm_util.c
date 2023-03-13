@@ -290,7 +290,7 @@ const char *table_string[] = {
     "DLOG_MT_CD_CALL_STATS",        // 0x0b
     "DLOG_MT_PERF_STATS",           // 0x0c
     "DLOG_MT_END_DATA",             // 0x0d
-    "DLOG_MT_TAB_UPD_ACK",          // 0x0e
+    "DLOG_MT_TABLE_UPD_ACK",        // 0x0e
     "DLOG_MT_MAINT_ACK",            // 0x0f
     "DLOG_MT_ALARM_ACK",            // 0x10
     "DLOG_MT_TRANS_DATA",           // 0x11
@@ -464,8 +464,8 @@ const char* table_to_string(uint8_t table) {
 
 /* Millennium Alarm Strings */
 const char* alarm_type_str[] = {
-    /* 0 */  "Telephony Board Not Responding",  // TSTATUS_HANDSET_DISCONT_IND
-    /* 1 */  "TELEPHONY_STATUS_IND",
+    /* 0 */  "Handset Disconnected",
+    /* 1 */  "Telephony Board not Responding",
     /* 2 */  "EPM/SAM Not Responding",
     /* 3 */  "EPM/SAM Locked Out",
     /* 4 */  "EPM/SAM Expired",

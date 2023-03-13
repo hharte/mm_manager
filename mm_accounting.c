@@ -28,7 +28,7 @@
 #endif /* MYSQL */
 
 
-int mm_acct_save_TALARM(mm_context_t *context, dlog_mt_alarm_t *alarm) {
+int mm_acct_save_TALARM(void *db, mm_telco_t *telco, char *terminal_id, dlog_mt_alarm_t *alarm) {
     char sql[512] = { 0 };
     char timestamp_str[20] = { 0 };
     char received_time_str[16] = { 0 };
@@ -40,18 +40,18 @@ int mm_acct_save_TALARM(mm_context_t *context, dlog_mt_alarm_t *alarm) {
 
     snprintf(sql, sizeof(sql), "INSERT " SQL_IGNORE "INTO TALARM ( TERMINAL_ID, RECEIVED_DATE, RECEIVED_TIME, START_DATE, START_TIME, ALARM_ID, TELCO_ID, REGION_CODE,ALARM ) VALUES ( " \
                                " \"%s\",%s,%s,%d," TELCO_ID_REGION_CODE ",\"%s\");",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         timestamp_to_db_string(alarm->timestamp, timestamp_str, sizeof(timestamp_str)),
         alarm->alarm_id,
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2],
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2],
         alarm_id_to_string(alarm->alarm_id));
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
-int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_request) {
+int mm_acct_save_TAUTH(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_funf_card_auth_t* auth_request) {
     char sql[512] = { 0 };
     char phone_number_string[21] = { 0 };
     char card_number_string[25] = { 0 };
@@ -80,7 +80,7 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
     }
 
     printf("\t\tCard Auth request: Terminal: %s, Phone number: %s, seq=%d, card#: %s, exp: %02x/%04x, service_code: %d, PIN: %02x, ctrlflag: 0x%02x carrier: %d, Call_type: 0x%02x (%s,) card_ref_num:0x%02x, unk:0x%04x, unk2:0x%04x\n",
-        context->terminal_id,
+        terminal_id,
         phone_number_string,
         auth_request->seq,
         card_number_string,
@@ -116,7 +116,7 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         "TELCO_ID, REGION_CODE"
         ") VALUES ( " \
         " \"%s\",%s,%d,\"%s\",%d,\"%s\",%d,%04x%02x,%04x%02x,%d,%d,%d,%d,%d,%d,%d,%d," TELCO_ID_REGION_CODE ");",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         0,
         phone_number_string,
@@ -135,10 +135,10 @@ int mm_acct_save_TAUTH(mm_context_t* context, dlog_mt_funf_card_auth_t* auth_req
         auth_request->card_ref_num,
         auth_request->seq,
         (auth_request->control_flag & TAUTH_FOLLOW_ON_IND) ? 1 : 0,
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
 const char* str_tcdr_flags[] = {
@@ -163,7 +163,7 @@ const char* str_tcdr_rate_flags[] = {
     "FOLLOW_ON_CALL_IND"
 };
 
-int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
+int mm_acct_save_TCDR(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_call_details_t *cdr) {
     char sql[512] = { 0 };
     char timestamp_str[20] = { 0 };
     char received_time_str[16] = { 0 };
@@ -191,17 +191,17 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
         cdr->unknown,
         cdr->seq);
 
-    if (context->debuglevel > 2) {
-        printf("\t\t\tDLOG_MT_CALL_DETAILS Rate Flags: 0x%02x: ", cdr->rate_type);
-        print_bits(cdr->rate_type, (char**)str_tcdr_rate_flags);
-        printf("\n\t\t\tDLOG_MT_CALL_DETAILS Flags: 0x%02x: ", cdr->flags);
-        print_bits(cdr->flags, (char**)str_tcdr_flags);
-        printf("\n\t\t\tDLOG_MT_CALL_DETAILS Auth code: %" PRIu64 "\n", cdr->auth_code);
-    }
+#ifdef CDR_DEBUG
+    printf("\t\t\tDLOG_MT_CALL_DETAILS Rate Flags: 0x%02x: ", cdr->rate_type);
+    print_bits(cdr->rate_type, (char**)str_tcdr_rate_flags);
+    printf("\n\t\t\tDLOG_MT_CALL_DETAILS Flags: 0x%02x: ", cdr->flags);
+    print_bits(cdr->flags, (char**)str_tcdr_flags);
+    printf("\n\t\t\tDLOG_MT_CALL_DETAILS Auth code: %" PRIu64 "\n", cdr->auth_code);
+#endif /* CDR_DEBUG */
 
     snprintf(sql, sizeof(sql), "INSERT " SQL_IGNORE "INTO TCDR ( TERMINAL_ID,RECEIVED_DATE,RECEIVED_TIME,SEQ,START_DATE,START_TIME,CALL_DURATION,CD_CALL_TYPE,CD_CALL_TYPE_STR,DIALED_NUM,CARD,REQUESTED,COLLECTED,CARRIER,RATE,TELCO_ID,REGION_CODE) VALUES ( " \
                                " \"%s\",%s,%d,%s,%d,%d,\"%s\",\"%s\",\"%s\",\"%6.2f\",\"%6.2f\",%d,%d," TELCO_ID_REGION_CODE ");",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         cdr->seq,
         timestamp_to_db_string(cdr->start_timestamp, timestamp_str, sizeof(timestamp_str)),
@@ -218,13 +218,13 @@ int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr) {
         (float)cdr->call_cost[0] / 100,
         cdr->carrier_code,
         cdr->rate_type,
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
-int mm_acct_save_TCALLST(mm_context_t* context, dlog_mt_summary_call_stats_t* summary_call_stats) {
+int mm_acct_save_TCALLST(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_summary_call_stats_t* summary_call_stats) {
     char sql[1024] = { 0 };
     char received_time_str[16] = { 0 };
     char timestamp_str[20] = { 0 };
@@ -301,7 +301,7 @@ int mm_acct_save_TCALLST(mm_context_t* context, dlog_mt_summary_call_stats_t* su
         "%d,%d,%d,%d,%d,%d,%d,%d,"
         "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,"    /* Rep dialer peg counts */
         "\"%s\", \"%s\"," TELCO_ID_REGION_CODE ");",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         timestamp_to_db_string(summary_call_stats->start_timestamp, timestamp_str, sizeof(timestamp_str)),
         timestamp_to_db_string(summary_call_stats->end_timestamp, timestamp2_str, sizeof(timestamp2_str)),
@@ -316,17 +316,17 @@ int mm_acct_save_TCALLST(mm_context_t* context, dlog_mt_summary_call_stats_t* su
         summary_call_stats->rep_dialer_peg_count[8], summary_call_stats->rep_dialer_peg_count[9],
         timestamp3_str,
         timestamp4_str,
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
-int mm_acct_load_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_status) {
+int mm_acct_load_TCASHST(void *db, char* terminal_id, cashbox_status_univ_t* cashbox_status) {
     char timestamp_str[20] = { 0 };
 
     /* Retrieve cash box status for the current terminal. */
-    mm_sql_load_TCASHST(context->database, context->terminal_id, cashbox_status);
+    mm_sql_load_TCASHST(db, terminal_id, cashbox_status);
 
     printf("Load Cashbox status: %s Total: $%6.2f (%3d%% full): CA N:%d D:%d Q:%d $:%d - US N:%d D:%d Q:%d $:%d\n",
         timestamp_to_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
@@ -344,7 +344,7 @@ int mm_acct_load_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_s
     return 0;
 }
 
-int mm_acct_save_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_status) {
+int mm_acct_save_TCASHST(void *db, mm_telco_t *telco, char* terminal_id, cashbox_status_univ_t* cashbox_status) {
     char sql[512] = { 0 };
     char received_time_str[16] = { 0 };
     char timestamp_str[20];
@@ -370,7 +370,7 @@ int mm_acct_save_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_s
         ") VALUES ( "
         "\"%s\",%s,%s,%d,%d,\"%6.2f\", "
         "%d, %d, %d, %d, %d, %d, %d, %d, " TELCO_ID_REGION_CODE ");",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         timestamp_to_db_string(cashbox_status->timestamp, timestamp_str, sizeof(timestamp_str)),
         cashbox_status->percent_full,
@@ -384,13 +384,13 @@ int mm_acct_save_TCASHST(mm_context_t* context, cashbox_status_univ_t* cashbox_s
         cashbox_status->coin_count[COIN_COUNT_US_DIMES],
         cashbox_status->coin_count[COIN_COUNT_US_QUARTERS],
         cashbox_status->coin_count[COIN_COUNT_US_DOLLARS],
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
-int mm_acct_save_TCOLLST(mm_context_t* context, dlog_mt_cash_box_collection_t* cash_box_collection) {
+int mm_acct_save_TCOLLST(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_cash_box_collection_t* cash_box_collection) {
     char sql[512] = { 0 };
     char received_time_str[16] = { 0 };
     char timestamp_str[20];
@@ -408,16 +408,16 @@ int mm_acct_save_TCOLLST(mm_context_t* context, dlog_mt_cash_box_collection_t* c
         cash_box_collection->coin_count[COIN_COUNT_US_QUARTERS],
         cash_box_collection->coin_count[COIN_COUNT_US_DOLLARS]);
 
-    if (context->debuglevel > 2) {
-        printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Pad:");
-        dump_hex(cash_box_collection->pad, sizeof(cash_box_collection->pad));
-        printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Pad2:");
-        dump_hex(cash_box_collection->pad2, sizeof(cash_box_collection->pad2));
-        printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Pad3:");
-        dump_hex(cash_box_collection->pad3, sizeof(cash_box_collection->pad3));
-        printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Spare:");
-        dump_hex(cash_box_collection->spare, sizeof(cash_box_collection->spare));
-    }
+#ifdef CASHBOX_DEBUG
+    printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Pad:");
+    dump_hex(cash_box_collection->pad, sizeof(cash_box_collection->pad));
+    printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Pad2:");
+    dump_hex(cash_box_collection->pad2, sizeof(cash_box_collection->pad2));
+    printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Pad3:");
+    dump_hex(cash_box_collection->pad3, sizeof(cash_box_collection->pad3));
+    printf("\t\t\tDLOG_MT_CASH_BOX_COLLECTION Spare:");
+    dump_hex(cash_box_collection->spare, sizeof(cash_box_collection->spare));
+#endif /* CASHBOX_DEBUG */
 
     snprintf(sql, sizeof(sql), "INSERT " SQL_IGNORE "INTO TCOLLST ( "
         "TERMINAL_ID,RECEIVED_DATE,RECEIVED_TIME,COLLECTION_DATE,COLLECTION_TIME,"
@@ -427,7 +427,7 @@ int mm_acct_save_TCOLLST(mm_context_t* context, dlog_mt_cash_box_collection_t* c
         "TELCO_ID, REGION_CODE ) VALUES ( "
         "\"%s\",%s,%s,%d,%d,\"%6.2f\", "
         "%d, %d, %d, %d, %d, %d, %d, %d," TELCO_ID_REGION_CODE ")",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         timestamp_to_db_string(cash_box_collection->timestamp, timestamp_str, sizeof(timestamp_str)),
         cash_box_collection->percent_full,
@@ -441,13 +441,13 @@ int mm_acct_save_TCOLLST(mm_context_t* context, dlog_mt_cash_box_collection_t* c
         cash_box_collection->coin_count[COIN_COUNT_US_DIMES],
         cash_box_collection->coin_count[COIN_COUNT_US_QUARTERS],
         cash_box_collection->coin_count[COIN_COUNT_US_DOLLARS],
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
-int mm_acct_save_TOPCODE(mm_context_t *context, dlog_mt_maint_req_t *maint) {
+int mm_acct_save_TOPCODE(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_maint_req_t *maint) {
     char sql[256] = { 0 };
     char received_time_str[16] = { 0 };
 
@@ -457,17 +457,17 @@ int mm_acct_save_TOPCODE(mm_context_t *context, dlog_mt_maint_req_t *maint) {
 
     snprintf(sql, sizeof(sql), "INSERT INTO TOPCODE ( TERMINAL_ID,RECEIVED_DATE,RECEIVED_TIME,OP_CODE,PIN,TELCO_ID,REGION_CODE ) VALUES ( " \
                                " \"%s\",%s,%d,\" %02x%02x%01x\", " TELCO_ID_REGION_CODE ")",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         maint->type,
         maint->access_pin[0], maint->access_pin[1], (maint->access_pin[2] & 0xF0) >> 4,
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
-int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* perf_stats) {
+int mm_acct_save_TPERFST(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_perf_stats_record_t* perf_stats) {
     char sql[1536] = { 0 };
     char received_time_str[16] = { 0 };
     char timestamp_str[20];
@@ -533,7 +533,7 @@ int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* per
         "%d,%d,%d,%d,%d,%d,%d,%d,"
         "%d,%d,%d,%d,%d,%d,%d,%d,"
         "%d,%d,%d," TELCO_ID_REGION_CODE ");",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         timestamp_to_db_string(perf_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
         timestamp_to_db_string(perf_stats->timestamp2, timestamp2_str, sizeof(timestamp2_str)),
@@ -548,10 +548,10 @@ int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* per
         perf_stats->stats[32], perf_stats->stats[33], perf_stats->stats[34], perf_stats->stats[35],
         perf_stats->stats[36], perf_stats->stats[37], perf_stats->stats[38], perf_stats->stats[39],
         perf_stats->stats[40], perf_stats->stats[41], perf_stats->stats[42],
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    mm_sql_exec(context->database, sql);
+    mm_sql_exec(db, sql);
 
     printf("\t\tPerformance Statistics Record: From: %s, to: %s:\n",
         timestamp_to_string(perf_stats->timestamp, timestamp_str, sizeof(timestamp_str)),
@@ -564,7 +564,7 @@ int mm_acct_save_TPERFST(mm_context_t* context, dlog_mt_perf_stats_record_t* per
     return 0;
 }
 
-int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_term_status) {
+int mm_acct_save_TSTATUS(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_term_status_t* dlog_mt_term_status) {
     char sql[1536] = { 0 };
     uint8_t  serial_number[11] = { 0 };
     uint64_t term_status_word;
@@ -589,9 +589,9 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
 
     /* Retrieve the most recent terminal status, and update only if changed. */
     snprintf(sql, sizeof(sql), "SELECT STATUS_WORD from TSTATUS where(TERMINAL_ID = %s) ORDER BY ID DESC LIMIT 1",
-        context->terminal_id);
+        terminal_id);
 
-    last_status_word = mm_sql_read_uint64(context->database, sql);
+    last_status_word = mm_sql_read_uint64(db, sql);
 
     if (term_status_word != last_status_word) {
         char received_time_str[16] = { 0 };
@@ -650,7 +650,7 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
             "%d,%d,%d,%d,%d,%d,%d,%d,"
             "%d,%d,%d,%d,%d,%d,%d,%d,"
             TELCO_ID_REGION_CODE ")",
-            context->terminal_id,
+            terminal_id,
             received_time_to_db_string(received_time_str, sizeof(received_time_str)),
             serial_number,
             term_status_word,
@@ -694,10 +694,10 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
             (term_status_word & TSTATUS_DIALOG_FAILURE_WITH_COL_SYS) ? 1 : 0,
             (term_status_word & TSTATUS_CODE_SERVE_CONNECTION_FAILURE) ? 1 : 0,
             (term_status_word & TSTATUS_CODE_SERVER_ABORTED) ? 1 : 0,
-            context->telco_id[0], context->telco_id[1],
-            context->region_code[0], context->region_code[1], context->region_code[2]);
+            telco->id[0], telco->id[1],
+            telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-        if (mm_sql_exec(context->database, sql) != 0) {
+        if (mm_sql_exec(db, sql) != 0) {
             fprintf(stderr, "%s: Failed to save TSTATUS.", __func__);
             return 1;
         }
@@ -713,7 +713,7 @@ int mm_acct_save_TSTATUS(mm_context_t* context, dlog_mt_term_status_t* dlog_mt_t
     return 0;
 }
 
-int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw_version) {
+int mm_acct_save_TSWVERS(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_sw_version_t* dlog_mt_sw_version, uint8_t *terminal_type) {
     char sql[512] = { 0 };
     char received_time_str[16] = { 0 };
 
@@ -736,15 +736,15 @@ int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw
     validator_hw_ver[0] = dlog_mt_sw_version->validator_hw_ver[0] & 0x7F;
     validator_hw_ver[1] = dlog_mt_sw_version->validator_hw_ver[1] & 0x7F;
 
-    context->terminal_type = mm_config_get_term_type_from_control_rom_edition(context->database, control_rom_edition);
+    *terminal_type = mm_config_get_term_type_from_control_rom_edition(db, control_rom_edition);
 
-    if (context->terminal_type == MTR_UNKNOWN) {
+    if (*terminal_type == MTR_UNKNOWN) {
         printf("Error: Unknown control ROM edition %s\n", control_rom_edition);
     }
 
     printf("\t\t\t             Terminal Type: %02d (0x%02x)\n",
-        context->terminal_type,
-        context->terminal_type);
+        *terminal_type,
+        *terminal_type);
     printf("\t\t\t     Feature Terminal Type: %s %02d (0x%02x)\n",
         feature_term_type_to_str(dlog_mt_sw_version->term_type),
         dlog_mt_sw_version->term_type,
@@ -763,7 +763,7 @@ int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw
         "TELCO_ID, REGION_CODE"
         " ) VALUES ( "
         "\"%s\",%s,\"%s\",\"%s\",\"%s\",\"%s\",%d,%d,\"%s\",\"%s\"," TELCO_ID_REGION_CODE ")",
-        context->terminal_id,
+        terminal_id,
         received_time_to_db_string(received_time_str, sizeof(received_time_str)),
         control_rom_edition,
         control_version,
@@ -773,10 +773,10 @@ int mm_acct_save_TSWVERS(mm_context_t* context, dlog_mt_sw_version_t* dlog_mt_sw
         dlog_mt_sw_version->term_type,
         validator_sw_ver,
         validator_hw_ver,
-        context->telco_id[0], context->telco_id[1],
-        context->region_code[0], context->region_code[1], context->region_code[2]);
+        telco->id[0], telco->id[1],
+        telco->region_code[0], telco->region_code[1], telco->region_code[2]);
 
-    return mm_sql_exec(context->database, sql);
+    return mm_sql_exec(db, sql);
 }
 
 int mm_acct_create_tables(void *db) {

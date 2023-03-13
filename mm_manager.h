@@ -86,7 +86,7 @@
 #define DLOG_MT_CD_CALL_STATS       0x0b    // 11: Summary Card Call Statistics Record
 #define DLOG_MT_PERF_STATS          0x0c    // 12: Performance Statistics Record
 #define DLOG_MT_END_DATA            0x0d    // 13: End of Data Message
-#define DLOG_MT_TAB_UPD_ACK         0x0e    // 14: Table Update Acknowledge Message
+#define DLOG_MT_TABLE_UPD_ACK       0x0e    // 14: Table Update Acknowledge Message
 #define DLOG_MT_MAINT_ACK           0x0f    // 15: Maintenance Acknowledge
 #define DLOG_MT_ALARM_ACK           0x10    // 16: Alarm Acknowledge
 #define DLOG_MT_TRANS_DATA          0x11    // 17: Transmit Terminal Data
@@ -1232,73 +1232,76 @@ typedef struct dlog_mt_npa_nxx_table {
 
 #define TABLE_PATH_MAX_LEN   283
 
-typedef struct mm_context {
-    struct mm_serial_context *serial_context;
-    FILE *logstream;
-    FILE *bytestream;
-    FILE *pcapstream;
+typedef struct mm_proto_ctx {
+    struct mm_serial_context* serial_context;
+    FILE* pcapstream;
     char terminal_id[11];   /* The terminal's phone number */
-    uint8_t terminal_type;
-    uint8_t telco_id[2];
+    int connected;
+    uint8_t rx_seq;
+    uint8_t tx_seq;
+    uint8_t waiting_for_ack;
+    uint8_t monitor_carrier;
+    uint8_t use_modem;
+    uint8_t rx_packet_gap;
+    uint8_t error_inject_type;
+    uint8_t debuglevel;
+    uint8_t send_udp;
+} mm_proto_t;
+
+typedef struct mm_telco {
+    uint8_t id[2];
     uint8_t region_code[3];
+} mm_telco_t;
+
+typedef struct mm_connection {
+    FILE* logstream;
+    FILE* bytestream;
+    char modem_reset_string[256];
+    char modem_init_string[256];
+    int test_mode;
+    /* Terminal Communication */
+    mm_proto_t proto;
+} mm_connection_t;
+
+typedef struct mm_context {
+    void* database;
+    mm_connection_t connection;
+    /* Configuration */
+    mm_telco_t telco;
     char ncc_number[2][21];
     char default_table_dir[256];
     char term_table_dir[256];
-    char modem_reset_string[256];
-    char modem_init_string[256];
-    uint8_t rx_seq;
-    uint8_t tx_seq;
-    uint8_t first_chunk;
-    uint8_t table_num;
-    int table_offset;
-    uint8_t table[10 * 1024];
-    uint8_t cdr_ack_buffer[PKT_TABLE_DATA_LEN_MAX];
-    uint8_t cdr_ack_buffer_len;
-    int table_len;
-    uint8_t trans_data_in_progress;
-    uint8_t curr_table;
-    uint8_t use_modem;
-    uint8_t debuglevel;
-    uint8_t send_udp;
-    uint8_t connected;
-    uint8_t minimal_table_set;
-    uint8_t terminal_upd_reason;
     uint8_t access_code[4];
     uint8_t key_card_number[5];
-    uint8_t rx_packet_gap;
+    uint8_t minimal_table_set;
+    /* Manager-wide */
+    uint8_t cdr_ack_buffer[PKT_TABLE_DATA_LEN_MAX];
+    uint8_t cdr_ack_buffer_len;
+    uint8_t trans_data_in_progress;
+    uint8_t debuglevel;
+    /* Terminal State */
+    uint8_t terminal_type;
+    uint8_t terminal_upd_reason;
     uint8_t complete_download;
     cashbox_status_univ_t cashbox_status;
-    void *database;
-    uint8_t error_inject_type;
-    uint8_t waiting_for_ack;
-    uint8_t monitor_carrier;
     uint8_t rating_test_mode;
+    uint8_t test_mode;
 } mm_context_t;
 
 typedef uint32_t pkt_status_t;  /* Packet status flags. */
 
-/* MM Table Operations */
-int mm_shutdown(mm_context_t* context);
-int receive_mm_table(mm_context_t *context, mm_table_t *table);
-int send_mm_table(mm_context_t *context, uint8_t* payload, size_t len);
-int wait_for_table_ack(mm_context_t *context, uint8_t table_id);
-int load_mm_table(mm_context_t *context, uint8_t table_id, uint8_t **buffer, size_t *len);
-int rewrite_instserv_parameters(char *access_code, dlog_mt_install_params_t *pinstsv_table, char *filename);
-void generate_install_parameters(mm_context_t* context, uint8_t** buffer, size_t* len);
-void generate_term_access_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
-void generate_term_access_parameters_mtr1(mm_context_t *context, uint8_t **buffer, size_t *len);
-void generate_call_in_parameters(mm_context_t* context, uint8_t** buffer, size_t *len);
-void generate_call_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
-void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
-void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer, size_t *len);
-void generate_dlog_mt_end_data(mm_context_t *context, uint8_t **buffer, size_t *len);
+/* MM Connection */
+int mm_connection_open(mm_connection_t* connection, const char* modem_dev, int baudrate, int test_mode);
+int mm_connection_wait(mm_connection_t* connection);
+int mm_connection_close(mm_connection_t* connection);
 
 /* MM Protocol */
-extern pkt_status_t receive_mm_packet(mm_context_t *context, mm_packet_t *pkt);
-extern pkt_status_t send_mm_packet(mm_context_t *context, uint8_t *payload, size_t len, uint8_t flags);
-extern pkt_status_t send_mm_ack(mm_context_t *context, uint8_t flags);
-extern pkt_status_t wait_for_mm_ack(mm_context_t *context);
-extern int print_mm_packet(int direction, mm_packet_t *pkt);
+extern int proto_connect(mm_proto_t* proto);
+extern int proto_disconnect(mm_proto_t* proto);
+extern int proto_connected(mm_proto_t* proto);
+extern int receive_mm_table(mm_proto_t* proto, mm_table_t* table);
+extern int send_mm_table(mm_proto_t* proto, uint8_t* payload, size_t len);
+extern int wait_for_table_ack(mm_proto_t* proto, uint8_t table_id);
 
 /* modem functions */
 extern int init_modem(struct mm_serial_context *pserial_context, const char *modem_reset_string, const char *modem_init_string);
@@ -1307,17 +1310,17 @@ extern int hangup_modem(struct mm_serial_context *pserial_context);
 
 /* accounting functions */
 extern int mm_acct_create_tables(void *db);
-extern int mm_acct_save_TALARM(mm_context_t *context, dlog_mt_alarm_t *alarm);
-extern int mm_acct_save_TAUTH(mm_context_t *context, dlog_mt_funf_card_auth_t* auth_request);
-extern int mm_acct_save_TCDR(mm_context_t *context, dlog_mt_call_details_t *cdr);
-extern int mm_acct_save_TCALLST(mm_context_t *context, dlog_mt_summary_call_stats_t* summary_call_stats);
-extern int mm_acct_load_TCASHST(mm_context_t *context, cashbox_status_univ_t* cashbox_status);
-extern int mm_acct_save_TCASHST(mm_context_t *context, cashbox_status_univ_t* cashbox_status);
-extern int mm_acct_save_TCOLLST(mm_context_t *context, dlog_mt_cash_box_collection_t* cash_box_collection);
-extern int mm_acct_save_TOPCODE(mm_context_t *context, dlog_mt_maint_req_t *maint);
-extern int mm_acct_save_TPERFST(mm_context_t *context, dlog_mt_perf_stats_record_t* perf_stats);
-extern int mm_acct_save_TSTATUS(mm_context_t *context, dlog_mt_term_status_t* dlog_mt_term_status);
-extern int mm_acct_save_TSWVERS(mm_context_t *context, dlog_mt_sw_version_t* dlog_mt_sw_version);
+extern int mm_acct_save_TALARM(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_alarm_t *alarm);
+extern int mm_acct_save_TAUTH(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_funf_card_auth_t* auth_request);
+extern int mm_acct_save_TCDR(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_call_details_t *cdr);
+extern int mm_acct_save_TCALLST(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_summary_call_stats_t* summary_call_stats);
+extern int mm_acct_load_TCASHST(void *db, char* terminal_id, cashbox_status_univ_t* cashbox_status);
+extern int mm_acct_save_TCASHST(void *db, mm_telco_t *telco, char* terminal_id, cashbox_status_univ_t* cashbox_status);
+extern int mm_acct_save_TCOLLST(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_cash_box_collection_t* cash_box_collection);
+extern int mm_acct_save_TOPCODE(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_maint_req_t *maint);
+extern int mm_acct_save_TPERFST(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_perf_stats_record_t* perf_stats);
+extern int mm_acct_save_TSTATUS(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_term_status_t* dlog_mt_term_status);
+extern int mm_acct_save_TSWVERS(void *db, mm_telco_t *telco, char* terminal_id, dlog_mt_sw_version_t* dlog_mt_sw_version, uint8_t* terminal_type);
 
 /* Table functions */
 int    mm_table_create_tables(void* db);
@@ -1329,8 +1332,8 @@ int mm_config_create_tables(void* db);
 uint8_t mm_config_get_term_type_from_control_rom_edition(void* db, const char* control_rom_edition);
 
 /* database functions */
-extern int mm_open_database(mm_context_t *context);
-extern int mm_close_database(mm_context_t *context);
+extern void *mm_open_database(const char *db_filename);
+extern int mm_close_database(void *db);
 extern int mm_sql_exec(void *db, const char *sql);
 extern uint8_t mm_sql_read_uint8(void* db, const char* sql);
 extern uint64_t mm_sql_read_uint64(void* db, const char* sql);
