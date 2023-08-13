@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 
 #include "mm_manager.h"
 
@@ -32,6 +33,7 @@ int mm_sql_exec(void *db, const char *sql) {
 
 uint8_t mm_sql_read_uint8(void* db, const char* sql) {
     sqlite3_stmt* res = NULL;
+    uint8_t val = 0;
     int rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, 0);
 
     if (rc != SQLITE_OK) {
@@ -41,21 +43,31 @@ uint8_t mm_sql_read_uint8(void* db, const char* sql) {
 
     sqlite3_step(res);
 
-    return (uint8_t)sqlite3_column_int(res, 0);
+    val = (uint8_t)sqlite3_column_int(res, 0);
+
+    sqlite3_finalize(res);
+
+    return (val);
 }
 
 uint64_t mm_sql_read_uint64(void* db, const char* sql) {
     sqlite3_stmt* res = NULL;
+    uint64_t val = 0L;
     int rc = sqlite3_prepare_v2((sqlite3*)db, sql, -1, &res, 0);
 
     if (rc != SQLITE_OK) {
         fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3 *)(db)));
+        sqlite3_finalize(res);
         return 0xFFFFFFFFFFFFFFFFLL;
     }
 
     sqlite3_step(res);
 
-    return (uint64_t)sqlite3_column_int64(res, 0);
+    val = (uint64_t)sqlite3_column_int64(res, 0);
+
+    sqlite3_finalize(res);
+
+    return (val);
 }
 
 int mm_sql_write_blob(void* db, const char* sql, uint8_t *buffer, size_t buflen) {
@@ -76,7 +88,6 @@ int mm_sql_write_blob(void* db, const char* sql, uint8_t *buffer, size_t buflen)
             rc = sqlite3_step(res);
             if (rc != SQLITE_DONE) {
                 fprintf(stderr, "execution failed: %s\n", sqlite3_errmsg((sqlite3*)db));
-                return 0;
             }
         }
     }
@@ -102,10 +113,13 @@ int mm_sql_read_blob(void* db, const char* sql, uint8_t* buffer, size_t buflen) 
     size_t blob_len = sqlite3_column_bytes(res, 0);
     if (blob_len > buflen) {
         fprintf(stderr, "%s: buffer length %zu is not large enough for table of %zu bytes.\n", __func__, buflen, blob_len);
-        return 0;
+        sqlite3_finalize(res);
+        return -EINVAL;
     }
 
     memcpy(buffer, sqlite3_column_blob(res, 0), blob_len);
+
+    sqlite3_finalize(res);
 
     return (int)blob_len;
 }
@@ -128,6 +142,7 @@ int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t
 
     if (rc != SQLITE_OK && rc != SQLITE_CONSTRAINT) {
         fprintf(stderr, "%s: Failed to prepare: \nSQL: '%s'\nError: %s", __func__, sql, sqlite3_errmsg((sqlite3 *)db));
+        sqlite3_finalize(res);
         return 1;
     }
 
@@ -174,6 +189,8 @@ int mm_sql_load_TCASHST(void* db, const char* terminal_id, cashbox_status_univ_t
         cashbox_status->timestamp[1] = 1;
         cashbox_status->timestamp[2] = 1;
     }
+
+    sqlite3_finalize(res);
 
     return 0;
 }
