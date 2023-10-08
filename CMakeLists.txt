@@ -4,6 +4,21 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("mm_manager" LANGUAGES C)
 
+set(ignoreMe "${CMAKE_ASM_COMPILER}")
+set(ignoreMe "${CMAKE_ASM_COMPILER_LAUNCHER}")
+set(ignoreMe "${CMAKE_CXX_COMPILER}")
+set(ignoreMe "${CMAKE_CXX_FLAGS_RELEASE}")
+set(ignoreMe "${CMAKE_EXPORT_NO_PACKAGE_REGISTRY}")
+set(ignoreMe "${CMAKE_EXPORT_PACKAGE_REGISTRY}")
+set(ignoreMe "${CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY}")
+set(ignoreMe "${CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY}")
+set(ignoreMe "${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}")
+set(ignoreMe "${CMAKE_FIND_USE_PACKAGE_REGISTRY}")
+set(ignoreMe "${CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY}")
+set(ignoreMe "${CMAKE_MODULE_LINKER_FLAGS}")
+set(ignoreMe "${CMAKE_SHARED_LINKER_FLAGS}")
+set(ignoreMe "${DL_LIBRARY}")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (MSVC)
@@ -159,6 +174,7 @@ set(INSTALL_TARGETS
 
 install(TARGETS ${INSTALL_TARGETS} DESTINATION bin)
 install(DIRECTORY wireshark DESTINATION .)
+install(DIRECTORY config DESTINATION .)
 install(DIRECTORY tables/default DESTINATION tables)
 install(DIRECTORY tables/card_only DESTINATION tables)
 install(DIRECTORY tables/coin DESTINATION tables)
