@@ -2,7 +2,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("mm_manager")
+project ("mm_manager" LANGUAGES C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
