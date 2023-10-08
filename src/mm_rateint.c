@@ -102,12 +102,12 @@ int main(int argc, char *argv[]) {
 
         prate = &ptable->irate[rate_index];
 
-        if (prate->ccode ==  0) continue;
+        if (LE16(prate->ccode) ==  0) continue;
 
         printf("\n| %3d (0x%02x) | 0x%04x %5d | ",
                rate_index, rate_index,
-               prate->ccode,
-               prate->ccode);
+               LE16(prate->ccode),
+               LE16(prate->ccode));
 
         if (prate->flags == 0) {         // Rated by NCC
             printf("NCC-rated  |");

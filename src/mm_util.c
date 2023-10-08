@@ -882,7 +882,7 @@ void print_instsv_table(dlog_mt_install_params_t* instsv_table) {
         instsv_table->rx_packet_gap, instsv_table->rx_packet_gap * 10);
     printf("       Retries until OOS: %d\n", instsv_table->retries_until_oos);
     printf("      Coin service flags: 0x%02x\n", instsv_table->coin_service_flags);
-    printf("    Coinbox lock timeout: %d seconds\n", instsv_table->coinbox_lock_timeout);
+    printf("    Coinbox lock timeout: %d seconds\n", LE16(instsv_table->coinbox_lock_timeout));
     printf("          Predial string: %s\n",
         callscrn_num_to_string(phone_number_string, sizeof(phone_number_string),
             instsv_table->predial_string, sizeof(instsv_table->predial_string)));
@@ -931,38 +931,38 @@ void print_call_stat_params_table(dlog_mt_call_stat_params_t* call_stat_params) 
 }
 
 void print_user_if_params_table(dlog_mt_user_if_params_t* user_if_table) {
-    printf("\tDigit clear delay:           %5d\n", user_if_table->digit_clear_delay);
-    printf("\tTransient Delay:             %5d\n", user_if_table->transient_delay);
-    printf("\tTransient Hint Time:         %5d\n", user_if_table->transient_hint_time);
-    printf("\tVisual to Voice Delay:       %5d\n", user_if_table->visual_to_voice_delay);
-    printf("\tVoice Repetition Delay:      %5d\n", user_if_table->voice_repitition_delay);
-    printf("\tNo Action Timeout:           %5d\n", user_if_table->no_action_timeout);
-    printf("\tCard Validation Timeout:     %5d\n", user_if_table->card_validation_timeout);
-    printf("\tDJ 2nd String DTMF Timeout:  %5d\n", user_if_table->dj_second_string_dtmf_timeout);
-    printf("\tCP Input Timeout:            %5d\n", user_if_table->cp_input_timeout);
-    printf("\tLanguage Timeout:            %5d\n", user_if_table->language_timeout);
-    printf("\tCFS Timeout:                 %5d\n", user_if_table->cfs_timeout);
-    printf("\tCPD Timeout:                 %5d\n", user_if_table->called_party_disconnect);
+    printf("\tDigit clear delay:           %5d\n", LE16(user_if_table->digit_clear_delay));
+    printf("\tTransient Delay:             %5d\n", LE16(user_if_table->transient_delay));
+    printf("\tTransient Hint Time:         %5d\n", LE16(user_if_table->transient_hint_time));
+    printf("\tVisual to Voice Delay:       %5d\n", LE16(user_if_table->visual_to_voice_delay));
+    printf("\tVoice Repetition Delay:      %5d\n", LE16(user_if_table->voice_repitition_delay));
+    printf("\tNo Action Timeout:           %5d\n", LE16(user_if_table->no_action_timeout));
+    printf("\tCard Validation Timeout:     %5d\n", LE16(user_if_table->card_validation_timeout));
+    printf("\tDJ 2nd String DTMF Timeout:  %5d\n", LE16(user_if_table->dj_second_string_dtmf_timeout));
+    printf("\tCP Input Timeout:            %5d\n", LE16(user_if_table->cp_input_timeout));
+    printf("\tLanguage Timeout:            %5d\n", LE16(user_if_table->language_timeout));
+    printf("\tCFS Timeout:                 %5d\n", LE16(user_if_table->cfs_timeout));
+    printf("\tCPD Timeout:                 %5d\n", LE16(user_if_table->called_party_disconnect));
     printf("\t# Voice Prompt Repititions:     %2d\n", user_if_table->no_voice_prompt_reps);
-    printf("\tACCS Digit Timeout:          %5d\n", user_if_table->accs_digit_timeout);
-    printf("\tCollect Call Timeout:        %5d\n", user_if_table->collect_call_timeout);
-    printf("\tBong Tone Timeout:           %5d\n", user_if_table->bong_tone_timeout);
-    printf("\tACCS No Action Timeout:      %5d\n", user_if_table->accs_no_action_timeout);
-    printf("\tCCard Auth Required Timeout: %5d\n", user_if_table->card_auth_required_timeout);
-    printf("\tRate Request Timeout:        %5d\n", user_if_table->rate_request_timeout);
-    printf("\tManual Dial Hold Time:       %5d\n", user_if_table->manual_dial_hold_time);
-    printf("\tAutodialer Hold Time:        %5d\n", user_if_table->autodialer_hold_time);
-    printf("\tCoin First Warning Time:     %5d\n", user_if_table->coin_first_warning_time);
-    printf("\tCoin Second Warning Time:    %5d\n", user_if_table->coin_second_warning_time);
-    printf("\tAlt Bong Tone Timeout:       %5d\n", user_if_table->alternate_bong_tone_timeout);
-    printf("\tDelay After Bong Tone:       %5d\n", user_if_table->delay_after_bong_tone);
-    printf("\tAlt Delay After Bong Tone:   %5d\n", user_if_table->alternate_delay_after_bong_tone);
-    printf("\tDisplay Scroll Speed:        %5d\n", user_if_table->display_scroll_speed);
-    printf("\tAOS Bong Tone Timeout:       %5d\n", user_if_table->aos_bong_tone_timeout);
-    printf("\tFGB AOS Second Spill Timeout:%5d\n", user_if_table->fgb_aos_second_spill_timeout);
-    printf("\tDatajack Connect Timeout:    %5d\n", user_if_table->datajack_connect_timeout);
-    printf("\tDatajack Pause Threshold:    %5d\n", user_if_table->datajack_pause_threshold);
-    printf("\tDatajack IAS Timer:          %5d\n", user_if_table->datajack_ias_timer);
+    printf("\tACCS Digit Timeout:          %5d\n", LE16(user_if_table->accs_digit_timeout));
+    printf("\tCollect Call Timeout:        %5d\n", LE16(user_if_table->collect_call_timeout));
+    printf("\tBong Tone Timeout:           %5d\n", LE16(user_if_table->bong_tone_timeout));
+    printf("\tACCS No Action Timeout:      %5d\n", LE16(user_if_table->accs_no_action_timeout));
+    printf("\tCCard Auth Required Timeout: %5d\n", LE16(user_if_table->card_auth_required_timeout));
+    printf("\tRate Request Timeout:        %5d\n", LE16(user_if_table->rate_request_timeout));
+    printf("\tManual Dial Hold Time:       %5d\n", LE16(user_if_table->manual_dial_hold_time));
+    printf("\tAutodialer Hold Time:        %5d\n", LE16(user_if_table->autodialer_hold_time));
+    printf("\tCoin First Warning Time:     %5d\n", LE16(user_if_table->coin_first_warning_time));
+    printf("\tCoin Second Warning Time:    %5d\n", LE16(user_if_table->coin_second_warning_time));
+    printf("\tAlt Bong Tone Timeout:       %5d\n", LE16(user_if_table->alternate_bong_tone_timeout));
+    printf("\tDelay After Bong Tone:       %5d\n", LE16(user_if_table->delay_after_bong_tone));
+    printf("\tAlt Delay After Bong Tone:   %5d\n", LE16(user_if_table->alternate_delay_after_bong_tone));
+    printf("\tDisplay Scroll Speed:        %5d\n", LE16(user_if_table->display_scroll_speed));
+    printf("\tAOS Bong Tone Timeout:       %5d\n", LE16(user_if_table->aos_bong_tone_timeout));
+    printf("\tFGB AOS Second Spill Timeout:%5d\n", LE16(user_if_table->fgb_aos_second_spill_timeout));
+    printf("\tDatajack Connect Timeout:    %5d\n", LE16(user_if_table->datajack_connect_timeout));
+    printf("\tDatajack Pause Threshold:    %5d\n", LE16(user_if_table->datajack_pause_threshold));
+    printf("\tDatajack IAS Timer:          %5d\n", LE16(user_if_table->datajack_ias_timer));
 }
 
 extern void print_comm_stat_table(dlog_mt_comm_stat_params_t* comm_stat_table) {
@@ -1142,15 +1142,15 @@ extern void print_fconfig_table(dlog_mt_fconfig_opts_t* fconfig_table) {
     printf("                 coin_calling_features: 0x%02x\t", fconfig_table->coin_calling_features);
     print_bits(fconfig_table->coin_calling_features, (char**)coin_calling_features_str);
     printf("\n");
-    printf("             coin_call_overtime_period: %ds\n", fconfig_table->coin_call_overtime_period);
-    printf("                   coin_call_pots_time: %ds\n", fconfig_table->coin_call_pots_time);
+    printf("             coin_call_overtime_period: %ds\n", LE16(fconfig_table->coin_call_overtime_period));
+    printf("                   coin_call_pots_time: %ds\n", LE16(fconfig_table->coin_call_pots_time));
     printf("              international_min_digits: %d\n", fconfig_table->international_min_digits);
     printf("         default_rate_req_payment_type: %d\n", fconfig_table->default_rate_req_payment_type);
     printf("      next_call_revalidation_frequency: %d\n", fconfig_table->next_call_revalidation_frequency);
     printf("               cutoff_on_disc_duration: %d (%dms)\n",
         fconfig_table->cutoff_on_disc_duration, fconfig_table->cutoff_on_disc_duration * 10);
-    printf("        cdr_upload_timer_international: %ds\n", fconfig_table->cdr_upload_timer_international);
-    printf("             cdr_upload_timer_domestic: %ds\n", fconfig_table->cdr_upload_timer_domestic);
+    printf("        cdr_upload_timer_international: %ds\n", LE16(fconfig_table->cdr_upload_timer_international));
+    printf("             cdr_upload_timer_domestic: %ds\n", LE16(fconfig_table->cdr_upload_timer_domestic));
     printf("            num_perf_stat_dialog_fails: %d\n", fconfig_table->num_perf_stat_dialog_fails);
     printf("               num_co_line_check_fails: %d\n", fconfig_table->num_co_line_check_fails);
     printf("        num_alt_ncc_dialog_check_fails: %d\n", fconfig_table->num_alt_ncc_dialog_check_fails);
@@ -1171,12 +1171,12 @@ extern void print_fconfig_table(dlog_mt_fconfig_opts_t* fconfig_table) {
     printf("                        datajack_flags: 0x%02x\t", fconfig_table->datajack_flags);
     print_bits(fconfig_table->datajack_flags, (char**)datajack_flags_str);
     printf("\n");
-    printf("              delay_on_hook_card_alarm: %d\n", fconfig_table->delay_on_hook_card_alarm);
-    printf("   delay_on_hook_card_alarm_after_call: %d\n", fconfig_table->delay_on_hook_card_alarm_after_call);
-    printf("                duration_of_card_alarm: %d\n", fconfig_table->duration_of_card_alarm);
-    printf("                 card_alarm_on_cadence: %d\n", fconfig_table->card_alarm_on_cadence);
-    printf("                card_alarm_off_cadence: %d\n", fconfig_table->card_alarm_off_cadence);
-    printf("       card_reader_blocked_alarm_delay: %d\n", fconfig_table->card_reader_blocked_alarm_delay);
+    printf("              delay_on_hook_card_alarm: %d\n", LE16(fconfig_table->delay_on_hook_card_alarm));
+    printf("   delay_on_hook_card_alarm_after_call: %d\n", LE16(fconfig_table->delay_on_hook_card_alarm_after_call));
+    printf("                duration_of_card_alarm: %d\n", LE16(fconfig_table->duration_of_card_alarm));
+    printf("                 card_alarm_on_cadence: %d\n", LE16(fconfig_table->card_alarm_on_cadence));
+    printf("                card_alarm_off_cadence: %d\n", LE16(fconfig_table->card_alarm_off_cadence));
+    printf("       card_reader_blocked_alarm_delay: %d\n", LE16(fconfig_table->card_reader_blocked_alarm_delay));
     printf("                       settlement_time: %d\n", fconfig_table->settlement_time);
     printf("                 grace_period_domestic: %d\n", fconfig_table->grace_period_domestic);
     printf("                           ias_timeout: %d\n", fconfig_table->ias_timeout);

@@ -15,9 +15,11 @@
 #include <stdint.h>
 #include <string.h> /* String function definitions */
 #include <time.h>
+#include <stddef.h>
 #ifdef _WIN32
 # include <windows.h>
 #else  /* ifdef _WIN32 */
+#define __USE_BSD
 # include <termios.h> /* POSIX terminal control definitions */
 # include <unistd.h>
 #endif /* _WIN32 */
@@ -312,8 +314,12 @@ static pkt_status_t receive_mm_packet(mm_proto_t *proto, mm_packet_t *pkt) {
                 break;
             case L2_STATE_GET_CRC1:
                 l2_state            = L2_STATE_SEARCH_FOR_STOP;
-                pkt->trailer.crc   |= databyte << 8;
-                pkt->calculated_crc = crc16(0, &pkt->hdr.start, (size_t)pkt->payload_len + 3);
+
+                pkt->trailer.crc   |= (uint16_t)(databyte << 8);
+                pkt->trailer.crc    = LE16(pkt->trailer.crc);
+                pkt->calculated_crc = crc16(0, &pkt->hdr.start, 3);
+                pkt->calculated_crc = crc16(pkt->calculated_crc, pkt->payload, (size_t)pkt->payload_len);
+                pkt->calculated_crc = LE16(pkt->calculated_crc);
 
                 if (pkt->trailer.crc != pkt->calculated_crc) {
                     printf("%s: CRC Error!\n", __func__);
@@ -435,7 +441,9 @@ static pkt_status_t send_mm_packet(mm_proto_t* proto, uint8_t* payload, size_t l
         }
 
         pkt.hdr.pktlen = pkt.payload_len + 5;
-        pkt.trailer.crc = crc16(0, &pkt.hdr.start, (size_t)(pkt.hdr.pktlen) - 2);
+        pkt.trailer.crc = crc16(0, &pkt.hdr.start, 3);
+        pkt.trailer.crc = crc16(pkt.trailer.crc, pkt.payload, (size_t)(pkt.payload_len));
+        pkt.trailer.crc = LE16(pkt.trailer.crc);
         if (inject_comm_error == 1) {
             if (((proto->error_inject_type == ERROR_INJECT_CRC_DLOG_TX) && (pkt.payload_len != 0)) ||
                 ((proto->error_inject_type == ERROR_INJECT_CRC_ACK_TX) && (pkt.payload_len == 0))) {
@@ -540,7 +548,7 @@ static int print_mm_packet(int direction, mm_packet_t *pkt) {
            (pkt->hdr.flags & FLAG_ACK) ? "ACK" : "REQ",
            (pkt->hdr.flags & FLAG_RETRY) ? "RETRY" : " --- ",
            (pkt->hdr.flags & FLAG_SEQUENCE),
-           pkt->hdr.pktlen, pkt->payload_len, pkt->trailer.crc);
+           pkt->hdr.pktlen, pkt->payload_len, LE16(pkt->trailer.crc));
 
     if (pkt->trailer.crc != pkt->calculated_crc) {
         printf("\t*** CRC Error, calculated: %04x ***\n", pkt->calculated_crc);

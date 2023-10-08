@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
         printf("|  %2d  |    %5d |    0x%02x | %s |  0x%02x |\n",
                index,
-               ptable->entry[index].display_time,
+               LE16(ptable->entry[index].display_time),
                ptable->entry[index].display_attr,
                vfd_string,
                ptable->entry[index].spare);

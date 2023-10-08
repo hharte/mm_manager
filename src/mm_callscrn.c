@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 
     /* If output file was specified, write it. */
     if (ostream != NULL) {
-        printf("\nWriting new table to %s\n", argv[2]);
+        printf("\nWriting new table to %s (%zu bytes)\n", argv[2], size);
 
         if (fwrite(load_buffer, size, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);

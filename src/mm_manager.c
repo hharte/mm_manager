@@ -16,6 +16,7 @@
 #include <string.h>  /* String function definitions */
 #include <inttypes.h>
 #ifndef _WIN32
+# include <getopt.h>
 # include <unistd.h> /* UNIX standard function definitions */
 # include <libgen.h>
 # include <signal.h>
@@ -249,8 +250,19 @@ uint8_t table_list_mtr17_intl[] = {
 };
 
 const char cmdline_options[] = "a:b:cd:e:f:hi:k:l:mn:p:qrst:uvw";
+
+/* Default communication parameters, may be overridden during compile. */
+#ifndef DEFAULT_BAUD_RATE
+#define DEFAULT_BAUD_RATE   (19200)
+#endif /* DEFAULT_BAUD_RATE */
+
+#ifndef DEFAULT_MODEM_RESET_STRING
 #define DEFAULT_MODEM_RESET_STRING "ATZ"
+#endif /* DEFAULT_MODEM_RESET_STRING */
+
+#ifndef DEFAULT_MODEM_INIT_STRING
 #define DEFAULT_MODEM_INIT_STRING "ATE=1 S0=1 S7=3 &D2 +MS=B212"
+#endif /* DEFAULT_MODEM_INIT_STRING */
 
 volatile int inject_comm_error = 0;
 
@@ -294,12 +306,13 @@ int main(int argc, char *argv[]) {
     char *modem_dev = NULL;
     int   ncc_index = 0;
     int   c;
-    int   baudrate      = 19200;
+    int   baudrate      = DEFAULT_BAUD_RATE;
     char  access_code_str[8];
     char  key_card_number_str[11];
     int   quiet = 0;
     int   status;
     int   retries;
+    int   betest = 1;
 
     time_t rawtime;
     struct tm ptm = { 0 };
@@ -560,6 +573,13 @@ int main(int argc, char *argv[]) {
     }
     printf("Baud Rate: %d\n", baudrate);
 
+    if (*(char*)&betest != 1) {
+        printf("Machine is BIG-ENDIAN.\n");
+        if (LE16(0x1234) != 0x3412) {
+            printf("Fatal: Not compiled for big-endian.\n");
+            exit(0);
+        }
+    }
     mm_context->telco.id[0] = 'V';
     mm_context->telco.id[1] = 'Z';
     mm_context->telco.region_code[0] = 'U';
@@ -711,9 +731,18 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 /* Send cash box status if requested by terminal */
                 if (context->terminal_upd_reason & TTBLREQ_CASHBOX_STATUS) {
+                    int i;
+
+                    cashbox_status_univ_t* cashbox_status = (cashbox_status_univ_t*)pack_payload;
                     printf("\tSend DLOG_MT_CASH_BOX_STATUS table as requested by terminal.\n\t");
 
-                    mm_acct_load_TCASHST(context->database, terminal_id, (cashbox_status_univ_t*)pack_payload);
+                    mm_acct_load_TCASHST(context->database, terminal_id, cashbox_status);
+
+                    /* Perform endian conversion */
+                    cashbox_status->currency_value = LE16(cashbox_status->currency_value);
+                    for (i = 0; i < COIN_COUNT_MAX; i++) {
+                        cashbox_status->coin_count[i] = LE16(cashbox_status->coin_count[i]);
+                    }
                     pack_payload += sizeof(cashbox_status_univ_t);
                 }
 
@@ -736,11 +765,14 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                 dlog_mt_maint_req_t *maint = (dlog_mt_maint_req_t *)ppayload;;
                 ppayload += sizeof(dlog_mt_maint_req_t);
 
-                mm_acct_save_TOPCODE(context->database, &context->telco, terminal_id, maint);
+                /* Perform endian conversion */
+                maint->type = LE16(maint->type);
 
                 *pack_payload++ = DLOG_MT_MAINT_ACK;
                 *pack_payload++ = maint->type & 0xFF;
                 *pack_payload++ = (maint->type >> 8) & 0xFF;
+
+                mm_acct_save_TOPCODE(context->database, &context->telco, terminal_id, maint);
                 break;
             }
             case DLOG_MT_CALL_DETAILS: {
@@ -749,11 +781,16 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
 
                 ppayload += sizeof(dlog_mt_call_details_t);
 
-                mm_acct_save_TCDR(context->database, &context->telco, terminal_id, cdr);
-
                 cdr_ack_buf[0] = DLOG_MT_CDR_DETAILS_ACK;
                 cdr_ack_buf[1] = cdr->seq & 0xFF;
                 cdr_ack_buf[2] = (cdr->seq >> 8) & 0xFF;
+
+                /* Perform endian conversion */
+                cdr->seq = LE16(cdr->seq);
+                cdr->call_cost[0] = LE16(cdr->call_cost[0]);
+                cdr->call_cost[1] = LE16(cdr->call_cost[1]);
+
+                mm_acct_save_TCDR(context->database, &context->telco, terminal_id, cdr);
 
                 /* If terminal is transferring multiple tables, queue the CDR response for later, after receiving DLOG_MT_END_DATA */
                 if (context->trans_data_in_progress == 1) {
@@ -778,8 +815,15 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
             }
             case DLOG_MT_CASH_BOX_COLLECTION: {
                 dlog_mt_cash_box_collection_t *cash_box_collection = (dlog_mt_cash_box_collection_t *)ppayload;
+                int i;
 
                 ppayload += sizeof(dlog_mt_cash_box_collection_t);
+
+                /* Perform endian conversion */
+                cash_box_collection->currency_value = LE16(cash_box_collection->currency_value);
+                for (i = 0; i < COIN_COUNT_MAX; i++) {
+                    cash_box_collection->coin_count[i] = LE16(cash_box_collection->coin_count[i]);
+                }
 
                 mm_acct_save_TCOLLST(context->database, &context->telco, terminal_id, cash_box_collection);
                 *pack_payload++ = DLOG_MT_END_DATA;
@@ -808,14 +852,30 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                 break;
             }
             case DLOG_MT_CASH_BOX_STATUS: {
-                mm_acct_save_TCASHST(context->database, &context->telco, terminal_id, (cashbox_status_univ_t*)ppayload);
+                cashbox_status_univ_t *cashbox_status = (cashbox_status_univ_t *)ppayload;
+                int i;
+
+                /* Perform endian conversion */
+                cashbox_status->currency_value = LE16(cashbox_status->currency_value);
+                for (i = 0; i < COIN_COUNT_MAX; i++) {
+                    cashbox_status->coin_count[i] = LE16(cashbox_status->coin_count[i]);
+                }
+
+                mm_acct_save_TCASHST(context->database, &context->telco, terminal_id, cashbox_status);
 
                 ppayload += sizeof(cashbox_status_univ_t);
                 break;
             }
             case DLOG_MT_PERF_STATS_MSG: {
                 dlog_mt_perf_stats_record_t *perf_stats = (dlog_mt_perf_stats_record_t *)ppayload;
+                int i;
+
                 ppayload += sizeof(dlog_mt_perf_stats_record_t);
+
+                /* Perform endian conversion. */
+                for (i = 0; i < PERF_STATS_MAX; i++) {
+                    perf_stats->stats[i] = LE16(perf_stats->stats[i]);
+                }
 
                 mm_acct_save_TPERFST(context->database, &context->telco, terminal_id, perf_stats);
                 break;
@@ -852,7 +912,7 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                     printf("\t\t\tCarrier 0x%02x:", pcarr_stats_entry->carrier_ref);
 
                     for (int j = 0; j < 29; j++) {
-                        k += pcarr_stats_entry->stats[j];
+                        k += LE16(pcarr_stats_entry->stats[j]);
                     }
 
                     if (k == 0) {
@@ -860,7 +920,7 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                     } else {
                         for (int j = 0; j < 29; j++) {
                             if (j % 2 == 0) printf(" |\n\t\t\t\t");
-                            printf("| stats[%24s] =%5d\t\t", stats_to_str(j), pcarr_stats_entry->stats[j]);
+                            printf("| stats[%24s] =%5d\t\t", stats_to_str(j), LE16(pcarr_stats_entry->stats[j]));
                         }
                         printf("\n");
                     }
@@ -881,7 +941,7 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                     printf("\t\t\tCarrier Ref: %d (0x%02x): ", pcarr_stats_entry->carrier_ref, pcarr_stats_entry->carrier_ref);
 
                     /* If no calls have been made using this carrier, skip it. */
-                    if (pcarr_stats_entry->total_call_duration == 0) {
+                    if (LE32(pcarr_stats_entry->total_call_duration) == 0) {
                         printf("No calls.\n");
                         continue;
                     }
@@ -892,24 +952,41 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                         printf("\t\t\t\t%s stats:\t", stats_call_type_to_str(j));
 
                         for (int i = 0; i < STATS_EXP_PAYMENT_TYPE_MAX; i++) {
-                            printf("%d, ", pcarr_stats_entry->stats[j][i]);
+                            printf("%d, ", LE16(pcarr_stats_entry->stats[j][i]));
                         }
                         printf("\n");
                     }
 
-                    printf("\t\t\t\tOperator Assisted Call Count: %d\n",    pcarr_stats_entry->operator_assist_call_count);
-                    printf("\t\t\t\t0+ Call Count: %d\n",                   pcarr_stats_entry->zero_plus_call_count);
-                    printf("\t\t\t\tFree Feature B Call Count: %d\n",       pcarr_stats_entry->free_featb_call_count);
-                    printf("\t\t\t\tDirectory Assistance Call Count: %d\n", pcarr_stats_entry->directory_assist_call_count);
-                    printf("\t\t\t\tTotal Call duration: %u\n",             pcarr_stats_entry->total_call_duration);
-                    printf("\t\t\t\tTotal Insert Mode Calls: %d\n",         pcarr_stats_entry->total_insert_mode_calls);
-                    printf("\t\t\t\tTotal Manual Mode Calls: %d\n",         pcarr_stats_entry->total_manual_mode_calls);
+                    printf("\t\t\t\tOperator Assisted Call Count: %d\n",    LE16(pcarr_stats_entry->operator_assist_call_count));
+                    printf("\t\t\t\t0+ Call Count: %d\n",                   LE16(pcarr_stats_entry->zero_plus_call_count));
+                    printf("\t\t\t\tFree Feature B Call Count: %d\n",       LE16(pcarr_stats_entry->free_featb_call_count));
+                    printf("\t\t\t\tDirectory Assistance Call Count: %d\n", LE16(pcarr_stats_entry->directory_assist_call_count));
+                    printf("\t\t\t\tTotal Call duration: %u\n",             LE32(pcarr_stats_entry->total_call_duration));
+                    printf("\t\t\t\tTotal Insert Mode Calls: %d\n",         LE16(pcarr_stats_entry->total_insert_mode_calls));
+                    printf("\t\t\t\tTotal Manual Mode Calls: %d\n",         LE16(pcarr_stats_entry->total_manual_mode_calls));
                 }
                 break;
             }
             case DLOG_MT_SUMMARY_CALL_STATS: {
                 dlog_mt_summary_call_stats_t *summary_call_stats = (dlog_mt_summary_call_stats_t *)ppayload;
                 ppayload += sizeof(dlog_mt_summary_call_stats_t);
+
+                /* Perform endian conversion */
+                for (int j = 0; j < 16; j++) {
+                    summary_call_stats->stats[j] = LE16(summary_call_stats->stats[j]);
+                }
+
+                for (int j = 0; j < 10; j++) {
+                    summary_call_stats->rep_dialer_peg_count[j] = LE16(summary_call_stats->rep_dialer_peg_count[j]);
+                }
+
+                summary_call_stats->total_call_duration = LE32(summary_call_stats->total_call_duration);
+                summary_call_stats->total_time_off_hook = LE32(summary_call_stats->total_time_off_hook);
+
+                summary_call_stats->free_featb_call_count = LE16(summary_call_stats->free_featb_call_count);
+                summary_call_stats->completed_1800_billable_count = LE16(summary_call_stats->completed_1800_billable_count);
+                summary_call_stats->datajack_calls_attempt_count = LE16(summary_call_stats->datajack_calls_attempt_count);
+                summary_call_stats->datajack_calls_complete_count = LE16(summary_call_stats->datajack_calls_complete_count);
 
                 mm_acct_save_TCALLST(context->database, &context->telco, terminal_id, summary_call_stats);
                 break;
@@ -962,6 +1039,11 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                     rate_response.rate.additional_period,
                     rate_response.rate.additional_charge);
 
+                rate_response.rate.initial_period = LE16(rate_response.rate.initial_period);
+                rate_response.rate.initial_charge = LE16(rate_response.rate.initial_charge);
+                rate_response.rate.additional_period = LE16(rate_response.rate.additional_period);
+                rate_response.rate.additional_charge = LE16(rate_response.rate.additional_charge);
+
                 memcpy(pack_payload, &rate_response, sizeof(rate_response));
                 pack_payload += sizeof(rate_response);
 //#define REQUEST_CALL_BACK_DURING_RATE_REQ
@@ -1007,6 +1089,13 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                 mm_time(context->test_mode, &rawtime);
                 ppayload += sizeof(dlog_mt_funf_card_auth_t);
 
+                /* Perform endian conversion */
+                auth_request->service_code = LE16(auth_request->service_code);
+                auth_request->unknown = LE16(auth_request->unknown);
+                auth_request->unknown2 = LE16(auth_request->unknown2);
+                auth_request->pin = LE16(auth_request->pin);
+                auth_request->seq = LE16(auth_request->seq);
+
                 mm_acct_save_TAUTH(context->database, &context->telco, terminal_id, auth_request);
 
                 auth_response.resp_code = 0;
@@ -1016,6 +1105,7 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                     auth_response.resp_code,
                     auth_response.auth_code);
 
+                auth_response.auth_code = LE64(auth_response.auth_code);
                 memcpy(pack_payload, &auth_response, sizeof(auth_response));
                 pack_payload += sizeof(auth_response);
 
@@ -1192,6 +1282,7 @@ static int mm_download_tables(mm_context_t *context, char *terminal_id) {
                 break;
             case DLOG_MT_CASH_BOX_STATUS:
             {
+                int i;
                 cashbox_status_univ_t *pcashbox_status = { 0 };
                 pcashbox_status = (cashbox_status_univ_t *)calloc(1, sizeof(cashbox_status_univ_t));
                 table_buffer = (uint8_t*)pcashbox_status;
@@ -1200,6 +1291,13 @@ static int mm_download_tables(mm_context_t *context, char *terminal_id) {
                     return -ENOMEM;
                 }
                 mm_acct_load_TCASHST(context->database, terminal_id, (cashbox_status_univ_t *)table_buffer);
+
+                /* Perform endian conversion */
+                pcashbox_status->currency_value = LE16(pcashbox_status->currency_value);
+                for (i = 0; i < COIN_COUNT_MAX; i++) {
+                    pcashbox_status->coin_count[i] = LE16(pcashbox_status->coin_count[i]);
+                }
+
                 table_len = sizeof(cashbox_status_univ_t);
                 break;
             }
@@ -1464,7 +1562,7 @@ static void generate_install_parameters(mm_context_t* context, uint8_t** buffer,
     pinstall_params->tx_packet_delay = 10;
     pinstall_params->rx_packet_gap   = context->connection.proto.rx_packet_gap;
     pinstall_params->retries_until_oos = 40;
-    pinstall_params->coinbox_lock_timeout = 150;
+    pinstall_params->coinbox_lock_timeout = LE16(150);
     pinstall_params->predial_string[0] = 0x0a;
     pinstall_params->predial_string_alt[0] = 0x0a;
 
@@ -1670,14 +1768,14 @@ static void generate_comm_stat_parameters(mm_context_t *context, uint8_t **buffe
 
     printf("\nGenerating Comm Stat Parameters table:\n");
     pcomm_stat_params->id = DLOG_MT_COMM_STAT_PARMS;
-    pcomm_stat_params->co_access_dial_complete       = 100;
-    pcomm_stat_params->co_access_dial_complete_int   = 50;
-    pcomm_stat_params->dial_complete_carr_detect     = 100;
-    pcomm_stat_params->dial_complete_carr_detect_int = 50;
-    pcomm_stat_params->carr_detect_first_pac         = 10;
-    pcomm_stat_params->carr_detect_first_pac_int     = 5;
-    pcomm_stat_params->user_waiting_expect_info      = 600;
-    pcomm_stat_params->user_waiting_expect_info_int  = 100;
+    pcomm_stat_params->co_access_dial_complete       = LE16(100);
+    pcomm_stat_params->co_access_dial_complete_int   = LE16(50);
+    pcomm_stat_params->dial_complete_carr_detect     = LE16(100);
+    pcomm_stat_params->dial_complete_carr_detect_int = LE16(50);
+    pcomm_stat_params->carr_detect_first_pac         = LE16(10);
+    pcomm_stat_params->carr_detect_first_pac_int     = LE16(5);
+    pcomm_stat_params->user_waiting_expect_info      = LE16(600);
+    pcomm_stat_params->user_waiting_expect_info_int  = LE16(100);
     pcomm_stat_params->perfstats_threshold           = 1;
     pcomm_stat_params->perfstats_start_time[0]       = 0; /* HH */
     pcomm_stat_params->perfstats_start_time[1]       = 0; /* MM */
@@ -1712,39 +1810,39 @@ static void generate_user_if_parameters(mm_context_t *context, uint8_t **buffer,
 
     printf("\nGenerating User Interface Parameters table:\n");
     puser_if_params->id = DLOG_MT_USER_IF_PARMS;
-    puser_if_params->digit_clear_delay               = 450;
-    puser_if_params->transient_delay                 = 450;
-    puser_if_params->transient_hint_time             = 450;
-    puser_if_params->visual_to_voice_delay           = 450;
-    puser_if_params->voice_repitition_delay          = 450;
-    puser_if_params->no_action_timeout               = 3000;
-    puser_if_params->card_validation_timeout         = 4500; /* Change from 30s to 45s */
-    puser_if_params->dj_second_string_dtmf_timeout   = 300;
-    puser_if_params->spare_timer_b                   = 1100;
-    puser_if_params->cp_input_timeout                = 100;
-    puser_if_params->language_timeout                = 1000;
-    puser_if_params->cfs_timeout                     = 200;
-    puser_if_params->called_party_disconnect         = 1200;
+    puser_if_params->digit_clear_delay               = LE16(450);
+    puser_if_params->transient_delay                 = LE16(450);
+    puser_if_params->transient_hint_time             = LE16(450);
+    puser_if_params->visual_to_voice_delay           = LE16(450);
+    puser_if_params->voice_repitition_delay          = LE16(450);
+    puser_if_params->no_action_timeout               = LE16(3000);
+    puser_if_params->card_validation_timeout         = LE16(4500); /* Change from 30s to 45s */
+    puser_if_params->dj_second_string_dtmf_timeout   = LE16(300);
+    puser_if_params->spare_timer_b                   = LE16(1100);
+    puser_if_params->cp_input_timeout                = LE16(100);
+    puser_if_params->language_timeout                = LE16(1000);
+    puser_if_params->cfs_timeout                     = LE16(200);
+    puser_if_params->called_party_disconnect         = LE16(1200);
     puser_if_params->no_voice_prompt_reps            = 3;
-    puser_if_params->accs_digit_timeout              = 450;
-    puser_if_params->collect_call_timeout            = 400;
-    puser_if_params->bong_tone_timeout               = 300;
-    puser_if_params->accs_no_action_timeout          = 450;
-    puser_if_params->card_auth_required_timeout      = 4000;
-    puser_if_params->rate_request_timeout            = 6000;
-    puser_if_params->manual_dial_hold_time           = 50;
-    puser_if_params->autodialer_hold_time            = 300;
-    puser_if_params->coin_first_warning_time         = 30;
-    puser_if_params->coin_second_warning_time        = 5;
-    puser_if_params->alternate_bong_tone_timeout     = 200;
-    puser_if_params->delay_after_bong_tone           = 125;
-    puser_if_params->alternate_delay_after_bong_tone = 125;
-    puser_if_params->display_scroll_speed            = 0;
-    puser_if_params->aos_bong_tone_timeout           = 600;
-    puser_if_params->fgb_aos_second_spill_timeout    = 600;
-    puser_if_params->datajack_connect_timeout        = 15000;
-    puser_if_params->datajack_pause_threshold        = 45;
-    puser_if_params->datajack_ias_timer              = 10;
+    puser_if_params->accs_digit_timeout              = LE16(450);
+    puser_if_params->collect_call_timeout            = LE16(400);
+    puser_if_params->bong_tone_timeout               = LE16(300);
+    puser_if_params->accs_no_action_timeout          = LE16(450);
+    puser_if_params->card_auth_required_timeout      = LE16(4000);
+    puser_if_params->rate_request_timeout            = LE16(6000);
+    puser_if_params->manual_dial_hold_time           = LE16(50);
+    puser_if_params->autodialer_hold_time            = LE16(300);
+    puser_if_params->coin_first_warning_time         = LE16(30);
+    puser_if_params->coin_second_warning_time        = LE16(5);
+    puser_if_params->alternate_bong_tone_timeout     = LE16(200);
+    puser_if_params->delay_after_bong_tone           = LE16(125);
+    puser_if_params->alternate_delay_after_bong_tone = LE16(125);
+    puser_if_params->display_scroll_speed            = LE16(0);
+    puser_if_params->aos_bong_tone_timeout           = LE16(600);
+    puser_if_params->fgb_aos_second_spill_timeout    = LE16(600);
+    puser_if_params->datajack_connect_timeout        = LE16(15000);
+    puser_if_params->datajack_pause_threshold        = LE16(45);
+    puser_if_params->datajack_ias_timer              = LE16(10);
     *buffer                                          = pbuffer;
 
     print_user_if_params_table(puser_if_params);

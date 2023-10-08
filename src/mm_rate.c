@@ -99,21 +99,21 @@ int main(int argc, char *argv[]) {
 
         if (prate->type ==  0) continue;
 
-        if ((prate->type == 0) && (prate->initial_charge == 0) && (prate->additional_charge == 0) && \
-            (prate->initial_period == 0) && (prate->additional_period == 0)) {
+        if ((prate->type == 0) && (LE16(prate->initial_charge) == 0) && (LE16(prate->additional_charge) == 0) && \
+            (LE16(prate->initial_period) == 0) && (LE16(prate->additional_period) == 0)) {
             continue;
         }
 
-        if (prate->initial_period & FLAG_PERIOD_UNLIMITED) {
+        if (LE16(prate->initial_period) & FLAG_PERIOD_UNLIMITED) {
             snprintf(rate_str_initial, sizeof(rate_str_initial), "Unlimited");
         } else {
-            snprintf(rate_str_initial, sizeof(rate_str_initial), "   %5ds", prate->initial_period);
+            snprintf(rate_str_initial, sizeof(rate_str_initial), "   %5ds", LE16(prate->initial_period));
         }
 
-        if (prate->additional_period & FLAG_PERIOD_UNLIMITED) {
+        if (LE16(prate->additional_period) & FLAG_PERIOD_UNLIMITED) {
             snprintf(rate_str_additional, sizeof(rate_str_additional), "Unlimited");
         } else {
-            snprintf(rate_str_additional, sizeof(rate_str_additional), "   %5ds", prate->additional_period);
+            snprintf(rate_str_additional, sizeof(rate_str_additional), "   %5ds", LE16(prate->additional_period));
         }
 
         printf("\n| %3d (0x%02x) | 0x%02x %s |      %s |       %6.2f |         %s |          %6.2f |",
@@ -121,9 +121,9 @@ int main(int argc, char *argv[]) {
                prate->type,
                str_rates[(prate->type) & 0x0F],
                rate_str_initial,
-               (float)prate->initial_charge / 100,
+               (float)LE16(prate->initial_charge) / 100,
                rate_str_additional,
-               (float)prate->additional_charge / 100);
+               (float)LE16(prate->additional_charge) / 100);
     }
 
     printf("\n+------------------------------------------------------------------------------------------------------------+\n");

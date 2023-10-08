@@ -14,8 +14,7 @@
 
 #include <stdint.h>
 
-#pragma pack(push)
-#pragma pack(1)                 /* Pack data structures for communication with terminal. */
+#pragma pack(push, 1)           /* Pack data structures for communication with terminal. */
 
 #define CCARD_MAX           32  /* Number of entries in CARD table MTR 2.x */
 #define CCARD_MAX_MTR1      20  /* Number of entries in CARD table MTR 1.x */

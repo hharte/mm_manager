@@ -12,8 +12,8 @@
 #include <string.h> /* String function definitions */
 #include <fcntl.h>  /* File control definitions */
 #include <errno.h>  /* Error number definitions */
-#include <unistd.h>
 #include <termios.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 
 /*

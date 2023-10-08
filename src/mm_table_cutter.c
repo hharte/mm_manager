@@ -74,8 +74,7 @@ typedef SSIZE_T ssize_t;
 #define TABLE_MAX       152
 #define TABLE_LEN_MASK  0x1FFF      /* Maximum table length 8K */
 
-#pragma pack(push)
-#pragma pack(1)         /* Pack data structures for communication with terminal. */
+#pragma pack(push, 1)   /* Pack data structures for communication with terminal. */
 
 typedef struct mt_table_entry {
     uint8_t id;

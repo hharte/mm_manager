@@ -65,15 +65,15 @@ int main(int argc, char *argv[]) {
     /* Don't dial a digit when incoming call is answered. */
     ptable->anti_fraud_for_incoming_call = 0;
     ptable->OOS_POTS_flags               = (FC_IN_SERVICE_ON_CDR_LIST_FULL | FC_TERM_RATE_DISPLAY_OPTION |                    \
-                                                  FC_INCOMING_CALL_FCA_PRECEDENCE | FC_FCA_ON_CARD | FC_REVERT_TO_PRIMARY_NCC_NUM | \
-                                                  FC_RATED_CREDIT_CARD_CDR);  // FC_11_DIGIT_LOCAL_CALLS
-    ptable->rating_flags = (FC_ENABLE_NPA_SBR | FC_ENABLE_IXL_SBR | FC_SHOW_INIT_ADDL_RATE | \
-                                  FC_ENABLE_DIAL_AROUND);                     // FC_ROUND_UP_CHARGE FC_7_DIGIT_NO_WAIT
-    ptable->advertising_flags                    |= FC_REP_DIALER_ADVERTISING;
-    ptable->advertising_flags                    &= ~FC_TIME_FORMAT;    /* 24-hour time format. */
-    ptable->call_setup_param_flags               |= FC_DISPLAY_CALLED_NUMBER;
-    ptable->call_setup_param_flags               &= ~FC_SUPPRESS_CALLING_PROMPT;
-    ptable->datajack_flags                       &= ~FC_DATAJACK_ENABLED;
+                                            FC_INCOMING_CALL_FCA_PRECEDENCE | FC_FCA_ON_CARD | FC_REVERT_TO_PRIMARY_NCC_NUM | \
+                                            FC_RATED_CREDIT_CARD_CDR);  // FC_11_DIGIT_LOCAL_CALLS
+    ptable->rating_flags                 = (FC_ENABLE_NPA_SBR | FC_ENABLE_IXL_SBR | FC_SHOW_INIT_ADDL_RATE | \
+                                            FC_ENABLE_DIAL_AROUND);                     // FC_ROUND_UP_CHARGE FC_7_DIGIT_NO_WAIT
+    ptable->advertising_flags           |=  FC_REP_DIALER_ADVERTISING;
+    ptable->advertising_flags           &= ~FC_TIME_FORMAT;    /* 24-hour time format. */
+    ptable->call_setup_param_flags      |=  FC_DISPLAY_CALLED_NUMBER;
+    ptable->call_setup_param_flags      &= ~FC_SUPPRESS_CALLING_PROMPT;
+    ptable->datajack_flags              &= ~FC_DATAJACK_ENABLED;
     ptable->grace_period_domestic                 = 5; /* 5 second grace period. */
     ptable->call_screen_list_ixl_aos_entry        = 0;
     ptable->call_screen_list_inter_lata_aos_entry = 0;

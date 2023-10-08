@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
             case ccitt:
 
                 for (j = 0; j < SVC_CODE_MAX; j++) {
-                    printf("%04x,", pcard->svc_code.cc.svc_code[j]);
+                    printf("%04x,", LE16(pcard->svc_code.cc.svc_code[j]));
                 }
                 printf("Spill: ");
 

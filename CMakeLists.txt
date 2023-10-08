@@ -15,7 +15,8 @@ else()
     set(CMAKE_C_STANDARD_REQUIRED ON)
 
     # Enforce additional checking
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(-Wall -Wextra -Werror)
+#    add_compile_options(-pedantic)
 endif()
 
 execute_process(COMMAND git describe --dirty --always --tags
