@@ -172,6 +172,38 @@ char* seconds_to_ddhhmmss_string(char* string_buf, size_t string_buf_len, uint32
     return string_buf;
 }
 
+int print_mm_packet(int direction, mm_packet_t *pkt) {
+    int status = 0;
+
+    /* Decode flags: bit 3 = Req/Ack, 2=Retry, 1:0=Sequence. */
+    printf("\n%s %s: flags=%02x [ %s | %s | %s | %s | Seq:%d], len=%3d (datalen=%3d), crc=%04x.\n",
+           (direction == RX) ? "T-->M" : "T<--M",
+           (direction == RX) ? "RX" : "TX",
+           pkt->hdr.flags,
+           (pkt->hdr.flags & FLAG_DISCONNECT) ? "DIS" : "---",
+           (pkt->hdr.flags & FLAG_STATUS) ? "ERR" : "OK ",
+           (pkt->hdr.flags & FLAG_ACK) ? "ACK" : "REQ",
+           (pkt->hdr.flags & FLAG_RETRY) ? "RETRY" : " --- ",
+           (pkt->hdr.flags & FLAG_SEQUENCE),
+           pkt->hdr.pktlen, pkt->payload_len, LE16(pkt->trailer.crc));
+
+    if (pkt->trailer.crc != pkt->calculated_crc) {
+        printf("\t*** CRC Error, calculated: %04x ***\n", pkt->calculated_crc);
+        status = -1;
+    }
+
+    if (pkt->trailer.end != STOP_BYTE) {
+        printf("\t*** Framing Error, expected STOP=0x03, got STOP=%02x ***\n", pkt->trailer.end);
+        status = -1;
+    }
+
+    if (pkt->payload_len > 0) {
+        dump_hex(pkt->payload, pkt->payload_len);
+    }
+
+    return status;
+}
+
 /* Call Type (lower 4-bits) of CALLTYP */
 const char *call_type_str[16] = {
     "Incoming",
