@@ -69,6 +69,12 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
+    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlg_mt_intl_sbr_table_t) - 1) != 0) {
+        free(ptable);
+        fclose(instream);
+        return -EIO;
+    }
+
     load_buffer = ((uint8_t*)ptable) + 1;
     if (fread(load_buffer, sizeof(dlg_mt_intl_sbr_table_t) - 1, 1, instream) != 1) {
         printf("Error reading %s table.\n", table_to_string(TABLE_ID));

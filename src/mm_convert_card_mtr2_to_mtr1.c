@@ -17,6 +17,8 @@
 #include "mm_manager.h"
 #include "mm_card.h"
 
+#define TABLE_ID    (0x86)
+
 int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
@@ -28,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     if (argc <= 2) {
         printf("Usage:\n" \
-               "\tmm_convert_card_mtr2_to_mtr1 mm_table_86.bin mm_table_16.bin\n");
+               "\tmm_convert_card_mtr2_to_mtr1 mm_table_%x.bin mm_table_16.bin\n", TABLE_ID);
         return -1;
     }
 
@@ -54,6 +56,13 @@ int main(int argc, char *argv[]) {
         free(pcard_table_mtr2);
         free(pcard_table_mtr1);
         return -ENOENT;
+    }
+
+    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlog_mt_card_table_t)) != 0) {
+        free(pcard_table_mtr2);
+        free(pcard_table_mtr1);
+        fclose(instream);
+        return -EIO;
     }
 
     if (fread(pcard_table_mtr2, sizeof(dlog_mt_card_table_t), 1, instream) != 1) {

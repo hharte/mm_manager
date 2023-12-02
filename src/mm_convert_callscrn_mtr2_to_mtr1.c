@@ -16,6 +16,8 @@
 
 #include "mm_manager.h"
 
+#define TABLE_ID    (0x5c)
+
 int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
@@ -29,7 +31,7 @@ int main(int argc, char *argv[]) {
 
     if (argc <= 2) {
         printf("Usage:\n" \
-               "\tmm_convert_callscrn_mtr2_to_mtr1 mm_table_5c.bin mm_table_18.bin\n");
+               "\tmm_convert_callscrn_mtr2_to_mtr1 mm_table_%x.bin mm_table_18.bin\n", TABLE_ID);
         return -1;
     }
 
@@ -55,6 +57,13 @@ int main(int argc, char *argv[]) {
         free(pcallscrn_table);
         free(pcallscrnu_table);
         return -ENOENT;
+    }
+
+    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlog_mt_carrier_table_mtr1_t) - 1) != 0) {
+        free(pcallscrn_table);
+        free(pcallscrnu_table);
+        fclose(instream);
+        return -EIO;
     }
 
     load_buffer = ((uint8_t*)pcallscrn_table) + 1;

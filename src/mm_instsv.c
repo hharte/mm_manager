@@ -46,6 +46,12 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
+    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlog_mt_install_params_t) - 1) != 0) {
+        free(instsv_table);
+        fclose(instream);
+        return -EIO;
+    }
+
     load_buffer = ((uint8_t*)instsv_table) + 1;
     if (fread(load_buffer, sizeof(dlog_mt_install_params_t) - 1, 1, instream) != 1) {
         printf("Error reading %s table.\n", table_to_string(TABLE_ID));

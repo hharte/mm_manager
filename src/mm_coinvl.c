@@ -68,6 +68,12 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
+    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlog_mt_coin_val_table_t)) != 0) {
+        free(ptable);
+        fclose(instream);
+        return -EIO;
+    }
+
     if (fread(ptable, sizeof(dlog_mt_coin_val_table_t), 1, instream) != 1) {
         printf("Error reading %s table.\n", table_to_string(TABLE_ID));
         free(ptable);
