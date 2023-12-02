@@ -29,6 +29,7 @@
  *
  * International
  * mm_table_cutter PBAXS05.BIN 13121 93
+ * mm_table_cutter 06CNB02.bin 13248 84 (Bosnia)
  *
  * Determining table data structure offset:
  *
