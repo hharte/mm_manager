@@ -1416,6 +1416,7 @@ extern void print_instsv_table(dlog_mt_install_params_t* instsv_table);
 extern void print_user_if_params_table(dlog_mt_user_if_params_t* user_if_table);
 extern void print_comm_stat_table(dlog_mt_comm_stat_params_t* comm_stat_table);
 extern void print_fconfig_table(dlog_mt_fconfig_opts_t* fconfig_table);
+extern int mm_validate_table_fsize(uint8_t table_id, FILE *stream, unsigned long expected_size);
 
 /* mm_pcap */
 int mm_create_pcap(const char* capfilename, FILE** pcapstream);

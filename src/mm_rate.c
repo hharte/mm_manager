@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
     char  timestamp_str[20];
     dlog_mt_rate_table_t *ptable;
     uint8_t *load_buffer;
+    size_t size;
     int ret = 0;
 
     if (argc <= 1) {
@@ -71,6 +72,20 @@ int main(int argc, char *argv[]) {
         printf("Error opening %s\n", argv[1]);
         free(ptable);
         return -ENOENT;
+    }
+
+    fseek(instream, 0, SEEK_END);
+    size = ftell(instream);
+    fseek(instream, 0, SEEK_SET);
+
+    if (size != (sizeof(dlog_mt_rate_table_t) - 1)) {
+        printf("Incorrect length for %s table, expected: %lu bytes, actual: %zd bytes.\n",
+            table_to_string(TABLE_ID),
+            sizeof(dlog_mt_rate_table_t) - 1,
+            size);
+        free(ptable);
+        fclose(instream);
+        return -EIO;
     }
 
     load_buffer = ((uint8_t*)ptable) + 1;

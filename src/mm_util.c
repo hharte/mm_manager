@@ -1217,6 +1217,24 @@ extern void print_fconfig_table(dlog_mt_fconfig_opts_t* fconfig_table) {
 
 }
 
+int mm_validate_table_fsize(uint8_t table_id, FILE *stream, unsigned long expected_size)
+{
+    size_t actual_size;
+    fseek(stream, 0, SEEK_END);
+    actual_size = ftell(stream);
+    fseek(stream, 0, SEEK_SET);
+
+    if (actual_size != (expected_size)) {
+        printf("Incorrect length for %s table, expected: %lu bytes, actual: %zd bytes.\n",
+            table_to_string(table_id),
+            expected_size,
+            actual_size);
+        return (-1);
+    }
+
+    return (0);
+}
+
 #ifdef _WIN32
 char* basename(char* path) {
     char fname[20] = { 0 };
