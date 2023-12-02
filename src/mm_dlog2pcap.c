@@ -111,16 +111,17 @@ int  main(int argc, char *argv[]) {
 
         if (direction == 'R') {
             parser = &rxparser;
+            pkt_direction = RX;
         } else {
             parser = &txparser;
+            pkt_direction = TX;
         }
 
         status = mm_parse_byte(parser, databyte, line);
 
-        pkt_direction = (parser == &txparser) ? TX : RX;
         if (status == 1) {
             ts_sec = stop_time / 20000;
-            ts_usec = (stop_time % 20000) * 100;
+            ts_usec = (stop_time % 20000);
 
             packets_processed++;
             mm_add_pcap_rec(pcapstream, pkt_direction, &parser->pkt, ts_sec, ts_usec);
