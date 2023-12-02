@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     printf("Sizeof            dlog_mt_time_sync_t: %zu\n", sizeof(dlog_mt_time_sync_t));
     printf("Sizeof        intl_rate_table_entry_t: %zu\n", sizeof(intl_rate_table_entry_t));
-    printf("Sizeof        dlg_mt_intl_sbr_table_t: %zu\n", sizeof(dlg_mt_intl_sbr_table_t));
+    printf("Sizeof       dlog_mt_intl_sbr_table_t: %zu\n", sizeof(dlog_mt_intl_sbr_table_t));
     printf("Sizeof             rate_table_entry_t: %zu\n", sizeof(rate_table_entry_t));
     printf("Sizeof           dlog_mt_rate_table_t: %zu\n", sizeof(dlog_mt_rate_table_t));
     printf("Sizeof         dlog_mt_rate_request_t: %zu\n", sizeof(dlog_mt_rate_request_t));

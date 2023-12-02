@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     FILE *instream;
     FILE *ostream = NULL;
     int   rate_index;
-    dlg_mt_intl_sbr_table_t *ptable;
+    dlog_mt_intl_sbr_table_t *ptable;
     uint8_t* load_buffer;
     int ret = 0;
 
@@ -56,10 +56,10 @@ int main(int argc, char *argv[]) {
 
     printf("Nortel Millennium %s Table %d (0x%02x) Dump\n\n", table_to_string(TABLE_ID), TABLE_ID, TABLE_ID);
 
-    ptable = (dlg_mt_intl_sbr_table_t *)calloc(1, sizeof(dlg_mt_intl_sbr_table_t));
+    ptable = (dlog_mt_intl_sbr_table_t *)calloc(1, sizeof(dlog_mt_intl_sbr_table_t));
 
     if (ptable == NULL) {
-        printf("Failed to allocate %zu bytes.\n", sizeof(dlg_mt_intl_sbr_table_t));
+        printf("Failed to allocate %zu bytes.\n", sizeof(dlog_mt_intl_sbr_table_t));
         return -ENOMEM;
     }
 
@@ -69,14 +69,14 @@ int main(int argc, char *argv[]) {
         return -ENOENT;
     }
 
-    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlg_mt_intl_sbr_table_t) - 1) != 0) {
+    if (mm_validate_table_fsize(TABLE_ID, instream, sizeof(dlog_mt_intl_sbr_table_t) - 1) != 0) {
         free(ptable);
         fclose(instream);
         return -EIO;
     }
 
     load_buffer = ((uint8_t*)ptable) + 1;
-    if (fread(load_buffer, sizeof(dlg_mt_intl_sbr_table_t) - 1, 1, instream) != 1) {
+    if (fread(load_buffer, sizeof(dlog_mt_intl_sbr_table_t) - 1, 1, instream) != 1) {
         printf("Error reading %s table.\n", table_to_string(TABLE_ID));
         free(ptable);
         fclose(instream);
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     if (ostream != NULL) {
         printf("\nWriting new table to %s\n", argv[2]);
 
-        if (fwrite(load_buffer, sizeof(dlg_mt_intl_sbr_table_t) - 1, 1, ostream) != 1) {
+        if (fwrite(load_buffer, sizeof(dlog_mt_intl_sbr_table_t) - 1, 1, ostream) != 1) {
             printf("Error writing output file %s\n", argv[2]);
             ret = -EIO;
         }

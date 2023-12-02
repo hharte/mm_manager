@@ -676,13 +676,13 @@ typedef struct intl_rate_table_entry {
     uint8_t flags;          // 0 calls in the NCC to rate, 1 is "blocked", 2 - 63 are rate indices in the RATE table (add RATE_TABLE_OFFSET)
 } PACKED intl_rate_table_entry_t;
 
-typedef struct dlg_mt_intl_sbr_table {
+typedef struct dlog_mt_intl_sbr_table {
     uint8_t id;
     uint8_t flags;
     uint8_t default_rate_index;     // 28 + default_rate_index is the entry in the RATE table.
     uint8_t spare;
     intl_rate_table_entry_t irate[INTL_RATE_TABLE_MAX_ENTRIES];
-} PACKED dlg_mt_intl_sbr_table_t;
+} PACKED dlog_mt_intl_sbr_table_t;
 
 #define FLAG_PERIOD_UNLIMITED   (1 << 15)
 
