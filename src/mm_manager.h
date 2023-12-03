@@ -656,6 +656,24 @@ typedef struct dlog_mt_query_term_err {
     uint8_t id;
 } PACKED dlog_mt_query_term_err_t;
 
+/* DLOG_MT_LIMSERV_DATA */
+#define RESTRICTION_LEVEL_NONE          (0) /* No restrictions - DISABLED */
+#define RESTRICTION_LEVEL_EMERGENCY     (1) /* Emergency calling only */
+#define RESTRICTION_LEVEL_DENY_COIN_SC  (2) /* Deny all Coin and Smart Card calls */
+#define RESTRICTION_LEVEL_NO_E2E_SIGNAL (3) /* No End-to-End Signalling (Coin and Smart Card) */
+
+#define LIMSERV_DATA_MAX_ENTRIES        (5)
+typedef struct servlev_entry {
+    uint8_t restriction_level;
+    uint8_t start_time[2];      /* The time when the restriction is applied (HH:MM) */
+    uint8_t duration_time[2];   /*  The duration of the restriction (HH:MM) */
+} PACKED servlev_entry_t;
+
+typedef struct dlog_mt_limserv_data {
+    uint8_t id;
+    servlev_entry_t servlev[LIMSERV_DATA_MAX_ENTRIES];
+} PACKED dlog_mt_limserv_data_t;
+
 /* Constants and data structures for the RATEINT (Set Based Rating - International) pp. 2-326
  *
  * Thanks to æstrid for figuring out the data structures for the International

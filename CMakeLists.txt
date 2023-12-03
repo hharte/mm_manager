@@ -120,6 +120,8 @@ TARGET_LINK_LIBRARIES(mm_fconfig mm_util)
 add_executable (mm_instsv "src/mm_instsv.c" "src/mm_manager.h")
 TARGET_LINK_LIBRARIES(mm_instsv mm_util)
 add_executable (mm_lcd "src/mm_lcd.c" "src/mm_manager.h")
+add_executable (mm_limserv "src/mm_limserv.c" "src/mm_manager.h")
+TARGET_LINK_LIBRARIES(mm_limserv mm_util)
 add_executable (mm_luhn "src/mm_luhn.c")
 add_executable (mm_packtest "src/mm_packtest.c")
 add_executable (mm_rate "src/mm_rate.c" "src/mm_manager.h")
@@ -164,6 +166,7 @@ set(INSTALL_TARGETS
     "mm_fconfig"
     "mm_instsv"
     "mm_lcd"
+    "mm_limserv"
     "mm_luhn"
     "mm_rate"
     "mm_rateint"
