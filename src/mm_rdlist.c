@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2020-2023, Howard M. Harte
  *
- * Reference: https://wiki.millennium.management/dlog:dlog_mt_carrier_table
+ * Reference: https://wiki.muc.ccc.de/millennium:dlog:dlog_mt_rep_dial_list
  *
  */
 
@@ -110,6 +110,39 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\n+-----------------------------------------------------------------------------------------------+\n");
+
+    /* Modify RDLIST table */
+
+    /* Entries 0-4 are the upper five buttons, only accessible on terminals with 10-button Repertory Dialer
+     * For five button sets, entry 0 has *** as the display prompt with a zeroed out phone_number.
+     */
+
+    /* Button 1 */
+    memset(ptable->rd[0].phone_number, 0, sizeof(ptable->rd[0].phone_number));
+    memcpy(ptable->rd[0].display_prompt, "***                                     ", sizeof(ptable->rd[0].display_prompt));
+
+    /* These are the lower (or only) five buttons. */
+    /* Button 6 */
+    /*   Number to dial, upto 16 digits */
+    string_to_bcd_a("18004880097", ptable->rd[5].phone_number, sizeof(ptable->rd[0].phone_number));
+    /*                                   "LINE ONE OF DISPLAY LINE TWO OF DISPLAY " */
+    memcpy(ptable->rd[5].display_prompt, "        MCI              0222 TEST      ", sizeof(ptable->rd[0].display_prompt));
+
+    /* Button 7 */
+    string_to_bcd_a("18002882060", ptable->rd[6].phone_number, sizeof(ptable->rd[0].phone_number));
+    memcpy(ptable->rd[6].display_prompt, "        AT&T             0288 TEST      ", sizeof(ptable->rd[0].display_prompt));
+
+    /* Button 8 */
+    string_to_bcd_a("18002255288", ptable->rd[7].phone_number, sizeof(ptable->rd[0].phone_number));
+    memcpy(ptable->rd[7].display_prompt, "        MCI              0555 TEST      ", sizeof(ptable->rd[0].display_prompt));
+
+    /* Button 9 */
+    string_to_bcd_a("18006261044", ptable->rd[8].phone_number, sizeof(ptable->rd[0].phone_number));
+    memcpy(ptable->rd[8].display_prompt, "     0333 TEST         LWM MILLIWATT    ", sizeof(ptable->rd[0].display_prompt));
+
+    /* Button 10 */
+    string_to_bcd_a("12027621401", ptable->rd[9].phone_number, sizeof(ptable->rd[0].phone_number));
+    memcpy(ptable->rd[9].display_prompt, "    TIME AND            TEMPERATURE     ", sizeof(ptable->rd[0].display_prompt));
 
     if (argc > 2) {
         if ((ostream = fopen(argv[2], "wb")) == NULL) {
