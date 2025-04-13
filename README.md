@@ -1285,6 +1285,8 @@ If you find a bug, please provide the following information when you report the 
 
 [Description of Millennium Tables](https://wiki.muc.ccc.de/millennium:dlog:start)
 
+[nortel-voiceware-decoder](https://github.com/hharte/nortel-voiceware-decoder) - Voiceware ROM decoder to extract voice prompts to .wav files
+
 [millenniium-panel on GitHub](https://github.com/pc-coholic/millennium-panel)
 
 [Armeniki’s Nortel Millennium information on GitHub](https://github.com/armeniki/Nortel-Millennium)
