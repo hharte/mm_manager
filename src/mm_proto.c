@@ -65,7 +65,7 @@ int proto_connected(mm_proto_t* proto) {
 
 int receive_mm_table(mm_proto_t* proto, mm_table_t* table) {
     mm_packet_t* pkt = &table->pkt;
-    uint8_t  status;
+    int status;
 
     status = receive_mm_packet(proto, pkt);
 

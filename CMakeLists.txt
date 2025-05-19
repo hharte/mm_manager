@@ -1,6 +1,6 @@
 ﻿# CMakeList.txt : CMake project for mm_manager
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.25)
 
 project ("mm_manager" LANGUAGES C)
 
