@@ -930,7 +930,7 @@ Qty 400: 20-line VFD strings
 
 ## Generating NPA and LCD tables
 
-Python3 scripts are included to generate NPA and LCD tables automatically, using spreadsheets available from the [North American Numbering Plan Administrator](https://nationalnanpa.com/).  For Canada, spreadsheets are available from the [Canadian Numbering Administrator](http://www.cnac.ca/).  These scripts require the Python3 libraries: pandas, requests, and xmltodict to be installed.
+Python3 scripts are included to generate NPA and LCD tables automatically, using spreadsheets available from the [North American Numbering Plan Administrator](https://www.nanpa.com/).  For Canada, spreadsheets are available from the [Canadian Numbering Administrator](http://www.cnac.ca/).  These scripts require the Python3 libraries: pandas, requests, and xmltodict to be installed.
 
 To generate an NPA table that classifies US and Canadian numbers as domestic:
 

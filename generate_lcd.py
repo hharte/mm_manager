@@ -5,7 +5,7 @@
 #
 # (c) 2020-2022, Howard M. Harte
 #
-# USA: https://nationalnanpa.com/reports/reports_cocodes_assign.html
+# USA: https://www.nanpa.com/reports/co-code-reports/cocodes_assign
 # Canada: http://www.cnac.ca/co_codes/co_code_status.htm
 #
 # All NPA-NXX in the USA: wget https://nationalnanpa.com/nanp1/allutlzd.zip

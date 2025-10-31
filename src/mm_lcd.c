@@ -18,7 +18,7 @@
  * 2 - Intra-LATA toll NXX
  * 3 - Invalid (ie, the N11, the NPA itself.
  *
- * See: https://nationalnanpa.com/reports/reports_cocodes_assign.html
+ * See: https://www.nanpa.com/reports/co-code-reports/cocodes_assign
  *
  * All NXX in the entire USA: wget https://nationalnanpa.com/nanp1/allutlzd.zip
  */

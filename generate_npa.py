@@ -17,9 +17,9 @@
 # 4 - US / Canada Area Code.
 # 6 - International Area Code (for example, the Bahamas.)
 #
-# Details: https://nationalnanpa.com/reports/reports_npa.html
+# Details: https://www.nanpa.com/reports/npa-reports
 #
-# All NPAs in the North American Numbering Plan https://nationalnanpa.com/nanp1/npa_report.csv
+# All NPAs in the North American Numbering Plan https://reports.nanpa.com/public/npa_report.csv
 #
 # usage: generate_npa.py [-h] [--debug DEBUG] [--datafile DATAFILE]
 #                        [--countries COUNTRIES [COUNTRIES ...]]
@@ -64,7 +64,7 @@ try:
     df = pandas.read_csv(source_filename, dtype={'NPA_ID': object, 'COUNTRY': object}, skiprows=1, names=npa_cols, engine='python')
 except OSError:
     print("Error: Cannot read NPA data file.")
-    print("Please download https://nationalnanpa.com/nanp1/npa_report.csv into the current directory.")
+    print("Please download https://reports.nanpa.com/public/npa_report.csv into the current directory.")
     exit()
 
 df["NPA_ID"].fillna("0", inplace = True)
