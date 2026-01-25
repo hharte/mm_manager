@@ -231,7 +231,7 @@ uint8_t table_list_mtr17_intl[] = {
     DLOG_MT_COIN_VAL_TABLE,     /* Required */
     DLOG_MT_REP_DIAL_LIST,
     DLOG_MT_LIMSERV_DATA,
-    DLOG_MT_CALLSCRN_EXP,
+    DLOG_MT_CALLSCRN_UNIVERSAL,
     DLOG_MT_NUM_PLAN_TABLE,     /* Required */
     DLOG_MT_RATE_TABLE,         /* Required */
     DLOG_MT_LCD_TABLE_1,        /* MTR 1.7 Length: 819 */

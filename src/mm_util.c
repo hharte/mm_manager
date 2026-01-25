@@ -733,66 +733,66 @@ const char* error_inject_type_to_str(uint8_t type) {
 
 const uint16_t term_type_mtr[TERM_TYPE_MAX + 1] = {
     MTR_UNKNOWN,
-    MTR_2_X,    /* 1 */
+    MTR_2_X,     /* 1 */
     MTR_2_X,
     MTR_2_X,
     MTR_UNKNOWN,
-    MTR_2_X,    /* 5 */
+    MTR_2_X,     /* 5 */
     MTR_1_9,
     MTR_2_X,
     MTR_1_6,
     MTR_1_6,
-    MTR_1_13,   /* 10 */
+    MTR_1_13,    /* 10 */
+    MTR_1_7,
+    MTR_1_7_INTL, /* 12: 06CNB02 */
     MTR_1_7,
     MTR_1_7,
-    MTR_1_7,
-    MTR_1_7,
-    MTR_1_7,    /* 15 */
+    MTR_1_7,     /* 15 */
     MTR_1_7,
     MTR_2_X,
     MTR_1_20,
     MTR_1_7,
-    MTR_1_20,   /* 20 */
+    MTR_1_20,    /* 20 */
     MTR_1_7,
-    MTR_2_X,
+    MTR_2_X,     /* 22: MTR 2.0 - Multipay, ADSI */
     MTR_1_7,
     MTR_1_7,
-    MTR_1_7,    /* 25 */
+    MTR_1_7,     /* 25 */
     MTR_1_7,
-    MTR_1_9,    /* 27: MTR 1.9 Card-only */
+    MTR_1_9,     /* 27: MTR 1.9 - Card */
     MTR_1_9,
     MTR_1_9,
-    MTR_1_9,    /* 30 */
+    MTR_1_9,     /* 30 */
     MTR_1_9,
     MTR_1_7_INTL,
     MTR_1_9,
     MTR_2_X,
-    MTR_2_X,    /* 35 */
-    MTR_1_13,   /* NCA1X03, MTR 2.0 appears to use the same tables as 1.13. */
+    MTR_2_X,     /* 35 */
+    MTR_1_13,    /* 36: NCA1X03, MTR 2.0 appears to use the same tables as 1.13. */
     MTR_1_13,
     MTR_2_X,
-    MTR_2_X,
-    MTR_2_X,    /* 40 */
-    MTR_UNKNOWN,
+    MTR_2_X,     /* 39: MTR 2.0 - Card, ADSI */
+    MTR_2_X,     /* 40: MTR 2.0 - Multipay, ADSI */
+    MTR_UNKNOWN, /* 41: "MTR 2.4" - Proton */
     MTR_1_9,
-    MTR_UNKNOWN,
+    MTR_1_11,    /* MTR 1.11 - Card */
     MTR_1_10,
-    MTR_1_11,   /* 45 */
+    MTR_1_11,    /* 45 */
     MTR_1_9,
-    MTR_UNKNOWN,
-    MTR_UNKNOWN,
-    MTR_UNKNOWN,
-    MTR_UNKNOWN,/* 50 */
+    MTR_1_11,
+    MTR_1_11,
+    MTR_1_11,
+    MTR_2_X,     /* 50 */
     MTR_2_X,
-    MTR_UNKNOWN,
-    MTR_UNKNOWN,
-    MTR_UNKNOWN,
-    MTR_UNKNOWN,/* 55 */
+    MTR_2_X,
+    MTR_2_X,
+    MTR_2_X,
+    MTR_1_7,     /* 55 */
     MTR_2_X,
     MTR_2_X,
     MTR_1_20,
     MTR_2_X,
-    MTR_2_X     /* 60 */
+    MTR_2_X      /* 60 */
 };
 
 uint16_t term_type_to_mtr(uint8_t term_type) {
@@ -844,19 +844,19 @@ const uint8_t term_type_model[TERM_TYPE_MAX + 1] = {
     TERM_MULTIPAY,      /* 40 */
     TERM_MULTIPAY,
     TERM_COIN_BASIC,
-    TERM_MULTIPAY,
+    TERM_CARD,
     TERM_MULTIPAY,
     TERM_DESK,          /* 45 */
     TERM_MULTIPAY,
+    TERM_CARD,
     TERM_MULTIPAY,
+    TERM_DESK,
+    TERM_CARD,          /* 50 */
     TERM_MULTIPAY,
+    TERM_CARD,
     TERM_MULTIPAY,
-    TERM_MULTIPAY,      /* 50 */
-    TERM_MULTIPAY,
-    TERM_MULTIPAY,
-    TERM_MULTIPAY,
-    TERM_MULTIPAY,
-    TERM_MULTIPAY,      /* 55 */
+    TERM_CARD,
+    TERM_DESK,          /* 55 */
     TERM_COIN_BASIC,
     TERM_MULTIPAY,
     TERM_CARD,
