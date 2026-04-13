@@ -27,7 +27,7 @@ jobs:
       # --- Add Checkout Step ---
       # Checkout the code so gh commands have repository context
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         # Fetch depth 0 might be needed if gh relies on full history,
         # but often not necessary just for context. Keep it minimal first.
         # fetch-depth: 0
@@ -108,7 +108,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Checkout the specific tag for release events, or the commit SHA for push events
           ref: ${{ github.event_name == 'release' && github.ref || github.sha }}
