@@ -21,6 +21,18 @@
 #define PACKED      __attribute__((packed))
 #endif /* _WIN32 */
 
+/* NONSTRING: marks char arrays that are not NUL-terminated strings, to
+ * suppress -Wunterminated-string-initialization on Clang/GCC. Expands to
+ * nothing on compilers that don't support the attribute (e.g. MSVC). */
+#if defined(__has_attribute)
+#  if __has_attribute(nonstring)
+#    define NONSTRING __attribute__((nonstring))
+#  endif
+#endif
+#ifndef NONSTRING
+#  define NONSTRING
+#endif
+
 //#define strnlen(x, y)	strlen(x)
 
 #define RX 2
@@ -803,7 +815,7 @@ typedef struct carrier_table_entry {
     uint8_t  carrier_ref;                   /* Unique number for each carrier used to cross reference the carrier in other tables. */
     uint16_t carrier_num;
     uint32_t valid_cards;
-    char     display_prompt[20];            /* Actual prompt for display on one line. */
+    char     display_prompt[20] NONSTRING;  /* Actual prompt for display on one line. */
     uint8_t  control_byte2;
     uint8_t  control_byte;
     uint16_t fgb_timer;                     /* Time in 10 msec increments */
@@ -824,7 +836,7 @@ typedef struct carrier_table_entry_mtr1 {
     uint8_t  carrier_ref;                   /* Unique number for each carrier used to cross reference the carrier in other tables. */
     uint16_t carrier_num;
     uint8_t  valid_cards[3];
-    char     display_prompt[20];            /* Actual prompt for display on one line. */
+    char     display_prompt[20] NONSTRING;  /* Actual prompt for display on one line. */
     uint8_t  control_byte2;
     uint8_t  control_byte;
     uint16_t fgb_timer;                     /* Time in 10 msec increments */
