@@ -648,6 +648,35 @@ static int append_to_cdr_ack_buffer(mm_context_t *context, uint8_t *buffer, uint
     return 0;
 }
 
+static uint8_t* pack_time_sync(mm_context_t* context, uint8_t* buffer) {
+    time_t rawtime;
+    struct tm ptm = { 0 };
+    dlog_mt_time_sync_t* time_sync_response = (dlog_mt_time_sync_t*)buffer;
+
+    time_sync_response->id = DLOG_MT_TIME_SYNC;
+
+    mm_time(context->test_mode, &rawtime);
+    localtime_r(&rawtime, &ptm);
+
+    time_sync_response->year  = (ptm.tm_year & 0xff);      /* Fill current years since 1900 */
+    time_sync_response->month = ((ptm.tm_mon + 1) & 0xff); /* Fill current month (1-12) */
+    time_sync_response->day   = (ptm.tm_mday & 0xff);      /* Fill current day (1-31) */
+    time_sync_response->hour  = (ptm.tm_hour & 0xff);      /* Fill current hour (0-23) */
+    time_sync_response->min   = (ptm.tm_min & 0xff);       /* Fill current minute (0-59) */
+    time_sync_response->sec   = (ptm.tm_sec & 0xff);       /* Fill current second (0-59) */
+    time_sync_response->wday  = (ptm.tm_wday + 1);         /* Day of week, 1=Sunday ... 7=Saturday */
+
+    printf("\t\tCurrent day/time: %04d-%02d-%02d / %2d:%02d:%02d\n",
+        time_sync_response->year + 1900,
+        time_sync_response->month,
+        time_sync_response->day,
+        time_sync_response->hour,
+        time_sync_response->min,
+        time_sync_response->sec);
+
+    return buffer + sizeof(dlog_mt_time_sync_t);
+}
+
 static int process_mm_table(mm_context_t* context, mm_table_t* table) {
     mm_packet_t* pkt = &table->pkt;
     uint8_t  ack_payload[PKT_TABLE_DATA_LEN_MAX] = { 0 };
@@ -679,38 +708,11 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
         }
 
         switch (table->table_id) {
-            case DLOG_MT_TIME_SYNC_REQ: {
-                time_t rawtime;
-                struct tm ptm = { 0 };
-                dlog_mt_time_sync_t* time_sync_response = (dlog_mt_time_sync_t*)pack_payload;
-
+            case DLOG_MT_TIME_SYNC_REQ:
                 ppayload += sizeof(dlog_mt_time_sync_req_t);
-
-                time_sync_response->id = DLOG_MT_TIME_SYNC;
-
-                mm_time(context->test_mode, &rawtime);
-                localtime_r(&rawtime, &ptm);
-
-                time_sync_response->year  = (ptm.tm_year & 0xff);      /* Fill current years since 1900 */
-                time_sync_response->month = ((ptm.tm_mon + 1) & 0xff); /* Fill current month (1-12) */
-                time_sync_response->day   = (ptm.tm_mday & 0xff);      /* Fill current day (1-31) */
-                time_sync_response->hour  = (ptm.tm_hour & 0xff);      /* Fill current hour (0-23) */
-                time_sync_response->min   = (ptm.tm_min & 0xff);       /* Fill current minute (0-59) */
-                time_sync_response->sec   = (ptm.tm_sec & 0xff);       /* Fill current second (0-59) */
-                time_sync_response->wday  = (ptm.tm_wday + 1);         /* Day of week, 1=Sunday ... 7=Saturday */
-
-                printf("\t\tCurrent day/time: %04d-%02d-%02d / %2d:%02d:%02d\n",
-                    time_sync_response->year + 1900,
-                    time_sync_response->month,
-                    time_sync_response->day,
-                    time_sync_response->hour,
-                    time_sync_response->min,
-                    time_sync_response->sec);
-
-                pack_payload += sizeof(dlog_mt_time_sync_t);
+                pack_payload = pack_time_sync(context, pack_payload);
                 *pack_payload++ = DLOG_MT_END_DATA;
                 break;
-            }
             case DLOG_MT_ATN_REQ_TAB_UPD: {
                 ppayload++;
                 context->terminal_upd_reason = *ppayload++;
@@ -1135,6 +1137,9 @@ static int process_mm_table(mm_context_t* context, mm_table_t* table) {
                 ppayload += sizeof(dlog_mt_end_data_t);
                 context->trans_data_in_progress = 0;
 
+                if (context->cdr_ack_buffer_len + sizeof(dlog_mt_time_sync_t) < sizeof(ack_payload)) {
+                    pack_payload = pack_time_sync(context, pack_payload);
+                }
                 *pack_payload++ = DLOG_MT_END_DATA;
 
                 if (context->cdr_ack_buffer_len > 0) {
