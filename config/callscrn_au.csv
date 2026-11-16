@@ -1,0 +1,13 @@
+Number,Action
+000,emergency
+112,emergency
+02XXXXXXXX,free
+03XXXXXXXX,free
+04XXXXXXXX,free
+07XXXXXXXX,free
+08XXXXXXXX,free
+00XXXXXXXX,deny
+01XXXXXXXX,deny
+05XXXXXXXX,deny
+06XXXXXXXX,deny
+09XXXXXXXX,deny
